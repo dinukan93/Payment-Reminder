@@ -1,6 +1,7 @@
 import "./App.css";
 import Sidebar from "./components/Sidebar";
 import CustomerManagement from "./pages/CustomerManagement";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 function App() {
   return (
@@ -8,7 +9,16 @@ function App() {
       <div className="app-container">
         <Sidebar />
         <div className="main-content">
-          <CustomerManagement />
+          <Routes>
+            <Route path="/" element={<Navigate to="/customers" replace />} />
+            <Route path="/dashboard" element={<div>Dashboard</div>} />
+            <Route path="/tasks" element={<div>Tasks</div>} />
+            <Route path="/customers" element={<CustomerManagement />} />
+            <Route path="/employees" element={<div>Employees</div>} />
+            <Route path="/reports" element={<div>Reports</div>} />
+            <Route path="/settings" element={<div>Settings</div>} />
+            <Route path="/logout" element={<div>Logging out…</div>} />
+          </Routes>
         </div>
       </div>
     </>

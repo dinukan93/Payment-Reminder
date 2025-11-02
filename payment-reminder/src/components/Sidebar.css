@@ -43,3 +43,18 @@ li {
 .logout {
   color: red;
 }
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* space between icon and text */
+  padding: 8px 12px; /* bigger clickable area */
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.menu-item:hover,
+.menu-item.active {
+  color: #2a9b8e;
+}

@@ -8,6 +8,7 @@ import { TbPhoneCall } from "react-icons/tb";
 import { IoFileTrayFullOutline } from "react-icons/io5";
 import { RiSettings4Line } from "react-icons/ri";
 import { TbLogout2 } from "react-icons/tb";
+import { NavLink } from "react-router-dom";
 
 export default function Sidebar() {
   return (
@@ -21,36 +22,80 @@ export default function Sidebar() {
           <h4>Overview</h4>
           <ul>
             <li>
-              <BiHomeAlt2 />
-              <span> Dashboard</span>
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <BiHomeAlt2 />
+                <span>Dashboard</span>
+              </NavLink>
             </li>
             <li>
-              <FaTasks />
-              <span> Task</span>
+              <NavLink
+                to="/tasks"
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <FaTasks />
+                <span>Task</span>
+              </NavLink>
             </li>
             <li>
-              <GoPeople />
-              <span> Customers</span>
+              <NavLink
+                to="/customers"
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <GoPeople />
+                <span>Customers</span>
+              </NavLink>
             </li>
             <li>
-              <TbPhoneCall />
-              <span> Employees</span>
+              <NavLink
+                to="/employees"
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <TbPhoneCall />
+                <span>Employees</span>
+              </NavLink>
             </li>
             <li>
-              <IoFileTrayFullOutline />
-              <span> Report</span>
+              <NavLink
+                to="/reports"
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <IoFileTrayFullOutline />
+                <span>Report</span>
+              </NavLink>
             </li>
           </ul>
         </nav>
         <div className="sidebar-end">
           <ul>
             <li>
-              <RiSettings4Line />
-              <span> Settings</span>
+              <NavLink
+                to="/settings"
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <RiSettings4Line />
+                <span>Settings</span>
+              </NavLink>
             </li>
             <li className="logout">
-              <TbLogout2 />
-              <span> Logout</span>
+              <NavLink to="/logout" className="menu-item">
+                <TbLogout2 />
+                <span>Logout</span>
+              </NavLink>
             </li>
           </ul>
         </div>
