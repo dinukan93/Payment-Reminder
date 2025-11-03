@@ -1,0 +1,58 @@
+.searchbar {
+  border: #d9d9d9 1px solid;
+  border-radius: 10px;
+  padding: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+input {
+  border: #d9d9d9 1px solid;
+  height: 19px;
+  border-radius: 5px;
+  outline: none;
+  font-size: 16px;
+  padding: 5px;
+  flex: 1; /* allows input to grow */
+  max-width: 600px;
+}
+
+select {
+  border: #d9d9d9 1px solid;
+  border-radius: 5px;
+  outline: none;
+  font-size: 12px;
+  padding: 5px;
+  flex: 1; /* allows input to grow */
+  max-width: 250px;
+}
+
+option {
+  color: #252525;
+}
+
+.search-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  /* color: white; */
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.add-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}

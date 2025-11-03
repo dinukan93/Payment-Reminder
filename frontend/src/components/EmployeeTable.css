@@ -1,0 +1,58 @@
+.table-card {
+  width: 100%;
+  margin: 20px auto;
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+  border-radius: 20px;
+  overflow: hidden; /* clip inner content to rounded corners */
+  padding: 5px;
+}
+
+/* table without its own border; use separate mode so radius works */
+.employee-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #000;
+  background: transparent;
+}
+
+/* keep your row styles */
+.employee-table th,
+.employee-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.employee-table th {
+  color: #000000;
+}
+
+.employee-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.status {
+  color: #ff2d2d;
+  font-size: smaller;
+}
+
+td > i {
+  margin-right: 20px; /* space after each icon */
+}
+
+td > i:last-child {
+  margin-right: 0; /* remove margin from last icon */
+}
+
+/* delete button */
+.bi-trash-fill {
+  color: #f04040;
+  cursor: pointer;
+}
+
+/* edit button */
+.bi-pencil-square {
+  color: #838383; /* orange for pending */
+}
