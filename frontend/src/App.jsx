@@ -2,6 +2,7 @@ import "./App.css";
 import Sidebar from "./components/Sidebar";
 import CustomerManagement from "./pages/CustomerManagement";
 import EmployeeManagement from "./pages/EmployeeManagement";
+import CallerDashboard from "./pages/CallerDashboard";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 function App() {
@@ -11,8 +12,8 @@ function App() {
         <Sidebar />
         <div className="main-content">
           <Routes>
-            <Route path="/" element={<Navigate to="/customers" replace />} />
-            <Route path="/dashboard" element={<div>Dashboard</div>} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<CallerDashboard />} />
             <Route path="/tasks" element={<div>Tasks</div>} />
             <Route path="/customers" element={<CustomerManagement />} />
             <Route path="/employees" element={<EmployeeManagement />} />
