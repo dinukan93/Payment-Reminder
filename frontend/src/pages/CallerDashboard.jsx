@@ -44,10 +44,10 @@ function CallerDashboard() {
     callDate2.setDate(today.getDate() - 1);
     const callDate2String = `${String(callDate2.getDate()).padStart(2, '0')}/${String(callDate2.getMonth() + 1).padStart(2, '0')}/${callDate2.getFullYear()}`;
 
-    const initialContactedCustomers = [
+    const initialCustomers = [
       {
         id: 1,
-        accountNumber: "1001",
+        accountNumber: "1001234567",
         name: "Kumar Singh",
         date: todayString,
         status: "PENDING",
@@ -68,7 +68,7 @@ function CallerDashboard() {
       },
       {
         id: 2,
-        accountNumber: "1002",
+        accountNumber: "1001234568",
         name: "Ravi Kumar",
         date: todayString,
         status: "COMPLETED",
@@ -87,12 +87,9 @@ function CallerDashboard() {
           }
         ]
       },
-    ];
-
-    const initialOverduePayments = [
       {
         id: 3,
-        accountNumber: "1003",
+        accountNumber: "1001234569",
         name: "Kumar Singh",
         date: todayString,
         status: "OVERDUE",
@@ -105,7 +102,7 @@ function CallerDashboard() {
       },
       {
         id: 4,
-        accountNumber: "1004",
+        accountNumber: "1001234570",
         name: "Ash Kumar",
         date: todayString,
         status: "OVERDUE",
@@ -118,7 +115,7 @@ function CallerDashboard() {
       },
       {
         id: 5,
-        accountNumber: "1005",
+        accountNumber: "1001234571",
         name: "Priya Singh",
         date: todayString,
         status: "OVERDUE",
@@ -131,9 +128,16 @@ function CallerDashboard() {
       },
     ];
 
+    const initialContactedCustomers = initialCustomers.filter(c => c.status !== "OVERDUE");
+    const initialOverduePayments = initialCustomers.filter(c => c.status === "OVERDUE");
+
     setContactedCustomers(initialContactedCustomers);
     setOverduePayments(initialOverduePayments);
     updateStats(initialContactedCustomers, initialOverduePayments);
+    
+    // Save to localStorage for Tasks page
+    localStorage.setItem('contactedCustomers', JSON.stringify(initialContactedCustomers));
+    localStorage.setItem('overduePayments', JSON.stringify(initialOverduePayments));
   }, []);
 
   // Update statistics based on data
@@ -156,12 +160,22 @@ function CallerDashboard() {
     // customersData can be a single customer object or an array of customers
     const customersArray = Array.isArray(customersData) ? customersData : [customersData];
     
-    // Add all accepted customers to overdue payments list
+    // Add all accepted customers with OVERDUE status
+    const customersWithOverdueStatus = customersArray.map(customer => ({
+      ...customer,
+      status: "OVERDUE"
+    }));
+    
+    // Add to overdue payments list (they will be OVERDUE until contacted)
     setOverduePayments(prevOverduePayments => {
-      const newOverduePayments = [...prevOverduePayments, ...customersArray];
+      const newOverduePayments = [...prevOverduePayments, ...customersWithOverdueStatus];
       // Update stats with the new data
       updateStats(contactedCustomers, newOverduePayments);
       console.log(`${customersArray.length} customer(s) added from admin request`);
+      
+      // Save to localStorage for Tasks page
+      localStorage.setItem('overduePayments', JSON.stringify(newOverduePayments));
+      
       return newOverduePayments;
     });
   };
@@ -174,7 +188,8 @@ function CallerDashboard() {
     const overdueCustomer = overduePayments.find(p => p.id === accountNumber);
     
     if (overdueCustomer) {
-      // Move from overdue to contacted
+      
+      // status from OVERDUE to PENDING or COMPLETED
       const updatedCustomer = {
         ...overdueCustomer,
         status: paymentMade ? "COMPLETED" : "PENDING",
@@ -192,17 +207,21 @@ function CallerDashboard() {
         ]
       };
 
-      // Remove from overdue
+      // Remove from overdue (status is no longer OVERDUE)
       const newOverduePayments = overduePayments.filter(p => p.id !== accountNumber);
       
-      // Add to contacted
+      // Add to contacted (status is now PENDING or COMPLETED)
       const newContactedCustomers = [...contactedCustomers, updatedCustomer];
 
       setOverduePayments(newOverduePayments);
       setContactedCustomers(newContactedCustomers);
       updateStats(newContactedCustomers, newOverduePayments);
+      
+      // Save to localStorage for Tasks page
+      localStorage.setItem('contactedCustomers', JSON.stringify(newContactedCustomers));
+      localStorage.setItem('overduePayments', JSON.stringify(newOverduePayments));
     } else {
-      // Update existing contacted customer
+      // Update existing contacted customer (already PENDING or COMPLETED)
       const newContactedCustomers = contactedCustomers.map(c => {
         if (c.id === accountNumber) {
           const updated = {
@@ -228,6 +247,9 @@ function CallerDashboard() {
 
       setContactedCustomers(newContactedCustomers);
       updateStats(newContactedCustomers, overduePayments);
+      
+      // Save to localStorage for Tasks page
+      localStorage.setItem('contactedCustomers', JSON.stringify(newContactedCustomers));
     }
   };
 

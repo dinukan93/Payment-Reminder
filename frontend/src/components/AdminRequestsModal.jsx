@@ -4,47 +4,67 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 
 function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestProcessed }) {
   const [requests, setRequests] = useState([]);
+  const [requestId, setRequestId] = useState(null);
 
   // Initialize sample admin requests data when modal opens
   useEffect(() => {
     if (isOpen) {
-      // Sample admin requests data - will be replaced with actual data from backend
-      const sampleRequests = [
-        {
-          id: 1,
-          accountNumber: "1006",
-          name: "Kamal Perera",
-          contactNumber: "077-1234567",
-          amountOverdue: "Rs.3500",
-          daysOverdue: "25",
-          date: "02/11/2025",
-          sentBy: "Admin",
-          sentDate: "02/11/2025"
-        },
-        {
-          id: 2,
-          accountNumber: "1007",
-          name: "Nimal Silva",
-          contactNumber: "071-9876543",
-          amountOverdue: "Rs.4200",
-          daysOverdue: "18",
-          date: "02/11/2025",
-          sentBy: "Admin",
-          sentDate: "02/11/2025"
-        },
-        {
-          id: 3,
-          accountNumber: "1008",
-          name: "Saman Fernando",
-          contactNumber: "076-5555444",
-          amountOverdue: "Rs.2800",
-          daysOverdue: "30",
-          date: "02/11/2025",
-          sentBy: "Admin",
-          sentDate: "02/11/2025"
+      console.log('AdminRequestsModal opened, checking localStorage...');
+      
+      // Check for pending request from localStorage
+      const storedRequest = localStorage.getItem('pendingAdminRequest');
+      console.log('Stored request:', storedRequest);
+      
+      if (storedRequest) {
+        try {
+          const parsedRequest = JSON.parse(storedRequest);
+          console.log('Parsed request:', parsedRequest);
+          setRequests(parsedRequest.customers);
+          setRequestId(parsedRequest.requestId);
+        } catch (error) {
+          console.error('Error parsing stored request:', error);
         }
-      ];
-      setRequests(sampleRequests);
+      } else {
+        console.log('No stored request found, using sample data');
+        // Sample admin requests data - will be replaced with actual data from backend
+        const sampleRequests = [
+          {
+            id: 1,
+            accountNumber: "1001234582",
+            name: "Kamal Perera",
+            contactNumber: "077-1234567",
+            amountOverdue: "Rs.3500",
+            daysOverdue: "25",
+            date: "02/11/2025",
+            sentBy: "Admin",
+            sentDate: "02/11/2025"
+          },
+          {
+            id: 2,
+            accountNumber: "1001234583",
+            name: "Nimal Silva",
+            contactNumber: "071-9876543",
+            amountOverdue: "Rs.4200",
+            daysOverdue: "18",
+            date: "02/11/2025",
+            sentBy: "Admin",
+            sentDate: "02/11/2025"
+          },
+          {
+            id: 3,
+            accountNumber: "1001234584",
+            name: "Saman Fernando",
+            contactNumber: "076-5555444",
+            amountOverdue: "Rs.2800",
+            daysOverdue: "30",
+            date: "02/11/2025",
+            sentBy: "Admin",
+            sentDate: "02/11/2025"
+          }
+        ];
+        setRequests(sampleRequests);
+        setRequestId(null);
+      }
     }
   }, [isOpen]);
 
@@ -67,6 +87,25 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     // Call parent handler with all customers at once
     onAccept(allCustomersData);
     
+    // Update request status in localStorage to ACCEPTED
+    if (requestId) {
+      const requestResponse = {
+        requestId: requestId,
+        status: 'ACCEPTED',
+        respondedDate: new Date().toLocaleString('en-GB', { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true 
+        }),
+        reason: null
+      };
+      localStorage.setItem('callerRequestResponse', JSON.stringify(requestResponse));
+      localStorage.removeItem('pendingAdminRequest');
+    }
+    
     // Clear all requests
     setRequests([]);
     
@@ -79,6 +118,25 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     requests.forEach(request => {
       onDecline(request.id);
     });
+    
+    // Update request status in localStorage to DECLINED
+    if (requestId) {
+      const requestResponse = {
+        requestId: requestId,
+        status: 'DECLINED',
+        respondedDate: new Date().toLocaleString('en-GB', { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true 
+        }),
+        reason: 'Too many customers assigned already' // Default reason, can be customized
+      };
+      localStorage.setItem('callerRequestResponse', JSON.stringify(requestResponse));
+      localStorage.removeItem('pendingAdminRequest');
+    }
     
     // Clear all requests
     setRequests([]);

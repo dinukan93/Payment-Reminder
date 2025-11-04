@@ -76,15 +76,15 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
             <div className="customer-info-cards">
               <div className="info-card contact-card">
                 <div className="card-label">Contact Number</div>
-                <div className="card-value">{customer.contactNumber || "070 454 5457"}</div>
+                <div className="card-value">{customer.contactNumber}</div>
               </div>
               <div className="info-card amount-card">
                 <div className="card-label">Amount Overdue</div>
-                <div className="card-value">{customer.amountOverdue || "Rs.2000"}</div>
+                <div className="card-value">{customer.amountOverdue}</div>
               </div>
               <div className="info-card days-card">
                 <div className="card-label">Days Overdue</div>
-                <div className="card-value">{customer.daysOverdue || "16"}</div>
+                <div className="card-value">{customer.daysOverdue}</div>
               </div>
             </div>
 

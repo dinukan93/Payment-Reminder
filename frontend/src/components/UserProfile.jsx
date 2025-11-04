@@ -8,7 +8,24 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isRequestsModalOpen, setIsRequestsModalOpen] = useState(false);
   const [todayPaymentsCount, setTodayPaymentsCount] = useState(0);
-  const [pendingRequestsCount, setPendingRequestsCount] = useState(1); // Number of requests, not customers
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+
+  // Check for pending requests from admin
+  useEffect(() => {
+    const checkPendingRequests = () => {
+      const pendingRequest = localStorage.getItem('pendingAdminRequest');
+      const count = pendingRequest ? 1 : 0;
+      console.log('Checking pending requests... Found:', count);
+      setPendingRequestsCount(count);
+    };
+
+    checkPendingRequests();
+    
+    // Check every 3 seconds for new requests
+    const interval = setInterval(checkPendingRequests, 3000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Calculate today's promised payments
