@@ -6,6 +6,7 @@ import CallerDashboard from "./pages/CallerDashboard";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
+import Report from "./pages/Report";
 
 function App() {
   const location = useLocation();
@@ -23,7 +24,7 @@ function App() {
             <Route path="/tasks" element={<div>Tasks</div>} />
             <Route path="/customers" element={<CustomerManagement />} />
             <Route path="/employees" element={<EmployeeManagement />} />
-            <Route path="/reports" element={<div>Reports</div>} />
+            <Route path="/reports" element={<Report />} />
             <Route path="/settings" element={<Settings/>} />
             <Route path="/logout" element={<div>Logging out…</div>} />
           </Routes>

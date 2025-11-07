@@ -1,0 +1,110 @@
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #d9d9d9;
+  margin: 10px 0;
+}
+
+
+.widgets{
+    /* border: 1px solid #0a0000; */
+    display: flex;
+    justify-content: space-evenly;
+    gap: 50px;
+    padding: 10px;
+    margin: 20px;
+    
+}
+
+.total-calls{
+    border: 1px solid #D9D9D9;
+    padding: 10px;
+    border-radius: 10px;
+    width: 200px;
+}
+
+.sucessful-calls{
+    border: 1px solid #D9D9D9;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.total-payments{
+    border: 1px solid #D9D9D9;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.pending-payments{
+    border: 1px solid #D9D9D9;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.widgets h4 {
+    color: #000000;
+    padding-bottom: 5px;
+}
+
+                
+.verified-icon {
+    color: #44E466;
+}
+
+.pending-icon {
+    color: #FF0000;
+}
+
+.totalpay-icon {
+    color: #2743B3;
+}
+
+.totalCall-icon {
+    color: #2585F4;
+}
+
+.caller-statistics{
+    border: 1px solid #D9D9D9;
+    border-radius: 10px;
+    padding: 10px;
+    margin: auto;
+    
+}
+
+.chart-title{
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.download-section{
+    margin: 10px;
+    padding: 10px;
+    display: flex;
+    justify-content: start;
+    gap: 15px;
+    margin-left: 25px;
+}
+
+.download-pdf{
+    background-color: #2585F4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.download-excel{
+    background-color: #2585F4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+}

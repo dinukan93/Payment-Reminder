@@ -1,0 +1,39 @@
+.table-card {
+  width: 70%;
+  margin:auto;
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+  border-radius: 20px;
+  overflow: hidden; /* clip inner content to rounded corners */
+  padding: 15px;
+  padding-bottom: 20px;
+
+}
+
+.statistics-table {
+  width: 60vw;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #000;
+  background: transparent;
+  margin: 10px;
+}
+
+.statistics-table th,
+.statistics-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.statistics-table th {
+  color: #000000;
+}
+
+.statistics-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+td > i:last-child {
+  margin-right: 0; /* remove margin from last icon */
+}
