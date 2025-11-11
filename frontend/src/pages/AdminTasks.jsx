@@ -146,8 +146,34 @@ function AdminTasks() {
       sentDate: todayString
     };
     
+    // Store for caller to receive
     localStorage.setItem('pendingAdminRequest', JSON.stringify(requestData));
+    
+    // Add to sent requests list for admin tracking
+    const newSentRequest = {
+      id: newRequestId,
+      callerName: callerName,
+      callerId: callerId,
+      customersSent: customers.length,
+      sentDate: todayString,
+      status: "PENDING",
+      respondedDate: null,
+      customers: customers.map((customer, index) => ({
+        id: index + 1,
+        accountNumber: customer.accountNumber,
+        name: customer.name,
+        amountOverdue: customer.amountOverdue,
+        daysOverdue: customer.daysOverdue
+      }))
+    };
+    
+    // Get existing sent requests from localStorage
+    const existingSentRequests = JSON.parse(localStorage.getItem('adminSentRequests') || '[]');
+    existingSentRequests.push(newSentRequest);
+    localStorage.setItem('adminSentRequests', JSON.stringify(existingSentRequests));
+    
     console.log('✅ Request sent to caller:', callerName, requestData);
+    console.log('✅ Added to sent requests list:', newSentRequest);
   };
 
   const getSelectedCustomersData = () => {

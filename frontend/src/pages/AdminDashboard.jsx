@@ -89,68 +89,13 @@ function AdminDashboard() {
     }
   ]);
 
-  const [sentRequests, setSentRequests] = useState([
-    {
-      id: 1,
-      callerName: "Ravi Kumar",
-      callerId: "2313",
-      customersSent: 3,
-      sentDate: "01/11/2025",
-      status: "ACCEPTED",
-      respondedDate: "01/11/2025 10:30 AM",
-      customers: [
-        { id: 1, accountNumber: "1001234567", name: "John Doe", amountOverdue: "Rs.5,000", daysOverdue: 45 },
-        { id: 2, accountNumber: "1001234568", name: "Jane Smith", amountOverdue: "Rs.3,500", daysOverdue: 30 },
-        { id: 3, accountNumber: "1001234569", name: "Bob Johnson", amountOverdue: "Rs.7,200", daysOverdue: 60 }
-      ]
-    },
-    {
-      id: 2,
-      callerName: "Ash Kumar",
-      callerId: "2314",
-      customersSent: 4,
-      sentDate: "02/11/2025",
-      status: "DECLINED",
-      respondedDate: "02/11/2025 02:15 PM",
-      reason: "Too many customers assigned already",
-      customers: [
-        { id: 4, accountNumber: "1001234570", name: "Alice Brown", amountOverdue: "Rs.4,800", daysOverdue: 25 },
-        { id: 5, accountNumber: "1001234571", name: "Charlie Wilson", amountOverdue: "Rs.6,100", daysOverdue: 50 },
-        { id: 6, accountNumber: "1001234572", name: "Diana Moore", amountOverdue: "Rs.2,900", daysOverdue: 20 },
-        { id: 7, accountNumber: "1001234573", name: "Edward Taylor", amountOverdue: "Rs.8,500", daysOverdue: 70 }
-      ]
-    },
-    {
-      id: 3,
-      callerName: "Priya Singh",
-      callerId: "2315",
-      customersSent: 5,
-      sentDate: "03/11/2025",
-      status: "PENDING",
-      respondedDate: null,
-      customers: [
-        { id: 8, accountNumber: "1001234574", name: "Frank Miller", amountOverdue: "Rs.5,600", daysOverdue: 35 },
-        { id: 9, accountNumber: "1001234575", name: "Grace Lee", amountOverdue: "Rs.4,200", daysOverdue: 28 },
-        { id: 10, accountNumber: "1001234576", name: "Henry Davis", amountOverdue: "Rs.7,800", daysOverdue: 55 },
-        { id: 11, accountNumber: "1001234577", name: "Iris Martinez", amountOverdue: "Rs.3,300", daysOverdue: 22 },
-        { id: 12, accountNumber: "1001234578", name: "Jack Anderson", amountOverdue: "Rs.6,700", daysOverdue: 48 }
-      ]
-    },
-    {
-      id: 4,
-      callerName: "Kumar Singh",
-      callerId: "2331",
-      customersSent: 3,
-      sentDate: "03/11/2025",
-      status: "PENDING",
-      respondedDate: null,
-      customers: [
-        { id: 13, accountNumber: "1001234579", name: "Karen Thomas", amountOverdue: "Rs.4,500", daysOverdue: 32 },
-        { id: 14, accountNumber: "1001234580", name: "Leo Jackson", amountOverdue: "Rs.5,900", daysOverdue: 42 },
-        { id: 15, accountNumber: "1001234581", name: "Mia White", amountOverdue: "Rs.3,100", daysOverdue: 18 }
-      ]
-    }
-  ]);
+  const [sentRequests, setSentRequests] = useState([]);
+
+  // Load sent requests from localStorage on mount
+  useEffect(() => {
+    const storedRequests = JSON.parse(localStorage.getItem('adminSentRequests') || '[]');
+    setSentRequests(storedRequests);
+  }, []);
 
   const pendingRequestsCount = sentRequests.filter(req => req.status === "PENDING").length;
 
