@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./AdminTasks.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import API_BASE_URL from "../config/api";
 
 function AdminTasks() {
   const [allCustomers, setAllCustomers] = useState([]);
@@ -11,6 +12,7 @@ function AdminTasks() {
   const [selectedCaller, setSelectedCaller] = useState("");
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectCount, setSelectCount] = useState(10);
+  const [loading, setLoading] = useState(true);
 
   // Load customers and callers on mount
   useEffect(() => {
@@ -18,38 +20,68 @@ function AdminTasks() {
     loadCallers();
   }, []);
 
-  const loadCustomers = () => {
-    // Sample customer data - this would come from backend
-    const customers = [
-      { id: 1, accountNumber: "1001234590", name: "Anil Perera", contactNumber: "077-1234567", amountOverdue: "Rs.5,000", daysOverdue: 25, status: "UNASSIGNED" },
-      { id: 2, accountNumber: "1001234591", name: "Sunil Fernando", contactNumber: "071-2345678", amountOverdue: "Rs.3,500", daysOverdue: 18, status: "UNASSIGNED" },
-      { id: 3, accountNumber: "1001234592", name: "Kamala Silva", contactNumber: "076-3456789", amountOverdue: "Rs.7,200", daysOverdue: 40, status: "UNASSIGNED" },
-      { id: 4, accountNumber: "1001234593", name: "Nimal Rajapakse", contactNumber: "070-4567890", amountOverdue: "Rs.4,800", daysOverdue: 30, status: "UNASSIGNED" },
-      { id: 5, accountNumber: "1001234594", name: "Saman Wickramasinghe", contactNumber: "077-5678901", amountOverdue: "Rs.6,100", daysOverdue: 35, status: "UNASSIGNED" },
-      { id: 6, accountNumber: "1001234595", name: "Kumari Jayawardena", contactNumber: "071-6789012", amountOverdue: "Rs.2,900", daysOverdue: 15, status: "UNASSIGNED" },
-      { id: 7, accountNumber: "1001234596", name: "Rohan De Silva", contactNumber: "076-7890123", amountOverdue: "Rs.8,500", daysOverdue: 50, status: "UNASSIGNED" },
-      { id: 8, accountNumber: "1001234597", name: "Dilani Gunasekara", contactNumber: "070-8901234", amountOverdue: "Rs.5,600", daysOverdue: 28, status: "UNASSIGNED" },
-      { id: 9, accountNumber: "1001234598", name: "Prasad Mendis", contactNumber: "077-9012345", amountOverdue: "Rs.4,200", daysOverdue: 22, status: "UNASSIGNED" },
-      { id: 10, accountNumber: "1001234599", name: "Sandya Amarasinghe", contactNumber: "071-0123456", amountOverdue: "Rs.7,800", daysOverdue: 45, status: "UNASSIGNED" },
-      { id: 11, accountNumber: "1001234600", name: "Chathura Bandara", contactNumber: "076-1234567", amountOverdue: "Rs.3,300", daysOverdue: 20, status: "UNASSIGNED" },
-      { id: 12, accountNumber: "1001234601", name: "Malini Wijesinghe", contactNumber: "070-2345678", amountOverdue: "Rs.6,700", daysOverdue: 38, status: "UNASSIGNED" },
-    ];
-    
-    setAllCustomers(customers);
-    setFilteredCustomers(customers);
+  const loadCustomers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/customers`);
+      if (response.ok) {
+        const result = await response.json();
+        // Get data from the response (could be result.data or result directly)
+        const customersData = result.data || result;
+        
+        // Show all unassigned customers (not already assigned to a caller and not completed)
+        const unassignedCustomers = customersData
+          .filter(c => !c.assignedTo && c.status !== 'COMPLETED')
+          .map(customer => ({
+            id: customer._id,
+            accountNumber: customer.accountNumber,
+            name: customer.name,
+            contactNumber: customer.contactNumber || "N/A",
+            amountOverdue: `Rs.${(customer.amountOverdue || 0).toLocaleString()}`,
+            daysOverdue: customer.daysOverdue || 0,
+            status: customer.status || "UNASSIGNED"
+          }));
+        
+        setAllCustomers(unassignedCustomers);
+        setFilteredCustomers(unassignedCustomers);
+        console.log(`Loaded ${unassignedCustomers.length} unassigned customers`);
+      } else {
+        console.error('Failed to fetch customers');
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading customers:', error);
+      setLoading(false);
+    }
   };
 
-  const loadCallers = () => {
-    // Sample caller data - this would come from backend
-    const callers = [
-      { id: "2313", name: "Ravi Kumar", status: "AVAILABLE", currentLoad: 5, maxLoad: 20 },
-      { id: "2314", name: "Ash Kumar", status: "AVAILABLE", currentLoad: 8, maxLoad: 20 },
-      { id: "2315", name: "Priya Singh", status: "AVAILABLE", currentLoad: 3, maxLoad: 20 },
-      { id: "2331", name: "Kumar Singh", status: "AVAILABLE", currentLoad: 10, maxLoad: 20 },
-      { id: "2332", name: "Sita Devi", status: "AVAILABLE", currentLoad: 0, maxLoad: 20 },
-    ];
-    
-    setAvailableCallers(callers);
+  const loadCallers = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/callers`);
+      if (response.ok) {
+        const result = await response.json();
+        // Get data from the response (could be result.data or result directly)
+        const callersData = result.data || result;
+        
+        // Filter for AVAILABLE callers
+        const availableCallersData = callersData
+          .filter(c => c.status === 'AVAILABLE')
+          .map(caller => ({
+            id: caller.callerId,
+            name: caller.name,
+            status: caller.status,
+            currentLoad: caller.currentLoad || 0,
+            maxLoad: caller.maxLoad || 20
+          }));
+        
+        setAvailableCallers(availableCallersData);
+        console.log(`Loaded ${availableCallersData.length} available callers`);
+      } else {
+        console.error('Failed to fetch callers');
+      }
+    } catch (error) {
+      console.error('Error loading callers:', error);
+    }
   };
 
   // Filter customers based on search
@@ -102,7 +134,7 @@ function AdminTasks() {
     setShowAssignModal(true);
   };
 
-  const handleConfirmAssign = () => {
+  const handleConfirmAssign = async () => {
     if (!selectedCaller) {
       alert("Please select a caller");
       return;
@@ -111,8 +143,8 @@ function AdminTasks() {
     const caller = availableCallers.find(c => c.id === selectedCaller);
     const selectedCustomerData = allCustomers.filter(c => selectedCustomers.includes(c.id));
     
-    // Send request to caller
-    sendRequestToCaller(caller.name, caller.id, selectedCustomerData);
+    // Send request to backend
+    await sendRequestToCaller(caller.name, caller.id, selectedCustomerData);
     
     // Remove assigned customers from list
     setAllCustomers(allCustomers.filter(c => !selectedCustomers.includes(c.id)));
@@ -123,57 +155,48 @@ function AdminTasks() {
     alert(`Successfully assigned ${selectedCustomerData.length} customer(s) to ${caller.name}`);
   };
 
-  const sendRequestToCaller = (callerName, callerId, customers) => {
-    const newRequestId = Date.now();
-    const today = new Date();
-    const todayString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-    
-    const requestData = {
-      requestId: newRequestId,
-      callerName: callerName,
-      callerId: callerId,
-      customers: customers.map((customer, index) => ({
-        id: index + 1,
-        accountNumber: customer.accountNumber,
-        name: customer.name,
-        contactNumber: customer.contactNumber,
-        amountOverdue: customer.amountOverdue,
-        daysOverdue: customer.daysOverdue,
-        date: todayString,
-        sentBy: "Admin",
-        sentDate: todayString
-      })),
-      sentDate: todayString
-    };
-    
-    // Store for caller to receive
-    localStorage.setItem('pendingAdminRequest', JSON.stringify(requestData));
-    
-    // Add to sent requests list for admin tracking
-    const newSentRequest = {
-      id: newRequestId,
-      callerName: callerName,
-      callerId: callerId,
-      customersSent: customers.length,
-      sentDate: todayString,
-      status: "PENDING",
-      respondedDate: null,
-      customers: customers.map((customer, index) => ({
-        id: index + 1,
-        accountNumber: customer.accountNumber,
-        name: customer.name,
-        amountOverdue: customer.amountOverdue,
-        daysOverdue: customer.daysOverdue
-      }))
-    };
-    
-    // Get existing sent requests from localStorage
-    const existingSentRequests = JSON.parse(localStorage.getItem('adminSentRequests') || '[]');
-    existingSentRequests.push(newSentRequest);
-    localStorage.setItem('adminSentRequests', JSON.stringify(existingSentRequests));
-    
-    console.log('✅ Request sent to caller:', callerName, requestData);
-    console.log('✅ Added to sent requests list:', newSentRequest);
+  const sendRequestToCaller = async (callerName, callerId, customers) => {
+    try {
+      const today = new Date();
+      const todayString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+      
+      const requestData = {
+        requestId: Date.now().toString(),
+        callerName: callerName,
+        callerId: callerId,
+        customers: customers.map(customer => ({
+          customerId: customer.id,
+          accountNumber: customer.accountNumber,
+          name: customer.name,
+          contactNumber: customer.contactNumber,
+          amountOverdue: customer.amountOverdue,
+          daysOverdue: customer.daysOverdue
+        })),
+        customersSent: customers.length,
+        sentDate: todayString,
+        status: 'PENDING',
+        sentBy: 'Admin'
+      };
+      
+      // Save request to backend
+      const response = await fetch(`${API_BASE_URL}/requests`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      });
+      
+      if (response.ok) {
+        console.log('✅ Request sent to caller:', callerName);
+      } else {
+        console.error('Failed to save request to backend');
+        alert('Failed to send request. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending request to caller:', error);
+      alert('Failed to send request. Please try again.');
+    }
   };
 
   const getSelectedCustomersData = () => {

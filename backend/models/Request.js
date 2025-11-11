@@ -46,7 +46,13 @@ const requestSchema = new mongoose.Schema({
   respondedDate: {
     type: String
   },
+  respondedAt: {
+    type: Date
+  },
   reason: {
+    type: String
+  },
+  declineReason: {
     type: String
   },
   sentBy: {

@@ -4,6 +4,7 @@ import DashboardStats from "../components/DashboardStats";
 import ContactedCustomersTable from "../components/ContactedCustomersTable";
 import OverduePaymentsTable from "../components/OverduePaymentsTable";
 import UserProfile from "../components/UserProfile";
+import API_BASE_URL from "../config/api";
 
 function CallerDashboard() {
   // Helper function to format date as DD/MM/YYYY
@@ -28,7 +29,7 @@ function CallerDashboard() {
   // Fetch customers from backend API
   const fetchCustomers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/customers');
+      const response = await fetch(`${API_BASE_URL}/customers`);
       const data = await response.json();
       
       if (data.success && data.data) {
@@ -43,25 +44,10 @@ function CallerDashboard() {
         setContactedCustomers(formattedContacted);
         setOverduePayments(formattedOverdue);
         updateStats(formattedContacted, formattedOverdue);
-        
-        // Save to localStorage for offline access
-        localStorage.setItem('contactedCustomers', JSON.stringify(formattedContacted));
-        localStorage.setItem('overduePayments', JSON.stringify(formattedOverdue));
       }
     } catch (error) {
       console.error('Error fetching customers from backend:', error);
-      
-      // Fallback to localStorage if backend is unavailable
-      const storedContacted = localStorage.getItem('contactedCustomers');
-      const storedOverdue = localStorage.getItem('overduePayments');
-      
-      if (storedContacted && storedOverdue) {
-        const contacted = JSON.parse(storedContacted);
-        const overdue = JSON.parse(storedOverdue);
-        setContactedCustomers(contacted);
-        setOverduePayments(overdue);
-        updateStats(contacted, overdue);
-      }
+      alert('Failed to load customer data. Please check if the backend server is running.');
     }
   };
 
@@ -118,12 +104,12 @@ function CallerDashboard() {
       };
       
       console.log('Sending request to backend:', {
-        url: `http://localhost:5000/api/customers/${existingCustomer._id}/contact`,
+        url: `${API_BASE_URL}/customers/${existingCustomer._id}/contact`,
         body: requestBody
       });
       
       // Save to backend API using the contact endpoint
-      const response = await fetch(`http://localhost:5000/api/customers/${existingCustomer._id}/contact`, {
+      const response = await fetch(`${API_BASE_URL}/customers/${existingCustomer._id}/contact`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -144,49 +130,7 @@ function CallerDashboard() {
       }
     } catch (error) {
       console.error('Error saving customer details to backend:', error);
-      
-      // Fallback to localStorage-only update if backend fails
-      const updatedCustomerData = {
-        status: paymentMade ? "COMPLETED" : "PENDING",
-        response: customerResponse,
-        previousResponse: customerResponse,
-        contactHistory: [
-          ...(existingCustomer.contactHistory || []),
-          {
-            date: formatDate(new Date()),
-            outcome: callOutcome,
-            response: customerResponse,
-            promisedDate: promisedDate,
-            paymentMade: paymentMade
-          }
-        ]
-      };
-      
-      const updatedCustomer = {
-        ...existingCustomer,
-        ...updatedCustomerData,
-      };
-      
-      if (overdueCustomer) {
-        const newOverduePayments = overduePayments.filter(p => p.id !== accountNumber);
-        const newContactedCustomers = [...contactedCustomers, updatedCustomer];
-        
-        setOverduePayments(newOverduePayments);
-        setContactedCustomers(newContactedCustomers);
-        updateStats(newContactedCustomers, newOverduePayments);
-        
-        localStorage.setItem('contactedCustomers', JSON.stringify(newContactedCustomers));
-        localStorage.setItem('overduePayments', JSON.stringify(newOverduePayments));
-      } else {
-        const newContactedCustomers = contactedCustomers.map(c => 
-          c.id === accountNumber ? updatedCustomer : c
-        );
-        
-        setContactedCustomers(newContactedCustomers);
-        updateStats(newContactedCustomers, overduePayments);
-        
-        localStorage.setItem('contactedCustomers', JSON.stringify(newContactedCustomers));
-      }
+      alert('Failed to save customer details. Please try again.');
     }
   };
 

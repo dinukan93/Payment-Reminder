@@ -159,11 +159,7 @@ const createRequest = async (req, res) => {
 // @access  Public
 const updateRequest = async (req, res) => {
   try {
-    const request = await Request.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    ).populate('caller', 'name callerId');
+    const request = await Request.findById(req.params.id);
 
     if (!request) {
       return res.status(404).json({
@@ -172,9 +168,102 @@ const updateRequest = async (req, res) => {
       });
     }
 
+    // If the request is being declined, unassign all customers
+    if (req.body.status === 'DECLINED') {
+      // Unassign all customers from this request
+      for (const customerData of request.customers) {
+        const customer = await Customer.findById(customerData.customerId);
+        
+        if (customer) {
+          // Remove assignment
+          customer.assignedTo = null;
+          customer.assignedDate = null;
+          customer.status = 'UNASSIGNED';
+          await customer.save();
+        }
+      }
+
+      // Update the caller's assigned customers list
+      if (request.callerId) {
+        const caller = await Caller.findOne({ callerId: request.callerId });
+        if (caller) {
+          // Remove these customers from caller's assignedCustomers
+          const customerIds = request.customers.map(c => c.customerId.toString());
+          caller.assignedCustomers = caller.assignedCustomers.filter(
+            id => !customerIds.includes(id.toString())
+          );
+          caller.currentLoad = caller.assignedCustomers.length;
+          
+          // Update caller status if no customers assigned
+          if (caller.assignedCustomers.length === 0) {
+            caller.taskStatus = 'AVAILABLE';
+          }
+          
+          await caller.save();
+        }
+      }
+    }
+
+    // If the request is being accepted, assign customers
+    if (req.body.status === 'ACCEPTED') {
+      // Format current date as DD/MM/YYYY
+      const today = new Date();
+      const dateString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+
+      // Find the caller
+      const caller = await Caller.findOne({ callerId: request.callerId });
+      
+      if (caller) {
+        // Update customers - assign them to the caller
+        for (const customerData of request.customers) {
+          let customer = await Customer.findById(customerData.customerId);
+          
+          if (!customer) {
+            // If customer doesn't exist in DB, create them
+            customer = await Customer.create({
+              accountNumber: customerData.accountNumber,
+              name: customerData.name,
+              contactNumber: customerData.contactNumber,
+              amountOverdue: customerData.amountOverdue,
+              daysOverdue: customerData.daysOverdue,
+              status: 'OVERDUE',
+              assignedTo: caller._id,
+              assignedDate: dateString,
+              response: 'Not Contacted Yet',
+              previousResponse: 'No previous contact',
+              contactHistory: []
+            });
+          } else {
+            // Update existing customer
+            customer.assignedTo = caller._id;
+            customer.assignedDate = dateString;
+            customer.status = 'OVERDUE';
+            await customer.save();
+          }
+
+          // Add customer to caller's assignedCustomers
+          if (!caller.assignedCustomers.includes(customer._id)) {
+            caller.assignedCustomers.push(customer._id);
+          }
+        }
+
+        // Update caller workload
+        caller.currentLoad = caller.assignedCustomers.length;
+        caller.taskStatus = 'ONGOING';
+        await caller.save();
+      }
+    }
+
+    // Update the request with new data
+    Object.assign(request, req.body);
+    await request.save();
+
+    const updatedRequest = await Request.findById(req.params.id)
+      .populate('caller', 'name callerId');
+
     res.status(200).json({
       success: true,
-      data: request
+      data: updatedRequest
     });
   } catch (error) {
     res.status(400).json({

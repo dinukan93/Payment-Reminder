@@ -1,44 +1,44 @@
 import React, { useState, useEffect } from "react";
 import "./AdminRequestsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import API_BASE_URL from "../config/api";
 
 function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestProcessed, callerId }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch pending requests from localStorage when modal opens
+  // Fetch pending requests from MongoDB when modal opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && callerId) {
       fetchPendingRequests();
     }
-  }, [isOpen]);
+  }, [isOpen, callerId]);
 
-  const fetchPendingRequests = () => {
+  const fetchPendingRequests = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // Get pending request from localStorage
-      const pendingRequest = localStorage.getItem('pendingAdminRequest');
+      const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`);
       
-      if (pendingRequest) {
-        const requestData = JSON.parse(pendingRequest);
+      if (response.ok) {
+        const data = await response.json();
         
-        // Set the requests (customers array from the request)
-        if (requestData.customers && requestData.customers.length > 0) {
-          setRequests([{
-            id: requestData.requestId,
-            customers: requestData.customers,
-            customerCount: requestData.customers.length,
-            sentDate: requestData.sentDate,
-            callerName: requestData.callerName,
-            callerId: requestData.callerId
-          }]);
+        if (data && data.length > 0) {
+          setRequests(data.map(req => ({
+            id: req.requestId || req._id,
+            customers: req.customers,
+            customerCount: req.customers.length,
+            sentDate: req.sentDate,
+            callerName: req.callerName,
+            callerId: req.callerId
+          })));
         } else {
           setRequests([]);
         }
       } else {
+        setError('Failed to load requests. Please try again.');
         setRequests([]);
       }
     } catch (err) {
@@ -50,104 +50,98 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     }
   };
 
-  const handleAcceptAll = () => {
+  const handleAcceptAll = async () => {
     if (requests.length === 0) return;
     
     const request = requests[0];
     
-    // Convert all customers to the format expected by CallerDashboard
-    const allCustomersData = request.customers.map((customer, index) => ({
-      id: Date.now() + index, // Ensure unique IDs
-      accountNumber: customer.accountNumber,
-      name: customer.name,
-      contactNumber: customer.contactNumber,
-      amountOverdue: customer.amountOverdue,
-      daysOverdue: customer.daysOverdue,
-      date: customer.date,
-      status: "OVERDUE",
-      response: "Not Contacted Yet",
-      previousResponse: "No previous contact",
-      contactHistory: []
-    }));
-    
-    // Store response in localStorage for admin to see
-    const response = {
-      requestId: request.id,
-      status: "ACCEPTED",
-      respondedDate: new Date().toLocaleString(),
-      reason: null
-    };
-    localStorage.setItem('callerRequestResponse', JSON.stringify(response));
-    
-    // Remove the pending request from localStorage
-    localStorage.removeItem('pendingAdminRequest');
-    
-    // Update the sent request in adminSentRequests
-    const adminSentRequests = JSON.parse(localStorage.getItem('adminSentRequests') || '[]');
-    const updatedRequests = adminSentRequests.map(r => {
-      if (r.id === request.id) {
-        return {
-          ...r,
+    try {
+      // Update request status in backend
+      const response = await fetch(`${API_BASE_URL}/requests/${request.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           status: 'ACCEPTED',
-          respondedDate: response.respondedDate
-        };
+          respondedAt: new Date().toISOString()
+        })
+      });
+
+      if (response.ok) {
+        // Convert all customers to the format expected by CallerDashboard
+        const allCustomersData = request.customers.map((customer, index) => ({
+          id: customer.customerId || (Date.now() + index),
+          accountNumber: customer.accountNumber,
+          name: customer.name,
+          contactNumber: customer.contactNumber,
+          amountOverdue: customer.amountOverdue,
+          daysOverdue: customer.daysOverdue,
+          status: "OVERDUE",
+          response: "Not Contacted Yet",
+          previousResponse: "No previous contact",
+          contactHistory: []
+        }));
+        
+        // Call parent handler with all customers at once
+        onAccept(allCustomersData);
+        
+        // Clear all requests
+        setRequests([]);
+        
+        // Notify parent that request is processed
+        if (onRequestProcessed) onRequestProcessed();
+        
+        alert('Request accepted successfully!');
+      } else {
+        alert('Failed to accept request. Please try again.');
       }
-      return r;
-    });
-    localStorage.setItem('adminSentRequests', JSON.stringify(updatedRequests));
-    
-    // Call parent handler with all customers at once
-    onAccept(allCustomersData);
-    
-    // Clear all requests
-    setRequests([]);
-    
-    // Notify parent that request is processed
-    if (onRequestProcessed) onRequestProcessed();
+    } catch (error) {
+      console.error('Error accepting request:', error);
+      alert('Failed to accept request. Please try again.');
+    }
   };
 
-  const handleDeclineAll = () => {
+  const handleDeclineAll = async () => {
     if (requests.length === 0) return;
     
     const request = requests[0];
+    const reason = prompt("Please provide a reason for declining:");
     
-    // Store response in localStorage for admin to see
-    const response = {
-      requestId: request.id,
-      status: "DECLINED",
-      respondedDate: new Date().toLocaleString(),
-      reason: "Caller declined the request"
-    };
-    localStorage.setItem('callerRequestResponse', JSON.stringify(response));
+    if (!reason) return;
     
-    // Remove the pending request from localStorage
-    localStorage.removeItem('pendingAdminRequest');
-    
-    // Update the sent request in adminSentRequests
-    const adminSentRequests = JSON.parse(localStorage.getItem('adminSentRequests') || '[]');
-    const updatedRequests = adminSentRequests.map(r => {
-      if (r.id === request.id) {
-        return {
-          ...r,
+    try {
+      // Update request status in backend
+      const response = await fetch(`${API_BASE_URL}/requests/${request.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           status: 'DECLINED',
-          respondedDate: response.respondedDate,
-          reason: response.reason
-        };
+          respondedAt: new Date().toISOString(),
+          declineReason: reason
+        })
+      });
+
+      if (response.ok) {
+        // Decline all requests
+        onDecline(request.id);
+        
+        // Clear all requests
+        setRequests([]);
+        
+        // Notify parent that request is processed
+        if (onRequestProcessed) onRequestProcessed();
+        
+        alert('Request declined successfully!');
+      } else {
+        alert('Failed to decline request. Please try again.');
       }
-      return r;
-    });
-    localStorage.setItem('adminSentRequests', JSON.stringify(updatedRequests));
-    
-    // Decline all requests
-    requests.forEach(req => {
-      onDecline(req.id);
-    });
-    
-    // Clear all requests
-    setRequests([]);
-    
-    // Notify parent that request is processed
-    if (onRequestProcessed) onRequestProcessed();
+    } catch (error) {
+      console.error('Error declining request:', error);
+      alert('Failed to decline request. Please try again.');
+    }
   };
 
   if (!isOpen) return null;
