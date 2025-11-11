@@ -10,6 +10,7 @@ function AdminTasks() {
   const [availableCallers, setAvailableCallers] = useState([]);
   const [selectedCaller, setSelectedCaller] = useState("");
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectCount, setSelectCount] = useState(10);
 
   // Load customers and callers on mount
   useEffect(() => {
@@ -80,6 +81,17 @@ function AdminTasks() {
     } else {
       setSelectedCustomers(filteredCustomers.map(c => c.id));
     }
+  };
+
+  const handleSelectCount = () => {
+    const count = parseInt(selectCount);
+    if (isNaN(count) || count <= 0) {
+      alert("Please enter a valid number");
+      return;
+    }
+    
+    const customersToSelect = filteredCustomers.slice(0, count);
+    setSelectedCustomers(customersToSelect.map(c => c.id));
   };
 
   const handleAssignClick = () => {
@@ -192,6 +204,24 @@ function AdminTasks() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </div>
+        
+        <div className="selection-controls">
+          <input
+            type="number"
+            className="select-count-input"
+            value={selectCount}
+            onChange={(e) => setSelectCount(e.target.value)}
+            min="1"
+            placeholder="Enter number"
+          />
+          <button 
+            className="select-count-btn"
+            onClick={handleSelectCount}
+          >
+            <i className="bi bi-check-square"></i>
+            Select {selectCount}
+          </button>
         </div>
         
         <button 

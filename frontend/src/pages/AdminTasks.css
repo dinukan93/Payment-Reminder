@@ -27,7 +27,7 @@
 
 .assign-button {
   padding: 14px 28px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #4d99c0ff;
   color: white;
   border: none;
   border-radius: 12px;
@@ -37,13 +37,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
   transition: all 0.3s ease;
 }
 
 .assign-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  background: #3d8ab0;
+  transform: translateY(-1px);
 }
 
 .assign-button i {
@@ -70,11 +69,7 @@
 
 .stat-item i {
   font-size: 40px;
-  color: #667eea;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #4d99c0ff;
 }
 
 .stat-item h3 {
@@ -127,6 +122,51 @@
   box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
+.selection-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.select-count-input {
+  width: 100px;
+  padding: 14px 16px;
+  border: 2px solid #e0e6ed;
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.select-count-input:focus {
+  border-color: #4d99c0ff;
+  box-shadow: 0 0 0 4px rgba(77, 153, 192, 0.1);
+}
+
+.select-count-btn {
+  padding: 14px 20px;
+  background: #4d99c0ff;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.select-count-btn:hover {
+  background: #3d8ab0;
+  transform: translateY(-1px);
+}
+
+.select-count-btn i {
+  font-size: 16px;
+}
+
 .select-all-btn {
   padding: 14px 24px;
   background: white;
@@ -139,16 +179,17 @@
   gap: 8px;
   transition: all 0.3s ease;
   color: #2c3e50;
+  white-space: nowrap;
 }
 
 .select-all-btn:hover {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #4d99c0ff;
+  color: #4d99c0ff;
 }
 
 .select-all-btn.active {
-  background: #667eea;
-  border-color: #667eea;
+  background: #4d99c0ff;
+  border-color: #4d99c0ff;
   color: white;
 }
 
@@ -204,7 +245,7 @@
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #667eea;
+  accent-color: #4d99c0ff;
 }
 
 .account-number {
@@ -297,7 +338,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #4d99c0ff;
 }
 
 .modal-header h2 {
@@ -412,15 +453,15 @@
 }
 
 .caller-card:hover {
-  border-color: #667eea;
+  border-color: #4d99c0ff;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 4px 12px rgba(77, 153, 192, 0.2);
 }
 
 .caller-card.selected {
-  border-color: #667eea;
-  background: #eef2ff;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  border-color: #4d99c0ff;
+  background: #eef6f9;
+  box-shadow: 0 4px 12px rgba(77, 153, 192, 0.3);
 }
 
 .caller-card.selected::after {
@@ -429,7 +470,7 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  color: #667eea;
+  color: #4d99c0ff;
   font-size: 24px;
 }
 
@@ -459,7 +500,7 @@
 
 .load-fill {
   height: 100%;
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: #28a745;
   transition: width 0.3s ease;
 }
 
@@ -508,7 +549,7 @@
 }
 
 .confirm-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #4d99c0ff;
   color: white;
   display: flex;
   align-items: center;
@@ -516,8 +557,8 @@
 }
 
 .confirm-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  background: #3d8ab0;
+  transform: translateY(-1px);
 }
 
 /* Responsive */

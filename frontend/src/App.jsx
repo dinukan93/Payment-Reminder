@@ -9,6 +9,7 @@ import Settings from "./pages/Settings";
 import Report from "./pages/Report";
 import CallerTasks from "./pages/CallerTasks";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminTasks from "./pages/AdminTasks";
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
             <Route path="/dashboard" element={<CallerDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/tasks" element={<CallerTasks />} />
+            <Route path="/admin/tasks" element={<AdminTasks />} />
             <Route path="/customers" element={<CustomerManagement />} />
             <Route path="/employees" element={<EmployeeManagement />} />
             <Route path="/reports" element={<Report />} />
