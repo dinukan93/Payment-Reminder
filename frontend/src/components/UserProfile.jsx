@@ -60,16 +60,17 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
     setIsRequestsModalOpen(false);
   };
 
-  const handleAcceptRequest = (customerData, requestId) => {
-    // Pass the accepted customer data to parent component (CallerDashboard)
+  const handleAcceptRequest = () => {
+    // Notify parent component (CallerDashboard) to refetch customers from database
     if (onAcceptRequest) {
-      onAcceptRequest(customerData);
+      onAcceptRequest();
     }
-    console.log("Accepted customer:", customerData);
+    console.log("Requests accepted, customers will be refetched from database");
   };
 
-  const handleDeclineRequest = (requestId) => {
-    console.log("Declined request ID:", requestId);
+  const handleDeclineRequest = () => {
+    console.log("Request declined");
+    // No need to refetch since nothing was added
   };
 
   const handleRequestProcessed = () => {

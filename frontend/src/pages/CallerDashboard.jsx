@@ -29,128 +29,51 @@ function CallerDashboard() {
   useEffect(() => {
     // Check if data exists in localStorage
     const storedContacted = localStorage.getItem('contactedCustomers');
-    const storedOverdue = localStorage.getItem('overduePayments');
     
     if (storedContacted && storedOverdue) {
-      // Load from localStorage if available
-      const contacted = JSON.parse(storedContacted);
-      const overdue = JSON.parse(storedOverdue);
-      setContactedCustomers(contacted);
-      setOverduePayments(overdue);
-      updateStats(contacted, overdue);
-    } else {
-      // Simulate loading data from backend
-      const today = new Date();
-      const todayString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowString = `${String(tomorrow.getDate()).padStart(2, '0')}/${String(tomorrow.getMonth() + 1).padStart(2, '0')}/${tomorrow.getFullYear()}`;
+  // Fetch customers from backend API
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/customers');
+      const data = await response.json();
       
-      // Get dates from this week for call history
-      // Today is the current date (for calls made today)
-      const callDate1 = new Date(today); // Today
-      const callDate1String = `${String(callDate1.getDate()).padStart(2, '0')}/${String(callDate1.getMonth() + 1).padStart(2, '0')}/${callDate1.getFullYear()}`;
+      if (data.success && data.data) {
+        // Separate customers by status
+        const contacted = data.data.filter(c => c.status === 'PENDING' || c.status === 'COMPLETED');
+        const overdue = data.data.filter(c => c.status === 'OVERDUE');
+        
+        // Map MongoDB _id to id for frontend compatibility
+        const formattedContacted = contacted.map(c => ({ ...c, id: c._id }));
+        const formattedOverdue = overdue.map(c => ({ ...c, id: c._id }));
+        
+        setContactedCustomers(formattedContacted);
+        setOverduePayments(formattedOverdue);
+        updateStats(formattedContacted, formattedOverdue);
+        
+        // Save to localStorage for offline access
+        localStorage.setItem('contactedCustomers', JSON.stringify(formattedContacted));
+        localStorage.setItem('overduePayments', JSON.stringify(formattedOverdue));
+      }
+    } catch (error) {
+      console.error('Error fetching customers from backend:', error);
       
-      // Yesterday
-      const callDate2 = new Date(today);
-      callDate2.setDate(today.getDate() - 1);
-      const callDate2String = `${String(callDate2.getDate()).padStart(2, '0')}/${String(callDate2.getMonth() + 1).padStart(2, '0')}/${callDate2.getFullYear()}`;
-
-      const initialContactedCustomers = [
-        {
-          id: 1,
-          accountNumber: "1001",
-          name: "Kumar Singh",
-          date: todayString,
-          status: "PENDING",
-          response: "Will Be Paid Next Week",
-          contactNumber: "070 454 5457",
-          amountOverdue: "Rs.2000",
-          daysOverdue: "16",
-          previousResponse: "Said would pay last Friday",
-          contactHistory: [
-            { 
-              date: callDate1String, 
-              outcome: "Spoke to Customer", 
-              response: "Said would pay last Friday", 
-              promisedDate: todayString,
-              paymentMade: false 
-            }
-          ]
-        },
-        {
-          id: 2,
-          accountNumber: "1002",
-          name: "Ravi Kumar",
-          date: todayString,
-          status: "COMPLETED",
-          response: "Payment Will Be Done After The Call",
-          contactNumber: "070 123 4567",
-          amountOverdue: "Rs.1500",
-          daysOverdue: "8",
-          previousResponse: "Will pay after receiving salary",
-          contactHistory: [
-            { 
-              date: callDate2String, 
-              outcome: "Spoke to Customer", 
-              response: "Will pay after receiving salary", 
-              promisedDate: tomorrowString,
-              paymentMade: true 
-            }
-          ]
-        },
-      ];
-
-      const initialOverduePayments = [
-        {
-          id: 3,
-          accountNumber: "1003",
-          name: "Kumar Singh",
-          date: todayString,
-          status: "OVERDUE",
-          response: "Not Contacted Yet",
-          contactNumber: "070 454 5457",
-          amountOverdue: "Rs.2000",
-          daysOverdue: "16",
-          previousResponse: "No previous contact",
-          contactHistory: []
-        },
-        {
-          id: 4,
-          accountNumber: "1004",
-          name: "Ash Kumar",
-          date: todayString,
-          status: "OVERDUE",
-          response: "Not Contacted Yet",
-          contactNumber: "070 789 4561",
-          amountOverdue: "Rs.3500",
-          daysOverdue: "22",
-          previousResponse: "No previous contact",
-          contactHistory: []
-        },
-        {
-          id: 5,
-          accountNumber: "1005",
-          name: "Priya Singh",
-          date: todayString,
-          status: "OVERDUE",
-          response: "Not Contacted Yet",
-          contactNumber: "070 456 7890",
-          amountOverdue: "Rs.1800",
-          daysOverdue: "12",
-          previousResponse: "No previous contact",
-          contactHistory: []
-        },
-      ];
-
-      setContactedCustomers(initialContactedCustomers);
-      setOverduePayments(initialOverduePayments);
-      updateStats(initialContactedCustomers, initialOverduePayments);
+      // Fallback to localStorage if backend is unavailable
+      const storedContacted = localStorage.getItem('contactedCustomers');
+      const storedOverdue = localStorage.getItem('overduePayments');
       
-      // Save to localStorage
-      localStorage.setItem('contactedCustomers', JSON.stringify(initialContactedCustomers));
-      localStorage.setItem('overduePayments', JSON.stringify(initialOverduePayments));
+      if (storedContacted && storedOverdue) {
+        const contacted = JSON.parse(storedContacted);
+        const overdue = JSON.parse(storedOverdue);
+        setContactedCustomers(contacted);
+        setOverduePayments(overdue);
+        updateStats(contacted, overdue);
+      }
     }
+  };
+
+  // Initialize by fetching from backend
+  useEffect(() => {
+    fetchCustomers();
   }, []);
 
   // Update statistics based on data
@@ -169,49 +92,72 @@ function CallerDashboard() {
   };
 
   // Handle accepting customer request from admin
-  const handleAcceptRequest = (customersData) => {
-    // customersData can be a single customer object or an array of customers
-    const customersArray = Array.isArray(customersData) ? customersData : [customersData];
-    
-    // Add all accepted customers with OVERDUE status
-    const customersWithOverdueStatus = customersArray.map(customer => ({
-      ...customer,
-      status: "OVERDUE"
-    }));
-    
-    // Add to overdue payments list (they will be OVERDUE until contacted)
-    setOverduePayments(prevOverduePayments => {
-      const newOverduePayments = [...prevOverduePayments, ...customersWithOverdueStatus];
-      // Update stats with the new data
-      updateStats(contactedCustomers, newOverduePayments);
-      // Save to localStorage so CallerTasks can see the new customers
-      localStorage.setItem('overduePayments', JSON.stringify(newOverduePayments));
-      console.log(`${customersArray.length} customer(s) added from admin request`);
-      
-      // Save to localStorage for Tasks page
-      localStorage.setItem('overduePayments', JSON.stringify(newOverduePayments));
-      
-      return newOverduePayments;
-    });
+  const handleAcceptRequest = async () => {
+    // After accepting requests via API, refetch all customers from backend
+    console.log('Requests accepted, refetching customers from database...');
+    await fetchCustomers();
   };
 
   // Handle saving customer details from modal
-  const handleSaveCustomerDetails = (accountNumber, data) => {
+  const handleSaveCustomerDetails = async (accountNumber, data) => {
     const { callOutcome, customerResponse, paymentMade, promisedDate } = data;
+    
+    console.log('handleSaveCustomerDetails called with:', { accountNumber, data });
     
     // Check if customer is in overdue list
     const overdueCustomer = overduePayments.find(p => p.id === accountNumber);
+    const existingCustomer = overdueCustomer || contactedCustomers.find(c => c.id === accountNumber);
     
-    if (overdueCustomer) {
+    if (!existingCustomer) {
+      console.error('Customer not found');
+      return;
+    }
+    
+    console.log('Found customer:', existingCustomer);
+    
+    try {
+      const requestBody = {
+        callOutcome,
+        customerResponse,
+        paymentMade,
+        promisedDate
+      };
       
-      // status from OVERDUE to PENDING or COMPLETED
-      const updatedCustomer = {
-        ...overdueCustomer,
+      console.log('Sending request to backend:', {
+        url: `http://localhost:5000/api/customers/${existingCustomer._id}/contact`,
+        body: requestBody
+      });
+      
+      // Save to backend API using the contact endpoint
+      const response = await fetch(`http://localhost:5000/api/customers/${existingCustomer._id}/contact`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      const result = await response.json();
+      console.log('Backend response:', result);
+      
+      if (result.success) {
+        console.log('Customer updated successfully in database');
+        
+        // Refetch all customers from backend to get the latest data
+        await fetchCustomers();
+      } else {
+        console.error('Failed to update customer:', result.message);
+      }
+    } catch (error) {
+      console.error('Error saving customer details to backend:', error);
+      
+      // Fallback to localStorage-only update if backend fails
+      const updatedCustomerData = {
         status: paymentMade ? "COMPLETED" : "PENDING",
         response: customerResponse,
         previousResponse: customerResponse,
         contactHistory: [
-          ...overdueCustomer.contactHistory,
+          ...(existingCustomer.contactHistory || []),
           {
             date: formatDate(new Date()),
             outcome: callOutcome,
@@ -221,50 +167,32 @@ function CallerDashboard() {
           }
         ]
       };
-
-      // Remove from overdue (status is no longer OVERDUE)
-      const newOverduePayments = overduePayments.filter(p => p.id !== accountNumber);
       
-      // Add to contacted (status is now PENDING or COMPLETED)
-      const newContactedCustomers = [...contactedCustomers, updatedCustomer];
-
-      setOverduePayments(newOverduePayments);
-      setContactedCustomers(newContactedCustomers);
-      updateStats(newContactedCustomers, newOverduePayments);
+      const updatedCustomer = {
+        ...existingCustomer,
+        ...updatedCustomerData,
+      };
       
-      // Save to localStorage
-      localStorage.setItem('contactedCustomers', JSON.stringify(newContactedCustomers));
-      localStorage.setItem('overduePayments', JSON.stringify(newOverduePayments));
-    } else {
-      // Update existing contacted customer (already PENDING or COMPLETED)
-      const newContactedCustomers = contactedCustomers.map(c => {
-        if (c.id === accountNumber) {
-          const updated = {
-            ...c,
-            status: paymentMade ? "COMPLETED" : "PENDING",
-            response: customerResponse,
-            previousResponse: customerResponse,
-            contactHistory: [
-              ...c.contactHistory,
-              {
-                date: formatDate(new Date()),
-                outcome: callOutcome,
-                response: customerResponse,
-                promisedDate: promisedDate,
-                paymentMade: paymentMade
-              }
-            ]
-          };
-          return updated;
-        }
-        return c;
-      });
-
-      setContactedCustomers(newContactedCustomers);
-      updateStats(newContactedCustomers, overduePayments);
-      
-      // Save to localStorage
-      localStorage.setItem('contactedCustomers', JSON.stringify(newContactedCustomers));
+      if (overdueCustomer) {
+        const newOverduePayments = overduePayments.filter(p => p.id !== accountNumber);
+        const newContactedCustomers = [...contactedCustomers, updatedCustomer];
+        
+        setOverduePayments(newOverduePayments);
+        setContactedCustomers(newContactedCustomers);
+        updateStats(newContactedCustomers, newOverduePayments);
+        
+        localStorage.setItem('contactedCustomers', JSON.stringify(newContactedCustomers));
+        localStorage.setItem('overduePayments', JSON.stringify(newOverduePayments));
+      } else {
+        const newContactedCustomers = contactedCustomers.map(c => 
+          c.id === accountNumber ? updatedCustomer : c
+        );
+        
+        setContactedCustomers(newContactedCustomers);
+        updateStats(newContactedCustomers, overduePayments);
+        
+        localStorage.setItem('contactedCustomers', JSON.stringify(newContactedCustomers));
+      }
     }
   };
 

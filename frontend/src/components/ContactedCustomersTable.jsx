@@ -16,9 +16,9 @@ function ContactedCustomersTable({ customers, onSaveDetails }) {
     setSelectedCustomer(null);
   };
 
-  const handleSave = (data) => {
-    if (onSaveDetails && selectedCustomer) {
-      onSaveDetails(selectedCustomer.id, data);
+  const handleSave = (accountNumber, data) => {
+    if (onSaveDetails) {
+      onSaveDetails(accountNumber, data);
     }
     handleCloseModal();
   };

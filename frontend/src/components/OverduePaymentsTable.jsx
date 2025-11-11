@@ -16,9 +16,9 @@ function OverduePaymentsTable({ payments, onSaveDetails }) {
     setSelectedPayment(null);
   };
 
-  const handleSave = (data) => {
-    if (onSaveDetails && selectedPayment) {
-      onSaveDetails(selectedPayment.id, data);
+  const handleSave = (accountNumber, data) => {
+    if (onSaveDetails) {
+      onSaveDetails(accountNumber, data);
     }
     handleCloseModal();
   };
