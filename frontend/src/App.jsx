@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import Report from "./pages/Report";
 import CallerTasks from "./pages/CallerTasks";
+import AdminDashboard from "./pages/AdminDashboard";
 
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<CallerDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/tasks" element={<CallerTasks />} />
             <Route path="/customers" element={<CustomerManagement />} />
             <Route path="/employees" element={<EmployeeManagement />} />
