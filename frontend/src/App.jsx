@@ -3,24 +3,31 @@ import Sidebar from "./components/Sidebar";
 import CustomerManagement from "./pages/CustomerManagement";
 import EmployeeManagement from "./pages/EmployeeManagement";
 import CallerDashboard from "./pages/CallerDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import Login from "./pages/Login";
+import Settings from "./pages/Settings";
+import Report from "./pages/Report";
+import CallerTasks from "./pages/CallerTasks";
+
 
 function App() {
+  const location = useLocation();
+  const isLoginPage = location.pathname === "/login";
+
   return (
     <>
       <div className="app-container">
-        <Sidebar />
-        <div className="main-content">
+        {!isLoginPage && <Sidebar />}
+        <div className={`main-content ${isLoginPage ? 'full-width' : ''}`}>
           <Routes>
-             <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<CallerDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/tasks" element={<div>Tasks</div>} />
+            <Route path="/tasks" element={<CallerTasks />} />
             <Route path="/customers" element={<CustomerManagement />} />
             <Route path="/employees" element={<EmployeeManagement />} />
-            <Route path="/reports" element={<div>Reports</div>} />
-            <Route path="/settings" element={<div>Settings</div>} />
+            <Route path="/reports" element={<Report />} />
+            <Route path="/settings" element={<Settings/>} />
             <Route path="/logout" element={<div>Logging out…</div>} />
           </Routes>
         </div>

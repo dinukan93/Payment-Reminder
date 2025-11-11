@@ -8,4 +8,9 @@
   padding: 20px;
   margin-left: 200px; /* adjust based on your sidebar width */
   overflow-x: auto;
+  transition: margin-left 0.3s ease;
+}
+
+.main-content.full-width {
+  margin-left: 0;
 }

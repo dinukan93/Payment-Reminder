@@ -46,7 +46,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
 
   const handleSave = () => {
     if (onSave) {
-      onSave({
+      onSave(customer.id, {
         callOutcome,
         customerResponse,
         paymentMade,
