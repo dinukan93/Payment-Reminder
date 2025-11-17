@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const contactHistorySchema = new mongoose.Schema({
   date: {
@@ -86,4 +86,4 @@ customerSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Customer', customerSchema);
+export default mongoose.model('Customer', customerSchema);

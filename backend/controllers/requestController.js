@@ -1,6 +1,6 @@
-const Request = require('../models/Request');
-const Customer = require('../models/Customer');
-const Caller = require('../models/Caller');
+import Request from '../models/Request.js';
+import Customer from '../models/Customer.js';
+import Caller from '../models/Caller.js';
 
 // @desc    Get all requests
 // @route   GET /api/requests
@@ -393,7 +393,7 @@ const declineRequest = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getAllRequests,
   getPendingRequests,
   getRequestsByCallerId,

@@ -1,15 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { getAllRequests, getRequestById, createRequest, updateRequest, acceptRequest, declineRequest, getRequestsByCallerId, getPendingRequests } from '../controllers/requestController.js';
+
 const router = express.Router();
-const {
-  getAllRequests,
-  getRequestById,
-  createRequest,
-  updateRequest,
-  acceptRequest,
-  declineRequest,
-  getRequestsByCallerId,
-  getPendingRequests
-} = require('../controllers/requestController');
 
 // @route   GET /api/requests
 // @desc    Get all requests
@@ -51,4 +43,4 @@ router.put('/:id/accept', acceptRequest);
 // @access  Public
 router.put('/:id/decline', declineRequest);
 
-module.exports = router;
+export default router;

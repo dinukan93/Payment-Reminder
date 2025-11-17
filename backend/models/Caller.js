@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const callerSchema = new mongoose.Schema({
   callerId: {
@@ -65,4 +65,4 @@ callerSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Caller', callerSchema);
+export default mongoose.model('Caller', callerSchema);

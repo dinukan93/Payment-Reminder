@@ -1,4 +1,4 @@
-const Customer = require('../models/Customer');
+import Customer from '../models/Customer.js';
 
 // @desc    Get all customers
 // @route   GET /api/customers
@@ -225,7 +225,7 @@ const deleteCustomer = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getAllCustomers,
   getCustomerById,
   getCustomersByStatus,

@@ -1,14 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { getDashboardStats, getAssignedCallers, getUnassignedCallers, getSentRequests, getWeeklyCalls, getCompletedPayments, getCallerDetails } from '../controllers/adminController.js';
+
 const router = express.Router();
-const {
-  getDashboardStats,
-  getAssignedCallers,
-  getUnassignedCallers,
-  getSentRequests,
-  getWeeklyCalls,
-  getCompletedPayments,
-  getCallerDetails
-} = require('../controllers/adminController');
 
 // Dashboard statistics
 router.get('/stats', getDashboardStats);
@@ -25,4 +18,4 @@ router.get('/sent-requests', getSentRequests);
 router.get('/weekly-calls', getWeeklyCalls);
 router.get('/completed-payments', getCompletedPayments);
 
-module.exports = router;
+export default router;

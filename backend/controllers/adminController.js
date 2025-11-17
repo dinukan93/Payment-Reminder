@@ -1,6 +1,6 @@
-const Caller = require('../models/Caller');
-const Customer = require('../models/Customer');
-const Request = require('../models/Request');
+import Caller from '../models/Caller.js';
+import Customer from '../models/Customer.js';
+import Request from '../models/Request.js';
 
 // @desc    Get dashboard statistics
 // @route   GET /api/admin/stats
@@ -299,7 +299,7 @@ const getCallerDetails = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getDashboardStats,
   getAssignedCallers,
   getUnassignedCallers,

@@ -1,14 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { getAllCallers, getCallerById, createCaller, updateCaller, deleteCaller, getAvailableCallers, updateCallerWorkload } from '../controllers/callerController.js';
+
 const router = express.Router();
-const {
-  getAllCallers,
-  getCallerById,
-  createCaller,
-  updateCaller,
-  deleteCaller,
-  getAvailableCallers,
-  updateCallerWorkload
-} = require('../controllers/callerController');
 
 // @route   GET /api/callers
 // @desc    Get all callers
@@ -45,4 +38,4 @@ router.put('/:id/workload', updateCallerWorkload);
 // @access  Public
 router.delete('/:id', deleteCaller);
 
-module.exports = router;
+export default router;

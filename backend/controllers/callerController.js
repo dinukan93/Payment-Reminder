@@ -1,5 +1,5 @@
-const Caller = require('../models/Caller');
-const bcrypt = require('bcryptjs');
+import Caller from '../models/Caller.js';
+import bcrypt from 'bcryptjs';
 
 // @desc    Get all callers
 // @route   GET /api/callers
@@ -221,7 +221,7 @@ const deleteCaller = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getAllCallers,
   getAvailableCallers,
   getCallerById,
