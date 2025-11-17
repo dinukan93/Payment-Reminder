@@ -10,6 +10,7 @@ import Report from "./pages/Report";
 import CallerTasks from "./pages/CallerTasks";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminTasks from "./pages/AdminTasks";
+import UploadPage from "./pages/UploadPage";
 
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
             <Route path="/employees" element={<EmployeeManagement />} />
             <Route path="/reports" element={<Report />} />
             <Route path="/settings" element={<Settings/>} />
+            <Route path="/upload" element={<UploadPage/>} />
             <Route path="/logout" element={<div>Logging out…</div>} />
           </Routes>
         </div>

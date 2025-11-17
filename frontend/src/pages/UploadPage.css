@@ -1,0 +1,227 @@
+.title{
+  color: #000000;
+  font-size: 20px;
+  margin: 18px 0;
+}
+
+.upload-container{
+  padding: 18px 28px;
+}
+
+.dropzone{
+  height: 220px;
+  border: 1px dashed #000000; /* changed to black */
+  border-radius: 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background: transparent;
+}
+
+.dropzone:hover{
+  border-color: #1a1a1a; /* darker black on hover */
+  background: rgba(255,255,255,0.02);
+  outline-color: rgba(0,0,0,0.7);
+}
+
+/* drag-active state for dropzone */
+.dropzone.drag-active{
+  border-color: rgba(11,181,255,0.35);
+  background: rgba(11,181,255,0.03);
+  outline-color: rgba(11,181,255,0.12);
+  box-shadow: 0 0 0 4px rgba(11,181,255,0.03);
+}
+
+.drop-inner{
+  text-align:center;
+  color: #bfc6cc;
+}
+
+.drop-text{
+  font-size: 18px;
+  margin: 0 0 8px 0;
+  color: #cfd6d9;
+}
+
+.drop-sub{
+  font-weight:700;
+  color:#fff;
+  opacity:0.85;
+}
+
+.separator{
+  height:1px;
+  background: rgba(255,255,255,0.08);
+  margin: 22px 0;
+  border-radius:2px;
+}
+
+.file-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.file-list-header{
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.file-item{
+  background: rgba(255,255,255,0.03);
+  border-radius:18px;
+  padding:16px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset;
+}
+
+.file-left{
+  display:flex;
+  gap:14px;
+  align-items:center;
+}
+
+.file-icon{
+  width:56px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(255,255,255,0.03);
+  border-radius:10px;
+}
+
+.file-meta{
+  display:flex;
+  flex-direction:column;
+}
+
+.file-name{
+  font-size:20px;
+  color:#000000;
+  font-weight:600;
+}
+
+.file-size{
+  font-size:14px;
+  color:var(--muted);
+  margin-top:6px;
+}
+
+.muted{
+  color:var(--muted);
+}
+
+.error{
+  color:#ff6b6b;
+}
+
+.file-right{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.status{
+  font-weight:600;
+  color:#2f855a;
+}
+
+.status.error{
+  color:#ff6b6b;
+}
+
+/* browse button inside drop area */
+.browse-btn{
+  margin-top: 12px;
+  padding: 8px 14px;
+  font-size: 14px;
+  color: #cfd6d9;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+  box-shadow: none;
+}
+
+.browse-btn:hover{
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-1px);
+}
+
+/* empty list note */
+.empty-note{
+  color: var(--muted);
+  padding: 12px 6px;
+  font-size: 14px;
+}
+
+/* completed status explicit */
+.status.completed{
+  color: #2f855a; /* green */
+  font-weight:600;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* small tweak for remove icon hover color */
+.remove-btn svg path{
+  stroke: rgba(255,255,255,0.6);
+}
+
+.remove-btn:hover svg path{
+  stroke: rgba(255,255,255,0.9);
+}
+
+.remove-btn{
+  background:transparent;
+  border:none;
+  padding:8px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:6px;
+  color: rgba(255,255,255,0.6); /* icon color */
+  transition: background 120ms ease, color 120ms ease, transform 80ms ease;
+}
+
+.remove-btn svg{
+  display:block;
+  width:18px;
+  height:18px;
+}
+
+.remove-btn svg path{
+  stroke: currentColor;
+}
+
+.remove-btn:hover{
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.95);
+  transform: translateY(-1px);
+}
+
+.delete-all-btn{
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #ff4444;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 120ms ease, transform 80ms ease;
+}
+
+.delete-all-btn:hover{
+  background: #ff2222;
+  transform: translateY(-1px);
+}
