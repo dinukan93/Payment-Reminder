@@ -3,7 +3,7 @@ import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import isAuthenticated from '../middleware/isAuthenticated.js';
 import authController from '../controllers/authController.js';
-import User from '../models/userModel.js';
+import Caller from '../models/Caller.js';
 
 const router = express.Router();
 
@@ -51,10 +51,10 @@ router.get('/google/callback',
 
 router.get('/me', isAuthenticated, async (req, res)=>{
     try {
-        // fetch full user document from DB to include avatar and other fields
-        const user = await User.findById(req.user.id).select('-password -token -opt -optExpiry');
-        if (!user) return res.status(404).json({success:false, message:'User not found'});
-        res.json({success:true, user});
+        // fetch full caller document from DB to include avatar and other fields
+        const caller = await Caller.findById(req.user.id).select('-password -token -otp -otpExpiry');
+        if (!caller) return res.status(404).json({success:false, message:'Caller not found'});
+        res.json({success:true, user: caller});
     } catch (error) {
         console.error('Error fetching profile:', error);
         res.status(500).json({success:false, message:'Server error'});

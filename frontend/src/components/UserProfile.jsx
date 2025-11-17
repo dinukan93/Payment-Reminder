@@ -3,6 +3,7 @@ import "./UserProfile.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import PaymentCalendar from "./PaymentCalendar";
 import AdminRequestsModal from "./AdminRequestsModal";
+import API_BASE_URL from "../config/api";
 
 function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -10,19 +11,35 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
   const [todayPaymentsCount, setTodayPaymentsCount] = useState(0);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
-  // Check for pending requests from admin
+  // Check for pending requests from MongoDB
   useEffect(() => {
-    const checkPendingRequests = () => {
-      const pendingRequest = localStorage.getItem('pendingAdminRequest');
-      const count = pendingRequest ? 1 : 0;
-      console.log('Checking pending requests... Found:', count);
-      setPendingRequestsCount(count);
+    const checkPendingRequests = async () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const callerId = userData.id;
+        
+        console.log('UserProfile - Logged in user data:', userData);
+        console.log('UserProfile - Fetching requests for callerId:', callerId);
+        
+        if (!callerId) return;
+        
+        const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          const count = data.data?.length || 0;
+          console.log('Checking pending requests from MongoDB... Found:', count);
+          setPendingRequestsCount(count);
+        }
+      } catch (error) {
+        console.error('Error fetching pending requests:', error);
+      }
     };
 
     checkPendingRequests();
     
-    // Check every 3 seconds for new requests
-    const interval = setInterval(checkPendingRequests, 3000);
+    // Check every 10 seconds for new requests
+    const interval = setInterval(checkPendingRequests, 10000);
     
     return () => clearInterval(interval);
   }, []);
@@ -163,19 +180,20 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
         </div>
       </div>
 
-    <PaymentCalendar
-      isOpen={isCalendarOpen}
-      onClose={handleCloseCalendar}
-      promisedPayments={promisedPayments}
-    />
+      <PaymentCalendar
+        isOpen={isCalendarOpen}
+        onClose={handleCloseCalendar}
+        promisedPayments={promisedPayments}
+      />
 
-    <AdminRequestsModal
-      isOpen={isRequestsModalOpen}
-      onClose={handleCloseRequests}
-      onAccept={handleAcceptRequest}
-      onDecline={handleDeclineRequest}
-      onRequestProcessed={handleRequestProcessed}
-    />
+      <AdminRequestsModal
+        isOpen={isRequestsModalOpen}
+        onClose={handleCloseRequests}
+        onAccept={handleAcceptRequest}
+        onDecline={handleDeclineRequest}
+        onRequestProcessed={handleRequestProcessed}
+        callerId={JSON.parse(localStorage.getItem('userData') || '{}').id}
+      />
     </>
   );
 }

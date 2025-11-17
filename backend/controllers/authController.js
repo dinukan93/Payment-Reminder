@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import User from '../models/userModel.js';
+import Caller from '../models/Caller.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
@@ -16,13 +16,17 @@ export const register = async (req, res) => {
     if (!name || !email || !password || !confirmPassword) return res.status(400).json({ message: 'All fields are required' });
     if (password !== confirmPassword) return res.status(400).json({ message: 'Passwords do not match' });
 
-    const existing = await User.findOne({ email });
+    const existing = await Caller.findOne({ email });
     if (existing) return res.status(409).json({ message: 'User already exists' });
 
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(password, salt);
 
-    const user = await User.create({ name, email, phone, password: hashed });
+    // Generate unique callerId
+    const callerCount = await Caller.countDocuments();
+    const callerId = `CALLER${String(callerCount + 1).padStart(3, '0')}`;
+
+    const user = await Caller.create({ callerId, name, email, phone, password: hashed });
 
     const token = jwt.sign({ id: user._id, email: user.email, name: user.name }, process.env.SECRET_KEY || 'dev_secret', { expiresIn: '1d' });
 
@@ -39,7 +43,7 @@ export const login = async (req, res) => {
     if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
 
     //ok
-    const user = await User.findOne({ email });
+    const user = await Caller.findOne({ email });
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
     // If user created via Google, password may be undefined
@@ -74,15 +78,15 @@ export const forgotPassword = async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: 'Email is required' });
 
-    const user = await User.findOne({ email });
+    const user = await Caller.findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     // generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    user.opt = otp;
-    user.optExpiry = expiry;
+    user.otp = otp;
+    user.otpExpiry = expiry;
     await user.save();
 
     // send email (simple nodemailer setup)
@@ -123,18 +127,18 @@ export const verifyOtp = async (req, res) => {
     const { email, otp } = req.body;
     if (!email || !otp) return res.status(400).json({ message: 'Email and OTP required' });
 
-    const user = await User.findOne({ email });
+    const user = await Caller.findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (!user.opt || user.opt !== otp) return res.status(400).json({ message: 'Invalid OTP' });
-    if (user.optExpiry && user.optExpiry < new Date()) return res.status(400).json({ message: 'OTP expired' });
+    if (!user.otp || user.otp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
+    if (user.otpExpiry && user.otpExpiry < new Date()) return res.status(400).json({ message: 'OTP expired' });
 
     // create a short-lived token to allow password reset
     const resetToken = crypto.randomBytes(20).toString('hex');
     user.token = resetToken;
     // clear otp fields
-    user.opt = null;
-    user.optExpiry = null;
+    user.otp = null;
+    user.otpExpiry = null;
     await user.save();
 
     return res.json({ message: 'OTP verified', resetToken });
@@ -151,7 +155,7 @@ export const resetPassword = async (req, res) => {
     if (!email || !resetToken || !newPassword || !confirmPassword) return res.status(400).json({ message: 'All fields are required' });
     if (newPassword !== confirmPassword) return res.status(400).json({ message: 'Passwords do not match' });
 
-    const user = await User.findOne({ email, token: resetToken });
+    const user = await Caller.findOne({ email, token: resetToken });
     if (!user) return res.status(400).json({ message: 'Invalid or expired reset token' });
 
     const salt = await bcrypt.genSalt(10);
@@ -171,7 +175,7 @@ export const getProfile = async (req, res) => {
     // isAuthenticated middleware will attach req.user
     if (!req.user) return res.status(401).json({ message: 'Not authenticated' });
 
-    const user = await User.findById(req.user.id).select('-password -token');
+    const user = await Caller.findById(req.user.id).select('-password -token');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     res.json({ user });

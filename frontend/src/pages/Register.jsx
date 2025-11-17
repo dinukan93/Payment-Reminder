@@ -2,6 +2,8 @@ import React, {useState} from 'react';
 import './Register.css';
 import logo from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
+import { jwtDecode } from 'jwt-decode';
 
 const Register = () => {
   const [form, setForm] = useState({ name:'', email:'', phone:'', password:'', confirmPassword:'' });
@@ -17,15 +19,25 @@ const Register = () => {
     if (form.password !== form.confirmPassword) return setError('Passwords do not match');
     setLoading(true);
     try{
-      const res = await fetch('http://localhost:4000/auth/register', {
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Registration failed');
-      // registration success -> save token and go to dashboard
+      
+      // Registration success - decode token and save user data
+      const decoded = jwtDecode(data.token);
       localStorage.setItem('token', data.token);
+      localStorage.setItem('userData', JSON.stringify({
+        id: decoded.id,
+        email: decoded.email,
+        name: decoded.name,
+        avatar: decoded.avatar,
+        role: decoded.role || 'caller'
+      }));
+      
       navigate('/dashboard');
     }catch(err){
       setError(err.message);

@@ -7,7 +7,34 @@ import Caller from '../models/Caller.js';
 // @access  Public
 const getAllRequests = async (req, res) => {
   try {
-    const requests = await Request.find()
+    const { callerId, status } = req.query;
+    const query = {};
+    
+    // Handle filtering by callerId (can be either MongoDB _id or callerId string)
+    if (callerId) {
+      // Try to find caller by MongoDB _id first, then by callerId string
+      const caller = await Caller.findById(callerId).catch(() => null) || 
+                     await Caller.findOne({ callerId });
+      
+      if (caller) {
+        // Use the caller's MongoDB _id for the query
+        query.caller = caller._id;
+      } else {
+        // If caller not found, return empty array
+        return res.status(200).json({
+          success: true,
+          count: 0,
+          data: []
+        });
+      }
+    }
+    
+    // Handle filtering by status
+    if (status) {
+      query.status = status;
+    }
+    
+    const requests = await Request.find(query)
       .populate('caller', 'name callerId')
       .populate('customers.customerId', 'accountNumber name contactNumber');
     

@@ -19,9 +19,45 @@ const callerSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
+  phone: {
+    type: String,
+    trim: true
+  },
   password: {
     type: String,
-    required: true
+    required: false
+  },
+  googleId: {
+    type: String,
+    sparse: true
+  },
+  avatar: {
+    type: String
+  },
+  role: {
+    type: String,
+    enum: ['admin', 'caller'],
+    default: 'caller'
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  isLoggedIn: {
+    type: Boolean,
+    default: false
+  },
+  token: {
+    type: String,
+    default: null
+  },
+  otp: {
+    type: String,
+    default: null
+  },
+  otpExpiry: {
+    type: Date,
+    default: null
   },
   status: {
     type: String,

@@ -7,6 +7,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [expandedRequests, setExpandedRequests] = useState({});
 
   // Fetch pending requests from MongoDB when modal opens
   useEffect(() => {
@@ -19,11 +20,16 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     setLoading(true);
     setError(null);
     
+    console.log('AdminRequestsModal - Fetching requests for callerId:', callerId);
+    
     try {
       const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`);
       
       if (response.ok) {
-        const data = await response.json();
+        const result = await response.json();
+        const data = result.data || result; // Handle both nested and flat response
+        
+        console.log('AdminRequestsModal - Received requests:', data);
         
         if (data && data.length > 0) {
           setRequests(data.map(req => ({
@@ -34,6 +40,8 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
             callerName: req.callerName,
             callerId: req.callerId
           })));
+          // Expand first request by default
+          setExpandedRequests({ [data[0].requestId || data[0]._id]: true });
         } else {
           setRequests([]);
         }
@@ -50,10 +58,16 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     }
   };
 
-  const handleAcceptAll = async () => {
-    if (requests.length === 0) return;
-    
-    const request = requests[0];
+  const toggleRequest = (requestId) => {
+    setExpandedRequests(prev => ({
+      ...prev,
+      [requestId]: !prev[requestId]
+    }));
+  };
+
+  const handleAcceptRequest = async (requestId) => {
+    const request = requests.find(r => r.id === requestId);
+    if (!request) return;
     
     try {
       // Update request status in backend
@@ -86,8 +100,8 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         // Call parent handler with all customers at once
         onAccept(allCustomersData);
         
-        // Clear all requests
-        setRequests([]);
+        // Remove this request from the list
+        setRequests(requests.filter(r => r.id !== requestId));
         
         // Notify parent that request is processed
         if (onRequestProcessed) onRequestProcessed();
@@ -102,10 +116,10 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     }
   };
 
-  const handleDeclineAll = async () => {
-    if (requests.length === 0) return;
+  const handleDeclineRequest = async (requestId) => {
+    const request = requests.find(r => r.id === requestId);
+    if (!request) return;
     
-    const request = requests[0];
     const reason = prompt("Please provide a reason for declining:");
     
     if (!reason) return;
@@ -125,11 +139,11 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
       });
 
       if (response.ok) {
-        // Decline all requests
+        // Decline the request
         onDecline(request.id);
         
-        // Clear all requests
-        setRequests([]);
+        // Remove this request from the list
+        setRequests(requests.filter(r => r.id !== requestId));
         
         // Notify parent that request is processed
         if (onRequestProcessed) onRequestProcessed();
@@ -178,47 +192,77 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
               </button>
             </div>
           ) : requests.length > 0 ? (
-            <div className="requests-summary-card">
-              <div className="summary-header">
-                <i className="bi bi-envelope-open"></i>
-                <h3>New Customer Assignment from Admin</h3>
-              </div>
-              
-              <div className="summary-details">
-                <div className="detail-item">
-                  <span className="detail-label">Total Requests:</span>
-                  <span className="detail-value">{requests.length}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Total Customers:</span>
-                  <span className="detail-value">
-                    {requests.reduce((sum, req) => sum + (req.customerCount || 0), 0)}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Date:</span>
-                  <span className="detail-value">{requests[0].sentDate}</span>
-                </div>
-              </div>
+            <div className="requests-list">
+              {requests.map((request, index) => (
+                <div key={request.id} className="requests-summary-card">
+                  <div 
+                    className="summary-header clickable" 
+                    onClick={() => toggleRequest(request.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <i className="bi bi-envelope-open"></i>
+                      <h3>Customer Assignment #{index + 1}</h3>
+                      <span className="customer-badge">{request.customerCount} customers</span>
+                    </div>
+                    <i className={`bi bi-chevron-${expandedRequests[request.id] ? 'up' : 'down'}`}></i>
+                  </div>
+                  
+                  {expandedRequests[request.id] && (
+                    <>
+                      <div className="summary-details">
+                        <div className="detail-item">
+                          <span className="detail-label">Customers:</span>
+                          <span className="detail-value">{request.customerCount}</span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="detail-label">Date:</span>
+                          <span className="detail-value">{request.sentDate}</span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="detail-label">From:</span>
+                          <span className="detail-value">Admin</span>
+                        </div>
+                      </div>
 
-              <div className="summary-actions">
-                <button 
-                  className="decline-all-btn"
-                  onClick={handleDeclineAll}
-                  disabled={loading}
-                >
-                  <i className="bi bi-x-circle"></i>
-                  Decline
-                </button>
-                <button 
-                  className="accept-all-btn"
-                  onClick={handleAcceptAll}
-                  disabled={loading}
-                >
-                  <i className="bi bi-check-circle"></i>
-                  Accept
-                </button>
-              </div>
+                      <div className="customer-list">
+                        <h4>Customers in this request:</h4>
+                        <ul>
+                          {request.customers.slice(0, 3).map((customer, idx) => (
+                            <li key={idx}>
+                              {customer.name} - {customer.accountNumber}
+                            </li>
+                          ))}
+                          {request.customers.length > 3 && (
+                            <li className="more-customers">
+                              +{request.customers.length - 3} more customers
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+
+                      <div className="summary-actions">
+                        <button 
+                          className="decline-all-btn"
+                          onClick={() => handleDeclineRequest(request.id)}
+                          disabled={loading}
+                        >
+                          <i className="bi bi-x-circle"></i>
+                          Decline
+                        </button>
+                        <button 
+                          className="accept-all-btn"
+                          onClick={() => handleAcceptRequest(request.id)}
+                          disabled={loading}
+                        >
+                          <i className="bi bi-check-circle"></i>
+                          Accept
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
             </div>
           ) : (
             <div className="no-requests">

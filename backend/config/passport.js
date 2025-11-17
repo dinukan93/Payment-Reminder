@@ -8,7 +8,7 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import User from '../models/userModel.js';
+import Caller from '../models/Caller.js';
 
 console.log('Passport Config - GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
 console.log('Passport Config - GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? '***exists***' : 'MISSING');
@@ -23,32 +23,40 @@ passport.use(new GoogleStrategy({
         const email = profile.emails?.[0]?.value;
         const googleId = profile.id;
 
-        // try to find existing user by googleId first
-        let user = await User.findOne({ googleId });
+        // try to find existing caller by googleId first
+        let caller = await Caller.findOne({ googleId });
 
-        // if not found by googleId, try by email (user may have registered before linking Google)
-        if (!user && email) {
-            user = await User.findOne({ email });
-            if (user) {
-                // update existing user with googleId and avatar
-                user.googleId = googleId;
-                user.avatar = profile.photos?.[0]?.value || user.avatar;
-                await user.save();
-                return cb(null, user);
+        // if not found by googleId, try by email (caller may have registered before linking Google)
+        if (!caller && email) {
+            caller = await Caller.findOne({ email });
+            if (caller) {
+                // update existing caller with googleId and avatar
+                caller.googleId = googleId;
+                caller.avatar = profile.photos?.[0]?.value || caller.avatar;
+                caller.isVerified = true;
+                await caller.save();
+                return cb(null, caller);
             }
         }
 
-        // create new user if neither googleId nor email match
-        if (!user) {
-            user = await User.create({
+        // create new caller if neither googleId nor email match
+        if (!caller) {
+            // Generate unique callerId
+            const callerCount = await Caller.countDocuments();
+            const callerId = `CALLER${String(callerCount + 1).padStart(3, '0')}`;
+            
+            caller = await Caller.create({
+                callerId,
                 googleId,
                 name: profile.displayName || 'Google User',
                 email,
                 avatar: profile.photos?.[0]?.value,
+                isVerified: true,
+                role: 'caller'
             });
         }
 
-        return cb(null, user);
+        return cb(null, caller);
     } catch (error) {
         return cb(error, null);
     }
