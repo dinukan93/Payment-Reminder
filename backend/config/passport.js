@@ -1,6 +1,17 @@
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: join(__dirname, '..', '.env') });
+
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../models/userModel.js';
+
+console.log('Passport Config - GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
+console.log('Passport Config - GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? '***exists***' : 'MISSING');
 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,

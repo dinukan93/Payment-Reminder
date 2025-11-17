@@ -16,7 +16,7 @@ const Login = () => {
     e.preventDefault();
     setError('');
     try {
-      const res = await fetch('http://localhost:4000/auth/login', {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -70,7 +70,7 @@ const Login = () => {
               onClick={() => {
                 // send current frontend origin as redirect so backend can redirect back to the correct port
                 const redirect = encodeURIComponent(window.location.origin);
-                window.location.href = `http://localhost:4000/auth/google?redirect=${redirect}`;
+                window.location.href = `http://localhost:5000/api/auth/google?redirect=${redirect}`;
               }}
               className="google-btn"
             >

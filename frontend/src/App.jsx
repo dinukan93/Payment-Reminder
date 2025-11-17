@@ -5,6 +5,7 @@ import EmployeeManagement from "./pages/EmployeeManagement";
 import CallerDashboard from "./pages/CallerDashboard";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
+import AuthSuccess from "./pages/AuthSuccess";
 import Settings from "./pages/Settings";
 import Report from "./pages/Report";
 import CallerTasks from "./pages/CallerTasks";
@@ -14,7 +15,7 @@ import AdminTasks from "./pages/AdminTasks";
 
 function App() {
   const location = useLocation();
-  const isLoginPage = location.pathname === "/login";
+  const isLoginPage = location.pathname === "/login" || location.pathname === "/auth-success";
 
   return (
     <>
@@ -24,6 +25,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/auth-success" element={<AuthSuccess />} />
             <Route path="/dashboard" element={<CallerDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/tasks" element={<CallerTasks />} />
