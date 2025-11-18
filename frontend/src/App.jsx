@@ -18,7 +18,10 @@ import AdminTasks from "./pages/AdminTasks";
 
 function App() {
   const location = useLocation();
-  const isLoginPage = location.pathname === "/login" || location.pathname === "/auth-success" || location.pathname === "/register";
+  const isLoginPage = location.pathname === "/login" || 
+                       location.pathname === "/auth-success" || 
+                       location.pathname === "/register" ||
+                       location.pathname === "/logout";
 
   return (
     <>
