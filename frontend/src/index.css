@@ -19,6 +19,322 @@ body {
   font-family: "Inter", sans-serif;
 }
 
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-card: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --border-color: #e0e0e0;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --hover-bg: #f5f5f5;
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #333333;
+  --sidebar-hover: #f0f0f0;
+  --input-bg: #ffffff;
+  --input-border: #ddd;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --bg-card: #1e1e1e;
+  --text-primary: #ffffff;
+  --text-secondary: #d0d0d0;
+  --text-muted: #888888;
+  --border-color: #2a2a2a;
+  --shadow: rgba(0, 0, 0, 0.5);
+  --hover-bg: #2a2a2a;
+  --sidebar-bg: #0a0a0a;
+  --sidebar-text: #ffffff;
+  --sidebar-hover: #1a1a1a;
+  --input-bg: #1a1a1a;
+  --input-border: #2a2a2a;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark-mode {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Global dark mode styles */
+.dark-mode {
+  background-color: var(--bg-primary) !important;
+}
+
+.dark-mode .sidebar {
+  background-color: var(--sidebar-bg) !important;
+  border-right: 1px solid var(--border-color) !important;
+}
+
+.dark-mode .sidebar .menu-item {
+  color: var(--sidebar-text) !important;
+}
+
+.dark-mode .sidebar .menu-item:hover,
+.dark-mode .sidebar .menu-item.active {
+  background-color: var(--sidebar-hover) !important;
+}
+
+.dark-mode .sidebar h4 {
+  color: var(--text-muted) !important;
+}
+
+.dark-mode .caller-dashboard,
+.dark-mode .admin-dashboard,
+.dark-mode .admin-tasks,
+.dark-mode .customer-management,
+.dark-mode .employee-management,
+.dark-mode .main-content {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .dashboard-header,
+.dark-mode .admin-dashboard-header,
+.dark-mode .admin-tasks-header {
+  background-color: var(--bg-primary) !important;
+}
+
+.dark-mode .dashboard-stats,
+.dark-mode .admin-stats-grid,
+.dark-mode .stat-card,
+.dark-mode .admin-stat-card,
+.dark-mode .profile-card,
+.dark-mode .admin-profile-content,
+.dark-mode .user-profile-section,
+.dark-mode .admin-user-profile-section,
+.dark-mode .weekly-calls-section,
+.dark-mode .admin-weekly-calls-section,
+.dark-mode .completed-payments-section,
+.dark-mode .admin-completed-payments-section,
+.dark-mode .admin-assigned-callers-section,
+.dark-mode .admin-unassigned-callers-section,
+.dark-mode .admin-sent-requests-section,
+.dark-mode .admin-tasks-stats {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .stat-card,
+.dark-mode .admin-stat-card {
+  box-shadow: 0 2px 8px var(--shadow) !important;
+}
+
+.dark-mode .admin-section-header h3,
+.dark-mode .admin-section-header h4,
+.dark-mode .section-header h3,
+.dark-mode .section-header h4 {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode table,
+.dark-mode .admin-callers-table,
+.dark-mode .admin-tasks-table {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+.dark-mode table thead,
+.dark-mode .admin-callers-table thead,
+.dark-mode .admin-tasks-table thead {
+  background-color: var(--bg-card) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.dark-mode table thead th {
+  color: #888888 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  padding: 16px !important;
+}
+
+.dark-mode table tbody tr,
+.dark-mode .admin-callers-table tbody tr,
+.dark-mode .admin-tasks-table tbody tr {
+  border-bottom: 1px solid var(--border-color) !important;
+  background-color: var(--bg-card) !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.dark-mode table tbody tr:hover,
+.dark-mode .admin-callers-table tbody tr:hover,
+.dark-mode .admin-tasks-table tbody tr:hover {
+  background-color: #252525 !important;
+}
+
+.dark-mode table tbody tr:last-child {
+  border-bottom: none !important;
+}
+
+.dark-mode table tbody td {
+  color: #c0c0c0 !important;
+  padding: 16px !important;
+  font-size: 14px !important;
+}
+
+.dark-mode table tbody td strong {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea {
+  background-color: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  color: #b0b0b0 !important;
+  font-weight: 400 !important;
+}
+
+.dark-mode input::placeholder,
+.dark-mode textarea::placeholder {
+  color: #666666 !important;
+  opacity: 0.8;
+}
+
+.dark-mode .search-box,
+.dark-mode .search-box input {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+}
+
+.dark-mode .modal-overlay .assign-modal,
+.dark-mode .modal-overlay .login-card,
+.dark-mode .modal-content,
+.dark-mode .modal-header,
+.dark-mode .modal-body,
+.dark-mode .modal-footer {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode h4,
+.dark-mode h5,
+.dark-mode h6 {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode p {
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode span {
+  color: var(--text-secondary);
+}
+
+.dark-mode label {
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode .form-label,
+.dark-mode .toggle-label,
+.dark-mode .preference-label {
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode .search-box,
+.dark-mode .form-group,
+.dark-mode .settings-section,
+.dark-mode .login-card {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.dark-mode .section-divider {
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .caller-info,
+.dark-mode .admin-caller-info,
+.dark-mode .payment-info,
+.dark-mode .admin-payment-info {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .caller-id,
+.dark-mode .admin-caller-id,
+.dark-mode .caller-date,
+.dark-mode .admin-caller-date,
+.dark-mode .payment-id,
+.dark-mode .payment-date,
+.dark-mode .admin-payment-date {
+  color: var(--text-muted) !important;
+}
+
+.dark-mode .customer-item strong,
+.dark-mode .payment-item strong {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .profile-header,
+.dark-mode .admin-profile-header {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .profile-greeting {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .admin-tasks-controls,
+.dark-mode .selection-controls {
+  background-color: transparent !important;
+}
+
+.dark-mode .admin-tasks-table-container,
+.dark-mode .table-container {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.dark-mode .caller-card,
+.dark-mode .customer-card {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.dark-mode .caller-card:hover,
+.dark-mode .customer-card:hover {
+  background-color: var(--hover-bg) !important;
+  border-color: var(--text-muted) !important;
+}
+
+.dark-mode .day-label,
+.dark-mode .admin-day-label {
+  color: var(--text-muted) !important;
+}
+
+.dark-mode .see-all-btn,
+.dark-mode .admin-see-all-btn {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.dark-mode .see-all-btn:hover,
+.dark-mode .admin-see-all-btn:hover {
+  background-color: var(--hover-bg) !important;
+}
+
 body {
   margin: 0;
   padding: 0;

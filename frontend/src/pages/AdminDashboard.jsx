@@ -43,12 +43,16 @@ function AdminDashboard() {
       }
       setError(null);
       
+      // Get logged-in admin ID
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const adminId = userData.id;
+      
       // Fetch all data in parallel
       const [statsRes, assignedRes, unassignedRes, requestsRes, weeklyRes, paymentsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/admin/stats`),
         fetch(`${API_BASE_URL}/admin/assigned-callers`),
         fetch(`${API_BASE_URL}/admin/unassigned-callers`),
-        fetch(`${API_BASE_URL}/admin/sent-requests`),
+        fetch(`${API_BASE_URL}/admin/sent-requests${adminId ? `?adminId=${adminId}` : ''}`),
         fetch(`${API_BASE_URL}/admin/weekly-calls`),
         fetch(`${API_BASE_URL}/admin/completed-payments?limit=5`)
       ]);
@@ -415,9 +419,18 @@ function AdminDashboard() {
             
             <div className="admin-profile-content">
               <div className="admin-profile-avatar">
-                <img src="https://via.placeholder.com/80" alt="Admin" />
+                <img 
+                  src={(() => {
+                    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                    return userData.avatar || "https://ui-avatars.com/api/?name=" + encodeURIComponent(userData.name || "Admin") + "&background=1488ee&color=fff&size=80";
+                  })()} 
+                  alt="Admin" 
+                />
               </div>
-              <h3>Good Morning, (Admin)</h3>
+              <h3>Good Morning, ({(() => {
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                return userData.name || 'Admin';
+              })()})</h3>
               
               <div className="admin-profile-actions">
                 <button className="admin-icon-btn">

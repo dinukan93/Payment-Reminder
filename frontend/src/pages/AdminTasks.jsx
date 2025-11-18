@@ -160,6 +160,10 @@ function AdminTasks() {
       const today = new Date();
       const todayString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
       
+      // Get logged-in admin ID
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const adminId = userData.id;
+      
       const requestData = {
         requestId: Date.now().toString(),
         callerName: callerName,
@@ -175,7 +179,8 @@ function AdminTasks() {
         customersSent: customers.length,
         sentDate: todayString,
         status: 'PENDING',
-        sentBy: 'Admin'
+        sentBy: 'Admin',
+        adminId: adminId
       };
       
       // Save request to backend

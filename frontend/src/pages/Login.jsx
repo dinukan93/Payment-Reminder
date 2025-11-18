@@ -14,6 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,8 @@ const Login = () => {
     setMessage('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      const endpoint = isAdminLogin ? '/auth/admin/login' : '/auth/login';
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -47,7 +49,8 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+      const endpoint = isAdminLogin ? '/auth/admin/verify-otp' : '/auth/verify-otp';
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp, isPasswordReset: false })
@@ -66,7 +69,12 @@ const Login = () => {
         role: decoded.role || 'caller'
       }));
       
-      navigate('/dashboard');
+      // Redirect based on role
+      if (decoded.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch(err) {
       setError(err.message);
     } finally {
@@ -92,7 +100,7 @@ const Login = () => {
 
           {/* LOGIN CARD */}
           <div className="login-card">
-            <h2>Login</h2>
+            <h2>{isAdminLogin ? 'Admin Login' : 'Login'}</h2>
 
             {!showOtpInput ? (
               <form onSubmit={handleSignIn}>
@@ -102,7 +110,7 @@ const Login = () => {
                 <label>Password</label>
                 <input value={password} onChange={e=>setPassword(e.target.value)} type="password" placeholder="Password" required />
 
-                <span className="fp" onClick={()=>navigate('/forgot-password')}>Forgot Password?</span>
+                {!isAdminLogin && <span className="fp" onClick={()=>navigate('/forgot-password')}>Forgot Password?</span>}
 
                 <button className="signin-btn" type="submit" disabled={loading}>
                   {loading ? 'Signing In...' : 'Sign In'}
@@ -110,20 +118,30 @@ const Login = () => {
                 {error && <p style={{color:'red'}}>{error}</p>}
                 {message && <p style={{color:'green'}}>{message}</p>}
 
-                <p className="rg">Don't have an account? <a href="#" onClick={(e)=>{e.preventDefault(); navigate('/register')}}>Register</a></p>
+                {!isAdminLogin && (
+                  <>
+                    <p className="rg">Don't have an account? <a href="#" onClick={(e)=>{e.preventDefault(); navigate('/register')}}>Register</a></p>
 
-                <p className="divider">or continue with</p>
+                    <p className="divider">or continue with</p>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    const redirect = encodeURIComponent(window.location.origin);
-                    window.location.href = `${API_BASE_URL}/auth/google?redirect=${redirect}`;
-                  }}
-                  className="google-btn"
-                >
-                  <FcGoogle size={20} />
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const redirect = encodeURIComponent(window.location.origin);
+                        window.location.href = `${API_BASE_URL}/auth/google?redirect=${redirect}`;
+                      }}
+                      className="google-btn"
+                    >
+                      <FcGoogle size={20} />
+                    </button>
+                  </>
+                )}
+                
+                {isAdminLogin && (
+                  <p className="rg" style={{marginTop:15}}>
+                    <a href="#" onClick={(e)=>{e.preventDefault(); setIsAdminLogin(false); setEmail(''); setPassword(''); setError(''); setMessage('');}}>Back to user login</a>
+                  </p>
+                )}
               </form>
             ) : (
               <form onSubmit={verifyOtp}>
@@ -142,15 +160,27 @@ const Login = () => {
                 </button>
                 {error && <p style={{color:'red'}}>{error}</p>}
                 <p className="rg" style={{marginTop:10}}>
-                  <a href="#" onClick={(e)=>{e.preventDefault(); setShowOtpInput(false); setOtp(''); setMessage('');}}>Back to login</a>
+                  <a href="#" onClick={(e)=>{e.preventDefault(); setShowOtpInput(false); setOtp(''); setMessage(''); setError('');}}>Back to login</a>
                 </p>
               </form>
             )}
           </div>
 
           {/* ADMIN BUTTON BELOW LOGIN CARD */}
-          <button className="admin-btn">
-            <FaUserShield size={20} /> Login as Admin</button>
+          {!isAdminLogin && !showOtpInput && (
+            <button 
+              className="admin-btn" 
+              onClick={() => {
+                setIsAdminLogin(true);
+                setEmail('');
+                setPassword('');
+                setError('');
+                setMessage('');
+              }}
+            >
+              <FaUserShield size={20} /> Login as Admin
+            </button>
+          )}
 
         </div>
       </div>

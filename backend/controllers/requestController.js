@@ -133,7 +133,7 @@ const getRequestById = async (req, res) => {
 // @access  Public
 const createRequest = async (req, res) => {
   try {
-    const { callerName, callerId, customers } = req.body;
+    const { callerName, callerId, customers, adminId } = req.body;
 
     // Find the caller
     const caller = await Caller.findOne({ callerId });
@@ -165,7 +165,8 @@ const createRequest = async (req, res) => {
       customersSent: customers.length,
       sentDate: dateString,
       status: 'PENDING',
-      sentBy: 'Admin'
+      sentBy: 'Admin',
+      adminId: adminId || null
     });
 
     res.status(201).json({

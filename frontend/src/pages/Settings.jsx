@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './Settings.css';
 import { FaUser, FaBell, FaShieldAlt, FaCog, FaSave, FaEnvelope, FaPhone, FaMoon, FaSun } from 'react-icons/fa';
+import { useTheme } from '../context/ThemeContext';
 
 const Settings = () => {
+  const { darkMode, toggleDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -16,21 +18,11 @@ const Settings = () => {
     emailNotifications: true,
     paymentReminder: true,
     callNotifications: false,
-    darkMode: false,
     language: 'English',
     timezone: 'UTC'
   });
 
-  // Apply dark mode to the entire document
-  useEffect(() => {
-    if (preferences.darkMode) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      document.body.classList.add('dark-mode');
-    } else {
-      document.documentElement.setAttribute('data-theme', 'light');
-      document.body.classList.remove('dark-mode');
-    }
-  }, [preferences.darkMode]);
+  // Remove the local darkMode useEffect since it's handled by ThemeContext
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -55,7 +47,7 @@ const Settings = () => {
   };
 
   return (
-    <div className={`settings-container ${preferences.darkMode ? 'dark-mode' : ''}`}>
+    <div className={`settings-container ${darkMode ? 'dark-mode' : ''}`}>
       {/* Header with Settings Icon - Left Aligned */}
       <div className="settings-header">
         <div className="header-content">
@@ -290,19 +282,19 @@ const Settings = () => {
                   <label className="preference-label bold-label">Dark Mode :-</label>
                   <div className="preference-option">
                     <div className="dark-mode-toggle">
-                      {preferences.darkMode ? (
+                      {darkMode ? (
                         <FaSun className="dark-mode-icon" />
                       ) : (
                         <FaMoon className="dark-mode-icon" />
                       )}
                       <p className="preference-description">
-                        {preferences.darkMode ? 'Light mode theme' : 'Dark mode theme'}
+                        {darkMode ? 'Light mode theme' : 'Dark mode theme'}
                       </p>
                       <label className="toggle-switch">
                         <input
                           type="checkbox"
-                          checked={preferences.darkMode}
-                          onChange={(e) => handlePreferenceChange('darkMode', e.target.checked)}
+                          checked={darkMode}
+                          onChange={toggleDarkMode}
                         />
                         <span className="toggle-slider"></span>
                       </label>

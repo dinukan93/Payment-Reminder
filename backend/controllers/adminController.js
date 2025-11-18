@@ -123,7 +123,10 @@ const getUnassignedCallers = async (req, res) => {
 // @access  Public
 const getSentRequests = async (req, res) => {
   try {
-    const requests = await Request.find()
+    // Filter by adminId if provided in query (for logged-in admin)
+    const filter = req.query.adminId ? { adminId: req.query.adminId } : {};
+    
+    const requests = await Request.find(filter)
       .populate('caller', 'name callerId')
       .populate('customers', 'accountNumber name amountOverdue daysOverdue')
       .sort({ createdAt: -1 });

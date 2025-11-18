@@ -59,6 +59,11 @@ const requestSchema = new mongoose.Schema({
     type: String,
     default: 'Admin'
   },
+  adminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Admin',
+    required: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

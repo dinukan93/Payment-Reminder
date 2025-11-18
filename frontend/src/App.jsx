@@ -1,5 +1,6 @@
 import "./App.css";
 import Sidebar from "./components/Sidebar";
+import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerManagement from "./pages/CustomerManagement";
 import EmployeeManagement from "./pages/EmployeeManagement";
 import CallerDashboard from "./pages/CallerDashboard";
@@ -29,14 +30,14 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/auth-success" element={<AuthSuccess />} />
-            <Route path="/dashboard" element={<CallerDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/tasks" element={<CallerTasks />} />
-            <Route path="/admin/tasks" element={<AdminTasks />} />
-            <Route path="/customers" element={<CustomerManagement />} />
-            <Route path="/employees" element={<EmployeeManagement />} />
-            <Route path="/reports" element={<Report />} />
-            <Route path="/settings" element={<Settings/>} />
+            <Route path="/dashboard" element={<ProtectedRoute requiredRole="caller"><CallerDashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/tasks" element={<ProtectedRoute requiredRole="caller"><CallerTasks /></ProtectedRoute>} />
+            <Route path="/admin/tasks" element={<ProtectedRoute requiredRole="admin"><AdminTasks /></ProtectedRoute>} />
+            <Route path="/customers" element={<ProtectedRoute><CustomerManagement /></ProtectedRoute>} />
+            <Route path="/employees" element={<ProtectedRoute requiredRole="admin"><EmployeeManagement /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/logout" element={<Logout />} />
           </Routes>
         </div>

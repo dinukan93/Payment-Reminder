@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Caller from '../models/Caller.js';
+import Admin from '../models/Admin.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { sendOtpSms, generateOtp, getOtpExpiry } from '../utils/smsService.js';
@@ -238,4 +239,80 @@ export const getProfile = async (req, res) => {
   }
 };
 
-export default { register, login, logout, getProfile, forgotPassword, verifyOtp, resetPassword };
+// Admin Login
+export const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
+
+    const admin = await Admin.findOne({ email });
+    if (!admin) return res.status(401).json({ message: 'Invalid credentials' });
+
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+
+    // Generate and send OTP
+    const otp = generateOtp();
+    const otpExpiry = getOtpExpiry(parseInt(process.env.OTP_EXPIRY_MINUTES || '10'));
+
+    admin.otp = otp;
+    admin.otpExpiry = otpExpiry;
+    await admin.save();
+
+    // Send OTP via SMS
+    await sendOtpSms(admin.phone, otp);
+
+    res.json({ 
+      message: 'OTP sent to your registered phone number. Please verify to complete login.',
+      email: admin.email,
+      requiresOtp: true,
+      isAdmin: true
+    });
+  } catch (error) {
+    console.error('Admin login error', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Admin OTP Verification
+export const verifyAdminOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ message: 'Email and OTP required' });
+
+    const admin = await Admin.findOne({ email });
+    if (!admin) return res.status(404).json({ message: 'Admin not found' });
+
+    if (!admin.otp || admin.otp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
+    if (admin.otpExpiry && admin.otpExpiry < new Date()) return res.status(400).json({ message: 'OTP expired' });
+
+    admin.isVerified = true;
+    admin.isLoggedIn = true;
+    admin.otp = null;
+    admin.otpExpiry = null;
+    await admin.save();
+
+    const token = jwt.sign(
+      { id: admin._id, email: admin.email, name: admin.name, role: 'admin' }, 
+      process.env.SECRET_KEY || 'dev_secret', 
+      { expiresIn: '1d' }
+    );
+
+    return res.json({ 
+      message: 'OTP verified successfully',
+      user: { 
+        id: admin._id, 
+        email: admin.email, 
+        name: admin.name, 
+        avatar: admin.avatar,
+        role: 'admin'
+      }, 
+      token 
+    });
+  } catch (error) {
+    console.error('verifyAdminOtp error', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export default { register, login, logout, getProfile, forgotPassword, verifyOtp, resetPassword, adminLogin, verifyAdminOtp };
