@@ -259,12 +259,17 @@ function AdminDashboard() {
       </div>
 
       {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <div className="loading-text">
-            <h3>Loading Dashboard</h3>
-            <p>Fetching data from database...</p>
-          </div>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #1488ee',
+            borderRadius: '50%',
+            margin: '0 auto 20px',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <p>Loading dashboard...</p>
         </div>
       ) : error ? (
         <div style={{ textAlign: 'center', padding: '50px', fontSize: '18px', color: '#dc3545' }}>
