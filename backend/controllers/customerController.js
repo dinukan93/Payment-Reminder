@@ -234,7 +234,9 @@ const updateCustomerContact = async (req, res) => {
       id: customer._id,
       status: customer.status,
       paymentMade,
-      promisedDate
+      promisedDate,
+      assignedTo: customer.assignedTo ? customer.assignedTo._id : 'NOT ASSIGNED',
+      assignedToName: customer.assignedTo ? customer.assignedTo.name : 'NOT ASSIGNED'
     });
 
     // Check if this customer belongs to a request and update request progress
@@ -279,29 +281,25 @@ const updateCustomerContact = async (req, res) => {
             request.status = 'COMPLETED';
             request.isCompleted = true;
 
-            // Unassign all customers from this request
-            await Customer.updateMany(
-              { _id: { $in: requestCustomerIds } },
-              { 
-                $unset: { assignedTo: 1, assignedDate: 1 }
-              }
-            );
-
-            // Update caller - remove these customers and update status
+            // Keep customers assigned so they show in caller's completed section
+            // Do NOT unassign customers - they stay assigned with COMPLETED status
+            
+            // Update caller status (keep customers assigned but update task status)
             const caller = await Caller.findById(customer.assignedTo._id);
             if (caller) {
-              caller.assignedCustomers = caller.assignedCustomers.filter(
-                id => !requestCustomerIds.includes(id.toString())
-              );
-              caller.currentLoad = caller.assignedCustomers.length;
+              // Check if caller has any PENDING customers left
+              const pendingCount = await Customer.countDocuments({
+                assignedTo: caller._id,
+                status: { $in: ['PENDING', 'OVERDUE'] }
+              });
               
-              // Update caller status
-              if (caller.assignedCustomers.length === 0) {
+              // Update caller status based on pending work
+              if (pendingCount === 0) {
                 caller.taskStatus = 'IDLE';
               }
               
               await caller.save();
-              console.log(`✅ Request ${request.requestId} completed. All ${request.customersSent} customers paid. Caller ${caller.name} unassigned.`);
+              console.log(`✅ Request ${request.requestId} completed. All ${request.customersSent} customers paid. Customers remain assigned to ${caller.name}.`);
             }
           }
 
@@ -311,9 +309,12 @@ const updateCustomerContact = async (req, res) => {
       }
     }
 
+    // Re-fetch customer with populated assignedTo to ensure we return complete data
+    const updatedCustomer = await Customer.findById(customer._id).populate('assignedTo', 'name callerId');
+
     res.status(200).json({
       success: true,
-      data: customer
+      data: updatedCustomer
     });
   } catch (error) {
     console.error('Error updating customer contact:', error);

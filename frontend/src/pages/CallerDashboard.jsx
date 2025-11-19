@@ -43,20 +43,25 @@ function CallerDashboard() {
       
       if (data.success && data.data) {
         // Separate customers by status
-        // Contacted customers: PENDING (promised to pay) or COMPLETED (paid)
+        // Contacted customers: Only PENDING with contact history (contacted but not yet paid)
+        // Exclude COMPLETED customers - they should only show in Tasks page under Completed filter
         const contacted = data.data.filter(c => 
-          c.status === 'PENDING' || c.status === 'COMPLETED'
+          c.status === 'PENDING' && 
+          c.contactHistory && 
+          c.contactHistory.length > 0
         );
         
-        // Overdue payments: OVERDUE (contacted but no promise) or UNASSIGNED (not contacted yet)
+        // Overdue payments: OVERDUE (not contacted yet) - customers without contact history
         const overdue = data.data.filter(c => 
-          c.status === 'OVERDUE' || c.status === 'UNASSIGNED'
+          c.status === 'OVERDUE' || 
+          (c.status === 'PENDING' && (!c.contactHistory || c.contactHistory.length === 0))
         );
         
         console.log('Customers loaded:', {
           total: data.data.length,
           contacted: contacted.length,
           overdue: overdue.length,
+          completed: data.data.filter(c => c.status === 'COMPLETED').length,
           breakdown: {
             PENDING: data.data.filter(c => c.status === 'PENDING').length,
             COMPLETED: data.data.filter(c => c.status === 'COMPLETED').length,
@@ -71,7 +76,10 @@ function CallerDashboard() {
         
         setContactedCustomers(formattedContacted);
         setOverduePayments(formattedOverdue);
-        updateStats(formattedContacted, formattedOverdue);
+        
+        // Update stats with completed count from all data
+        const completedCount = data.data.filter(c => c.status === 'COMPLETED').length;
+        updateStats(formattedContacted, formattedOverdue, completedCount);
       }
     } catch (error) {
       console.error('Error fetching customers from backend:', error);
@@ -85,19 +93,17 @@ function CallerDashboard() {
   }, []);
 
   // Update statistics based on data
-  const updateStats = (contacted, overdue) => {
-    const totalCustomers = contacted.length + overdue.length;
+  const updateStats = (contacted, overdue, completedCount = 0) => {
+    // Get all assigned customers (excluding COMPLETED)
+    const allActiveCustomers = contacted.length + overdue.length;
+    
     // Only count customers with contact history as "contacted"
-    const contactedCount = contacted.filter(c => 
-      c.contactHistory && c.contactHistory.length > 0
-    ).length + overdue.filter(c => 
-      c.contactHistory && c.contactHistory.length > 0
-    ).length;
-    const completedCount = contacted.filter(c => c.status === "COMPLETED").length;
-    const pendingCount = contacted.filter(c => c.status === "PENDING").length + overdue.length;
+    const contactedCount = contacted.length;
+    
+    const pendingCount = contacted.length + overdue.length;
 
     setStats([
-      { type: "customers", value: totalCustomers.toString(), label: "Total Customers", color: "#90e4f7ff" },
+      { type: "customers", value: allActiveCustomers.toString(), label: "Total Customers", color: "#90e4f7ff" },
       { type: "contacted", value: contactedCount.toString(), label: "Customers Contacted", color: "#90e4f7ff" },
       { type: "completed", value: completedCount.toString(), label: "Payments Completed", color: "#90e4f7ff" },
       { type: "pending", value: pendingCount.toString(), label: "Pending Payments", color: "#90e4f7ff" },
@@ -174,19 +180,9 @@ function CallerDashboard() {
 
   // Get completed payments from contacted customers with payment date
   const getCompletedPayments = () => {
-    return contactedCustomers
-      .filter(customer => customer.status === "COMPLETED")
-      .map(customer => {
-        // Find the contact history entry where payment was marked as made
-        const paymentContact = customer.contactHistory?.find(contact => contact.paymentMade === true);
-        const paymentDate = paymentContact ? paymentContact.contactDate : customer.date;
-        
-        return {
-          name: customer.name,
-          date: paymentDate,
-          accountNumber: customer.accountNumber
-        };
-      });
+    // Note: This won't show anything now since COMPLETED customers are filtered out
+    // Completed payments should be viewed from the Tasks page under Completed filter
+    return [];
   };
 
   // Calculate weekly calls based on contact history (Monday to Sunday)
