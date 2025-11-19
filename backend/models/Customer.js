@@ -163,6 +163,11 @@ const customerSchema = new mongoose.Schema({
   assignedDate: {
     type: String
   },
+  taskId: {
+    type: String,
+    default: null,
+    index: true
+  },
   
   // Status & History
   status: {

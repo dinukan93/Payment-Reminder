@@ -114,7 +114,7 @@ function AdminDashboard() {
 
       if (weeklyRes.ok) {
         const weeklyData = await weeklyRes.json();
-        setWeeklyCalls(weeklyData.calls || [0, 0, 0, 0, 0, 0, 0]);
+        setWeeklyCalls(weeklyData.data || [0, 0, 0, 0, 0, 0, 0]);
       }
 
       if (paymentsRes.ok) {

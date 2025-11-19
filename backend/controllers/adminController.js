@@ -51,30 +51,38 @@ const getAssignedCallers = async (req, res) => {
     const assignedCallers = await Caller.find({ 
       taskStatus: { $in: ['ONGOING', 'COMPLETED'] } 
     })
-    .select('name callerId taskStatus customersContacted currentLoad maxLoad assignedCustomers')
-    .populate({
-      path: 'assignedCustomers',
-      select: 'accountNumber name contactNumber amountOverdue status contactHistory'
-    });
+    .select('name callerId taskStatus customersContacted currentLoad maxLoad assignedCustomers');
 
-    const formattedCallers = assignedCallers.map(caller => {
+    const formattedCallers = await Promise.all(assignedCallers.map(async caller => {
+      // Get active requests for this caller to find taskId
+      const activeRequest = await Request.findOne({ 
+        caller: caller._id,
+        isCompleted: false 
+      }).select('taskId').lean();
+      
+      // Get assigned customers
+      const assignedCustomers = await Customer.find({ 
+        assignedTo: caller._id 
+      }).select('accountNumber name contactNumber amountOverdue status contactHistory taskId').lean();
+      
       // Count how many assigned customers have been contacted
-      const contactedCount = caller.assignedCustomers.filter(c => 
+      const contactedCount = assignedCustomers.filter(c => 
         c.contactHistory && c.contactHistory.length > 0
       ).length;
-      const totalAssigned = caller.assignedCustomers.length;
+      const totalAssigned = assignedCustomers.length;
       
       return {
         id: caller._id,
         name: caller.name,
         callerId: caller.callerId,
-        task: caller.taskStatus,
+        task: activeRequest ? activeRequest.taskId : 'N/A',
+        taskStatus: caller.taskStatus,
         customersContacted: `${contactedCount}/${totalAssigned}`,
         currentLoad: caller.currentLoad,
         maxLoad: caller.maxLoad,
-        assignedCustomers: caller.assignedCustomers
+        assignedCustomers: assignedCustomers
       };
-    });
+    }));
 
     res.status(200).json({
       success: true,
@@ -275,12 +283,19 @@ const getCompletedPayments = async (req, res) => {
 // @access  Public
 const getCallerDetails = async (req, res) => {
   try {
-    const caller = await Caller.findById(req.params.id)
-      .select('-password')
-      .populate({
-        path: 'assignedCustomers',
-        select: 'accountNumber name contactNumber amountOverdue daysOverdue status contactHistory'
-      });
+    console.log('=== GET CALLER DETAILS ===');
+    console.log('Caller ID:', req.params.id);
+    
+    // Try to find caller by MongoDB _id first, then by callerId string
+    let caller = await Caller.findById(req.params.id).select('-password').catch(() => null);
+    
+    if (!caller) {
+      // If not found by _id, try finding by callerId field
+      console.log('Not found by _id, trying callerId field...');
+      caller = await Caller.findOne({ callerId: req.params.id }).select('-password');
+    }
+    
+    console.log('Caller found:', caller ? caller.name : 'NOT FOUND');
 
     if (!caller) {
       return res.status(404).json({
@@ -288,6 +303,44 @@ const getCallerDetails = async (req, res) => {
         message: 'Caller not found'
       });
     }
+
+    // Find all active (non-completed) requests for this caller
+    console.log('Fetching active requests for caller ID:', caller._id);
+    const activeRequests = await Request.find({ 
+      caller: caller._id,
+      isCompleted: false 
+    }).select('taskId customers').lean();
+    
+    console.log('Found', activeRequests.length, 'active requests');
+    console.log('Active task IDs:', activeRequests.map(r => r.taskId).join(', '));
+
+    // Extract customer IDs and task IDs from active requests
+    const activeCustomerIds = new Set();
+    const activeTaskIds = new Set();
+    
+    activeRequests.forEach(request => {
+      if (request.taskId) {
+        activeTaskIds.add(request.taskId);
+      }
+      request.customers.forEach(customer => {
+        if (customer.customerId) {
+          activeCustomerIds.add(customer.customerId.toString());
+        }
+      });
+    });
+
+    console.log('Active customer IDs count:', activeCustomerIds.size);
+    console.log('Active task IDs:', Array.from(activeTaskIds).join(', '));
+
+    // Fetch customers using taskId for better performance and accuracy
+    const assignedCustomers = await Customer.find({ 
+      assignedTo: caller._id,
+      taskId: { $in: Array.from(activeTaskIds) }
+    })
+      .select('accountNumber name contactNumber amountOverdue daysOverdue status contactHistory taskId')
+      .lean();
+    
+    console.log('Found', assignedCustomers.length, 'customers from active requests');
 
     res.status(200).json({
       success: true,
@@ -301,10 +354,11 @@ const getCallerDetails = async (req, res) => {
         currentLoad: caller.currentLoad,
         maxLoad: caller.maxLoad,
         customersContacted: caller.customersContacted,
-        assignedCustomers: caller.assignedCustomers
+        assignedCustomers: assignedCustomers
       }
     });
   } catch (error) {
+    console.error('❌ Error in getCallerDetails:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching caller details',

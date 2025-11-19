@@ -1,10 +1,11 @@
 import mongoose from 'mongoose';
 
 const requestSchema = new mongoose.Schema({
-  requestId: {
+  taskId: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   callerName: {
     type: String,

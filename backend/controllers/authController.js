@@ -24,9 +24,38 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(password, salt);
 
-    // Generate unique callerId
-    const callerCount = await Caller.countDocuments();
-    const callerId = `CALLER${String(callerCount + 1).padStart(3, '0')}`;
+    // Generate unique callerId - find the highest existing callerId and increment
+    let callerId;
+    let isUnique = false;
+    let attempts = 0;
+    
+    while (!isUnique && attempts < 100) {
+      const lastCaller = await Caller.findOne({}, { callerId: 1 })
+        .sort({ callerId: -1 })
+        .limit(1);
+      
+      let nextNumber = 1;
+      if (lastCaller && lastCaller.callerId) {
+        const match = lastCaller.callerId.match(/CALLER(\d+)/);
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1;
+        }
+      }
+      
+      callerId = `CALLER${String(nextNumber).padStart(3, '0')}`;
+      
+      // Check if this callerId already exists
+      const existingCaller = await Caller.findOne({ callerId });
+      if (!existingCaller) {
+        isUnique = true;
+      } else {
+        attempts++;
+      }
+    }
+    
+    if (!isUnique) {
+      return res.status(500).json({ message: 'Unable to generate unique caller ID' });
+    }
 
     // Generate OTP for phone verification
     const otp = generateOtp();
@@ -40,11 +69,14 @@ export const register = async (req, res) => {
       password: hashed, 
       otp, 
       otpExpiry,
-      isVerified: false 
+      isVerified: false
     });
 
     // Send OTP via SMS
-    await sendOtpSms(phone, otp);
+    sendOtpSms(phone, otp).catch(err => {
+      console.error('SMS sending failed:', err);
+    });
+    console.log(`[DEV MODE] OTP for ${phone}: ${otp}`);
 
     res.status(201).json({ 
       message: 'Registration successful. Please verify your phone number with the OTP sent via SMS.',
@@ -53,7 +85,10 @@ export const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Register error', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
   }
 };
 
@@ -80,7 +115,10 @@ export const login = async (req, res) => {
     await user.save();
 
     // Send OTP via SMS
-    await sendOtpSms(user.phone, otp);
+    sendOtpSms(user.phone, otp).catch(err => {
+      console.error('SMS sending failed:', err);
+    });
+    console.log(`[DEV MODE] OTP for ${user.phone}: ${otp}`);
 
     res.json({ 
       message: 'OTP sent to your registered phone number. Please verify to complete login.',
@@ -260,7 +298,10 @@ export const adminLogin = async (req, res) => {
     await admin.save();
 
     // Send OTP via SMS
-    await sendOtpSms(admin.phone, otp);
+    sendOtpSms(admin.phone, otp).catch(err => {
+      console.error('SMS sending failed:', err);
+    });
+    console.log(`[DEV MODE] Admin OTP for ${admin.phone}: ${otp}`);
 
     res.json({ 
       message: 'OTP sent to your registered phone number. Please verify to complete login.',

@@ -113,7 +113,7 @@ const seedRequestData = async () => {
     });
 
     const request = await Request.create({
-      requestId: `REQ${Date.now()}`,
+      taskId: `REQ${Date.now()}`,
       callerName: caller.name,
       callerId: caller.callerId,
       caller: caller._id,
@@ -133,7 +133,7 @@ const seedRequestData = async () => {
 
     console.log(' Admin request created successfully!');
     console.log('\nRequest Details:');
-    console.log(`- Request ID: ${request.requestId}`);
+    console.log(`- Task ID: ${request.taskId}`);
     console.log(`- Caller: ${request.callerName}`);
     console.log(`- Customers: ${request.customersSent}`);
     console.log(`- Status: ${request.status}`);

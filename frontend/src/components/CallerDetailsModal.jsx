@@ -130,6 +130,7 @@ function CallerDetailsModal({ isOpen, onClose, caller, callerData }) {
               <table className="caller-details-table">
                 <thead>
                   <tr>
+                    <th>TASK ID</th>
                     <th>ACCOUNT NUMBER</th>
                     <th>CUSTOMER NAME</th>
                     <th>AMOUNT OVERDUE</th>
@@ -145,6 +146,18 @@ function CallerDetailsModal({ isOpen, onClose, caller, callerData }) {
                     const customerStatus = getCustomerStatus(customer);
                     return (
                       <tr key={customer._id} className={`customer-row ${customerStatus.toLowerCase()}`}>
+                        <td>
+                          <span className="caller-details-task-id" style={{ 
+                            fontSize: '0.85em', 
+                            fontFamily: 'monospace',
+                            color: '#666',
+                            backgroundColor: '#f0f0f0',
+                            padding: '2px 6px',
+                            borderRadius: '3px'
+                          }}>
+                            {customer.taskId || 'N/A'}
+                          </span>
+                        </td>
                         <td>
                           <span className="caller-details-account">{customer.accountNumber}</span>
                         </td>

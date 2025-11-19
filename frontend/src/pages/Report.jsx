@@ -5,6 +5,7 @@ import { LuPhoneCall } from "react-icons/lu";
 import { MdVerified } from "react-icons/md";
 import { BsCashCoin } from "react-icons/bs";
 import { IoIosWarning } from "react-icons/io";
+import { IoSend } from "react-icons/io5";
 import CallerStatisticsTable from '../components/CallerStatisticsTable';
 import API_BASE_URL from "../config/api";
 
@@ -13,10 +14,15 @@ function Report() {
     totalCalls: 0,
     successfulCalls: 0,
     totalPayments: 0,
-    pendingPayments: 0
+    pendingPayments: 0,
+    successRate: 0,
+    completionRate: 0
   });
   const [completedRequests, setCompletedRequests] = useState([]);
+  const [customerDetails, setCustomerDetails] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sendingReport, setSendingReport] = useState(false);
+  const [reportType, setReportType] = useState('daily');
 
   useEffect(() => {
     fetchReportData();
@@ -59,12 +65,46 @@ function Report() {
         const totalPayments = customers.filter(c => c.status === 'COMPLETED').length;
         const pendingPayments = customers.filter(c => c.status === 'PENDING').length;
         
+        // Calculate rates
+        const successRate = totalCalls > 0 ? ((successfulCalls / totalCalls) * 100).toFixed(1) : 0;
+        const totalCustomers = customers.length;
+        const completionRate = totalCustomers > 0 ? ((totalPayments / totalCustomers) * 100).toFixed(1) : 0;
+        
         setStats({
           totalCalls,
           successfulCalls,
           totalPayments,
-          pendingPayments
+          pendingPayments,
+          successRate,
+          completionRate
         });
+        
+        // Prepare detailed customer list
+        const details = customers.map(customer => {
+          const latestContact = customer.contactHistory && customer.contactHistory.length > 0
+            ? customer.contactHistory[customer.contactHistory.length - 1]
+            : null;
+          
+          return {
+            accountNumber: customer.accountNumber,
+            name: customer.name,
+            contactNumber: customer.contactNumber,
+            amountOverdue: customer.amountOverdue,
+            daysOverdue: customer.daysOverdue,
+            status: customer.status,
+            lastContactDate: latestContact?.contactDate || 'Not contacted',
+            lastContactOutcome: latestContact?.outcome || 'N/A',
+            lastResponse: latestContact?.remark || 'N/A',
+            promisedDate: latestContact?.promisedDate || 'N/A',
+            totalContacts: customer.contactHistory?.length || 0
+          };
+        }).sort((a, b) => {
+          // Sort by status: COMPLETED, PENDING, OVERDUE
+          const statusOrder = { 'COMPLETED': 0, 'PENDING': 1, 'OVERDUE': 2 };
+          return statusOrder[a.status] - statusOrder[b.status];
+        });
+        
+        setCustomerDetails(details);
       }
       
       setLoading(false);
@@ -102,6 +142,48 @@ function Report() {
     // TODO: Implement Excel generation
   };
 
+  const handleSendReportToAdmin = async () => {
+    try {
+      setSendingReport(true);
+      
+      // Get logged-in caller ID
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const callerId = userData.id;
+      
+      if (!callerId) {
+        alert('Error: Caller ID not found');
+        setSendingReport(false);
+        return;
+      }
+      
+      // Send request to generate and send report
+      const response = await fetch(`${API_BASE_URL}/callers/${callerId}/report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reportType: reportType
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert(`✅ ${reportType.charAt(0).toUpperCase() + reportType.slice(1)} performance report sent to admin successfully!\n\nReport ID: ${result.data.reportId}`);
+        console.log('📊 Report generated:', result.data);
+      } else {
+        alert('❌ Failed to send report: ' + result.message);
+      }
+      
+      setSendingReport(false);
+    } catch (error) {
+      console.error('Error sending report:', error);
+      alert('❌ Error sending report to admin');
+      setSendingReport(false);
+    }
+  };
+
   return (
     <>
       <div className="title">My Performance Report</div>
@@ -131,17 +213,120 @@ function Report() {
             <div className="sucessful-calls">
               <h4>Successful Calls</h4>
               <h3>{stats.successfulCalls}</h3>
+              <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>Success Rate: {stats.successRate}%</p>
               <MdVerified className='verified-icon' />
             </div>
             <div className="total-payments">
               <h4>Total Payments</h4>
               <h3>{stats.totalPayments}</h3>
+              <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>Completion: {stats.completionRate}%</p>
               <BsCashCoin className='totalpay-icon' />
             </div>
             <div className="pending-payments">
               <h4>Pending Payments</h4>
               <h3>{stats.pendingPayments}</h3>
               <IoIosWarning className='pending-icon' />
+            </div>
+          </div>
+          
+          {/* Send Report to Admin Section */}
+          <div className='send-report-section'>
+            <h3>Send Performance Report to Admin</h3>
+            <div className='send-report-controls'>
+              <select 
+                value={reportType} 
+                onChange={(e) => setReportType(e.target.value)}
+                className='report-type'
+              >
+                <option value="daily">Daily Report</option>
+                <option value="weekly">Weekly Report</option>
+                <option value="monthly">Monthly Report</option>
+              </select>
+              <button 
+                className='send-report-btn' 
+                onClick={handleSendReportToAdmin}
+                disabled={sendingReport}
+              >
+                {sendingReport ? (
+                  <>
+                    <span className="spinner-small"></span>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <IoSend style={{ marginRight: '8px' }} />
+                    Send Report to Admin
+                  </>
+                )}
+              </button>
+            </div>
+            <p className='report-note'>
+              📊 This will send a detailed performance report including all customer interactions, call statistics, and completion rates to the admin.
+            </p>
+          </div>
+
+          {/* Customer Details Performance Log */}
+          <div className='customer-performance-log'>
+            <h3>Detailed Customer Performance Log</h3>
+            <div className='performance-table-container'>
+              <table className='performance-table'>
+                <thead>
+                  <tr>
+                    <th>Task ID</th>
+                    <th>Account Number</th>
+                    <th>Customer Name</th>
+                    <th>Status</th>
+                    <th>Total Contacts</th>
+                    <th>Last Contact Date</th>
+                    <th>Last Outcome</th>
+                    <th>Last Response</th>
+                    <th>Promised Date</th>
+                    <th>Amount Overdue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customerDetails.length > 0 ? (
+                    customerDetails.map((customer, index) => (
+                      <tr key={index}>
+                        <td>
+                          <span style={{ 
+                            fontSize: '0.85em', 
+                            fontFamily: 'monospace',
+                            color: '#666',
+                            backgroundColor: '#f0f0f0',
+                            padding: '2px 6px',
+                            borderRadius: '3px',
+                            display: 'inline-block'
+                          }}>
+                            {customer.taskId || 'N/A'}
+                          </span>
+                        </td>
+                        <td>{customer.accountNumber}</td>
+                        <td>{customer.name}</td>
+                        <td>
+                          <span className={`status-badge ${customer.status.toLowerCase()}`}>
+                            {customer.status}
+                          </span>
+                        </td>
+                        <td>{customer.totalContacts}</td>
+                        <td>{customer.lastContactDate}</td>
+                        <td>{customer.lastContactOutcome}</td>
+                        <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {customer.lastResponse}
+                        </td>
+                        <td>{customer.promisedDate}</td>
+                        <td>{customer.amountOverdue}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                        No customer data available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
           
@@ -152,7 +337,7 @@ function Report() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Request ID</th>
+                      <th>Task ID</th>
                       <th>Caller Name</th>
                       <th>Sent Date</th>
                       <th>Customers Sent</th>
@@ -163,7 +348,7 @@ function Report() {
                   <tbody>
                     {completedRequests.map((request) => (
                       <tr key={request._id}>
-                        <td>{request.requestId}</td>
+                        <td style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{request.taskId}</td>
                         <td>{request.caller?.name || request.callerName}</td>
                         <td>{request.sentDate}</td>
                         <td>{request.customersSent}</td>
@@ -186,10 +371,14 @@ function Report() {
           </div>
 
           <div className='download-section'>
-            <select name="reportType" className='report-type'>
-              <option>Daily Report</option>
-              <option>Weekly Report</option>
-              <option>Monthly Report</option>
+            <select 
+              value={reportType} 
+              onChange={(e) => setReportType(e.target.value)}
+              className='report-type'
+            >
+              <option value="daily">Daily Report</option>
+              <option value="weekly">Weekly Report</option>
+              <option value="monthly">Monthly Report</option>
             </select>
             <button className='download-pdf' onClick={handleDownloadPDF}>PDF</button>
             <button className='download-excel' onClick={handleDownloadExcel}>Excel</button>

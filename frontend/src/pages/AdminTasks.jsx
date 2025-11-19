@@ -179,7 +179,6 @@ function AdminTasks() {
         customersSent: customers.length,
         sentDate: todayString,
         status: 'PENDING',
-        sentBy: 'Admin',
         adminId: adminId
       };
       

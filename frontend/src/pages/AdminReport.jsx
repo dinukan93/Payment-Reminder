@@ -191,7 +191,7 @@ function AdminReport() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Request ID</th>
+                      <th>Task ID</th>
                       <th>Caller Name</th>
                       <th>Sent Date</th>
                       <th>Customers Sent</th>
@@ -207,7 +207,7 @@ function AdminReport() {
                         : 0;
                       return (
                         <tr key={request._id}>
-                          <td>{request.requestId}</td>
+                          <td style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{request.taskId}</td>
                           <td>{request.caller?.name || request.callerName}</td>
                           <td>{request.sentDate}</td>
                           <td>{request.customersSent}</td>
@@ -246,7 +246,7 @@ function AdminReport() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Request ID</th>
+                      <th>Task ID</th>
                       <th>Caller Name</th>
                       <th>Sent Date</th>
                       <th>Customers Sent</th>
@@ -257,7 +257,7 @@ function AdminReport() {
                   <tbody>
                     {completedRequests.map((request) => (
                       <tr key={request._id}>
-                        <td>{request.requestId}</td>
+                        <td style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{request.taskId}</td>
                         <td>{request.caller?.name || request.callerName}</td>
                         <td>{request.sentDate}</td>
                         <td>{request.customersSent}</td>

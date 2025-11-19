@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllCallers, getCallerById, createCaller, updateCaller, deleteCaller, getAvailableCallers, updateCallerWorkload } from '../controllers/callerController.js';
+import { getAllCallers, getCallerById, createCaller, updateCaller, deleteCaller, getAvailableCallers, updateCallerWorkload, generatePerformanceReport } from '../controllers/callerController.js';
 
 const router = express.Router();
 
@@ -37,5 +37,10 @@ router.put('/:id/workload', updateCallerWorkload);
 // @desc    Delete caller
 // @access  Public
 router.delete('/:id', deleteCaller);
+
+// @route   POST /api/callers/:id/report
+// @desc    Generate and send performance report to admin
+// @access  Public
+router.post('/:id/report', generatePerformanceReport);
 
 export default router;
