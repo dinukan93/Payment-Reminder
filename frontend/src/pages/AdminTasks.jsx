@@ -57,28 +57,55 @@ function AdminTasks() {
 
   const loadCallers = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/callers`);
-      if (response.ok) {
-        const result = await response.json();
-        // Get data from the response (could be result.data or result directly)
-        const callersData = result.data || result;
+      // Fetch both assigned and unassigned callers
+      const [assignedRes, unassignedRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/admin/assigned-callers`),
+        fetch(`${API_BASE_URL}/admin/unassigned-callers`)
+      ]);
+      
+      let allCallersData = [];
+      
+      // Process assigned callers with task info
+      if (assignedRes.ok) {
+        const assignedResult = await assignedRes.json();
+        const assignedData = assignedResult.data || assignedResult;
         
-        // Filter for AVAILABLE callers
-        const availableCallersData = callersData
-          .filter(c => c.status === 'AVAILABLE')
-          .map(caller => ({
+        const assignedCallers = assignedData.map(caller => {
+          // Parse customersContacted format "completed/total"
+          const [completed = '0', total = '0'] = (caller.customersContacted || '0/0').split('/');
+          
+          return {
             id: caller.callerId,
             name: caller.name,
-            status: caller.status,
-            currentLoad: caller.currentLoad || 0,
-            maxLoad: caller.maxLoad || 20
-          }));
+            status: caller.taskStatus,
+            taskId: caller.task,
+            completedInTask: parseInt(completed) || 0,
+            totalInTask: parseInt(total) || 0
+          };
+        });
         
-        setAvailableCallers(availableCallersData);
-        console.log(`Loaded ${availableCallersData.length} available callers`);
-      } else {
-        console.error('Failed to fetch callers');
+        allCallersData = [...allCallersData, ...assignedCallers];
       }
+      
+      // Process unassigned callers (no task info)
+      if (unassignedRes.ok) {
+        const unassignedResult = await unassignedRes.json();
+        const unassignedData = unassignedResult.data || unassignedResult;
+        
+        const unassignedCallers = unassignedData.map(caller => ({
+          id: caller.callerId,
+          name: caller.name,
+          status: caller.status,
+          taskId: null,
+          completedInTask: 0,
+          totalInTask: 0
+        }));
+        
+        allCallersData = [...allCallersData, ...unassignedCallers];
+      }
+        
+      setAvailableCallers(allCallersData);
+      console.log(`Loaded ${allCallersData.length} callers`);
     } catch (error) {
       console.error('Error loading callers:', error);
     }
@@ -387,15 +414,20 @@ function AdminTasks() {
                       <div className="caller-info">
                         <h4>{caller.name}</h4>
                         <span className="caller-id">ID: {caller.id}</span>
+                        {caller.taskId && caller.taskId !== 'N/A' && (
+                          <span className="task-id">Task: {caller.taskId}</span>
+                        )}
                       </div>
                       <div className="caller-load">
                         <div className="load-bar">
                           <div 
                             className="load-fill" 
-                            style={{ width: `${(caller.currentLoad / caller.maxLoad) * 100}%` }}
+                            style={{ width: caller.totalInTask > 0 ? `${(caller.completedInTask / caller.totalInTask) * 100}%` : '0%' }}
                           ></div>
                         </div>
-                        <span className="load-text">{caller.currentLoad}/{caller.maxLoad} customers</span>
+                        <span className="load-text">
+                          {caller.completedInTask}/{caller.totalInTask} completed
+                        </span>
                       </div>
                       <span className="caller-status">{caller.status}</span>
                     </div>

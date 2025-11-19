@@ -334,7 +334,7 @@ function AdminDashboard() {
                 <tr>
                   <th>CALLER NAME & ID</th>
                   <th>TASK</th>
-                  <th>CUSTOMERS CONTACTED</th>
+                  <th>TASK PROGRESS</th>
                   <th>ACTIONS</th>
                 </tr>
               </thead>
@@ -348,11 +348,22 @@ function AdminDashboard() {
                       </div>
                     </td>
                     <td>
-                      <span className={`admin-status-badge ${(caller.task || '').toLowerCase()}`}>
+                      <span className="admin-task-id" style={{ 
+                        fontFamily: 'monospace',
+                        fontSize: '0.9em',
+                        padding: '4px 8px',
+                        backgroundColor: '#f0f0f0',
+                        borderRadius: '4px',
+                        color: '#333'
+                      }}>
                         {caller.task || 'N/A'}
                       </span>
                     </td>
-                    <td>{caller.customersContacted || 'N/A'}</td>
+                    <td>
+                      <span style={{ fontWeight: '600', color: '#2e7d32' }}>
+                        {caller.customersContacted || '0/0'}
+                      </span>
+                    </td>
                     <td>
                       <button 
                         className="admin-action-button" 

@@ -54,22 +54,26 @@ const getAssignedCallers = async (req, res) => {
     .select('name callerId taskStatus customersContacted currentLoad maxLoad assignedCustomers');
 
     const formattedCallers = await Promise.all(assignedCallers.map(async caller => {
-      // Get active requests for this caller to find taskId
+      // Get active request for this caller to find taskId and customer count
       const activeRequest = await Request.findOne({ 
         caller: caller._id,
         isCompleted: false 
-      }).select('taskId').lean();
+      }).select('taskId customersSent').lean();
       
-      // Get assigned customers
-      const assignedCustomers = await Customer.find({ 
-        assignedTo: caller._id 
-      }).select('accountNumber name contactNumber amountOverdue status contactHistory taskId').lean();
+      // Get customers from the current active task only
+      let completedCount = 0;
+      let totalAssigned = 0;
       
-      // Count how many assigned customers have been contacted
-      const contactedCount = assignedCustomers.filter(c => 
-        c.contactHistory && c.contactHistory.length > 0
-      ).length;
-      const totalAssigned = assignedCustomers.length;
+      if (activeRequest && activeRequest.taskId) {
+        // Get customers assigned to this caller with the current task ID
+        const taskCustomers = await Customer.find({ 
+          assignedTo: caller._id,
+          taskId: activeRequest.taskId
+        }).select('status').lean();
+        
+        totalAssigned = taskCustomers.length;
+        completedCount = taskCustomers.filter(c => c.status === 'COMPLETED').length;
+      }
       
       return {
         id: caller._id,
@@ -77,10 +81,9 @@ const getAssignedCallers = async (req, res) => {
         callerId: caller.callerId,
         task: activeRequest ? activeRequest.taskId : 'N/A',
         taskStatus: caller.taskStatus,
-        customersContacted: `${contactedCount}/${totalAssigned}`,
+        customersContacted: `${completedCount}/${totalAssigned}`,
         currentLoad: caller.currentLoad,
-        maxLoad: caller.maxLoad,
-        assignedCustomers: assignedCustomers
+        maxLoad: caller.maxLoad
       };
     }));
 
