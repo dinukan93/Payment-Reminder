@@ -58,16 +58,72 @@ const Login = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'OTP verification failed');
       
-      // OTP verified - decode token and save user data
+      // OTP verified - decode token
       const decoded = jwtDecode(data.token);
       localStorage.setItem('token', data.token);
-      localStorage.setItem('userData', JSON.stringify({
-        id: decoded.id,
-        email: decoded.email,
-        name: decoded.name,
-        avatar: decoded.avatar,
-        role: decoded.role || 'caller'
-      }));
+      
+      // Fetch full user profile to get all fields including callerId
+      try {
+        const profileEndpoint = decoded.role === 'admin' ? '/admin/profile' : '/users/profile';
+        const profileRes = await fetch(`${API_BASE_URL}${profileEndpoint}`, {
+          headers: { 
+            'Authorization': `Bearer ${data.token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          const user = profileData.user || profileData;
+          
+          // Save complete user data including callerId/adminId
+          localStorage.setItem('userData', JSON.stringify({
+            id: user._id || decoded.id,
+            _id: user._id || decoded.id,
+            callerId: user.callerId || user.adminId || data.user?.callerId || data.user?.adminId || decoded.callerId || decoded.adminId,
+            adminId: user.adminId,
+            email: user.email || decoded.email,
+            name: user.name || decoded.name,
+            phone: user.phone,
+            phoneNumber: user.phone,
+            avatar: user.avatar || decoded.avatar || data.user?.avatar,
+            role: user.role || decoded.role || 'caller'
+          }));
+          
+          console.log('✅ User data saved to localStorage:', {
+            callerId: user.callerId,
+            name: user.name,
+            email: user.email
+          });
+        } else {
+          // Fallback: use data from token response which now includes callerId/adminId
+          localStorage.setItem('userData', JSON.stringify({
+            id: data.user?.id || decoded.id,
+            _id: data.user?.id || decoded.id,
+            callerId: data.user?.callerId || data.user?.adminId || decoded.callerId || decoded.adminId,
+            adminId: data.user?.adminId,
+            email: data.user?.email || decoded.email,
+            name: data.user?.name || decoded.name,
+            avatar: data.user?.avatar || decoded.avatar,
+            role: data.user?.role || decoded.role || 'caller'
+          }));
+          console.warn('✅ Using token data with callerId/adminId:', data.user?.callerId || data.user?.adminId);
+        }
+      } catch (profileErr) {
+        console.error('Profile fetch error:', profileErr);
+        // Fallback: use data from token response which now includes callerId/adminId
+        localStorage.setItem('userData', JSON.stringify({
+          id: data.user?.id || decoded.id,
+          _id: data.user?.id || decoded.id,
+          callerId: data.user?.callerId || data.user?.adminId || decoded.callerId || decoded.adminId,
+          adminId: data.user?.adminId,
+          email: data.user?.email || decoded.email,
+          name: data.user?.name || decoded.name,
+          avatar: data.user?.avatar || decoded.avatar,
+          role: data.user?.role || decoded.role || 'caller'
+        }));
+        console.warn('✅ Using token data (profile fetch failed) with callerId/adminId:', data.user?.callerId || data.user?.adminId);
+      }
       
       // Redirect based on role
       if (decoded.role === 'admin') {

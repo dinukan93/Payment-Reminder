@@ -69,5 +69,6 @@ router.post('/verify-otp', authController.verifyOtp);
 router.post('/reset-password', authController.resetPassword);
 router.post('/admin/login', authController.adminLogin);
 router.post('/admin/verify-otp', authController.verifyAdminOtp);
+router.post('/change-password', authController.changePassword);
 
 export default router;

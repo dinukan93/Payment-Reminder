@@ -376,8 +376,8 @@ function AdminReport() {
           <div className='requests-overview'>
             <h3>Ongoing Requests</h3>
             {pendingRequests.length > 0 ? (
-              <div className='requests-table'>
-                <table>
+              <div className='requests-table' style={{ maxHeight: 340, overflow: 'auto', minWidth: 0 }}>
+                <table style={{ minWidth: 900 }}>
                   <thead>
                     <tr>
                       <th>Task ID</th>
@@ -428,8 +428,8 @@ function AdminReport() {
           <div className='completed-requests-section'>
             <h3>Completed Requests</h3>
             {completedRequests.length > 0 ? (
-              <div className='requests-table'>
-                <table>
+              <div className='requests-table' style={{ maxHeight: 340, overflow: 'auto', minWidth: 0 }}>
+                <table style={{ minWidth: 900 }}>
                   <thead>
                     <tr>
                       <th>Task ID</th>
@@ -468,8 +468,9 @@ function AdminReport() {
           {/* Report List Section - Show all reports that are sent */}
           <div className='report-list-section' style={{ margin: '30px 0 20px 0', padding: '20px', background: '#f8f9fa', borderRadius: '8px' }}>
             <h3 style={{ marginBottom: '15px' }}>Performance Reports</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
+            <div style={{ maxHeight: 340, overflow: 'auto', minWidth: 0 }}>
+              <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse' }}>
+                <thead>
                 <tr style={{ background: '#e9ecef' }}>
                   <th style={{ padding: '8px', border: '1px solid #ddd' }}>Caller</th>
                   <th style={{ padding: '8px', border: '1px solid #ddd' }}>Caller ID</th>
@@ -556,7 +557,8 @@ function AdminReport() {
                   <tr><td colSpan={5} style={{ textAlign: 'center', color: '#999', padding: '20px' }}>No callers found</td></tr>
                 )}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
           {/* Download All Reports as Excel Button */}
           <div style={{ textAlign: 'center', margin: '30px 0' }}>

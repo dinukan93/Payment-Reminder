@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import './ResetPassword.css';
 import logo from '../assets/logo.png';
 import { useLocation, useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 function useQuery(){
   return new URLSearchParams(useLocation().search);
@@ -18,7 +19,7 @@ const ResetPassword = ()=>{
   const navigate = useNavigate();
 
   const verifyOtp = async () => {
-    const res = await fetch('http://localhost:4000/auth/verify-otp', {
+    const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
       method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, otp })
     });
     return res.json().then(d=>({ ok: res.ok, body: d }));
@@ -31,7 +32,7 @@ const ResetPassword = ()=>{
       const { ok, body } = await verifyOtp();
       if (!ok) throw new Error(body.message || 'Invalid OTP');
       const resetToken = body.resetToken;
-      const res2 = await fetch('http://localhost:4000/auth/reset-password', {
+      const res2 = await fetch(`${API_BASE_URL}/auth/reset-password`, {
         method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, resetToken, newPassword, confirmPassword })
       });
       const body2 = await res2.json();

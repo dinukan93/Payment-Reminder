@@ -52,16 +52,60 @@ const Register = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'OTP verification failed');
       
-      // OTP verified - decode token and save user data
+      // OTP verified - decode token and save it
       const decoded = jwtDecode(data.token);
       localStorage.setItem('token', data.token);
-      localStorage.setItem('userData', JSON.stringify({
+      
+      // First, save decoded token data as baseline
+      const baseUserData = {
         id: decoded.id,
         email: decoded.email,
         name: decoded.name,
         avatar: decoded.avatar,
         role: decoded.role || 'caller'
-      }));
+      };
+      localStorage.setItem('userData', JSON.stringify(baseUserData));
+      
+      // Then, try to fetch full user profile to get additional fields like callerId
+      try {
+        const profileRes = await fetch(`${API_BASE_URL}/users/profile`, {
+          headers: { 
+            'Authorization': `Bearer ${data.token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          const user = profileData.user || profileData;
+          
+          // Merge profile data with decoded data (profile takes priority)
+          const completeUserData = {
+            id: user._id || decoded.id,
+            _id: user._id || decoded.id,
+            callerId: user.callerId || decoded.callerId,  // Get callerId from profile!
+            email: user.email || decoded.email,
+            name: user.name || decoded.name,
+            phone: user.phone,
+            phoneNumber: user.phone,
+            avatar: user.avatar || decoded.avatar,
+            role: user.role || decoded.role || 'caller'
+          };
+          
+          localStorage.setItem('userData', JSON.stringify(completeUserData));
+          
+          console.log('✅ Registration complete - User data saved to localStorage:', {
+            callerId: completeUserData.callerId,
+            name: completeUserData.name,
+            email: completeUserData.email
+          });
+        } else {
+          console.warn('⚠️ Could not fetch full profile, using token data only');
+        }
+      } catch (profileErr) {
+        console.error('Profile fetch error:', profileErr);
+        console.log('Using decoded token data as fallback');
+      }
       
       navigate('/dashboard');
     } catch(err) {
