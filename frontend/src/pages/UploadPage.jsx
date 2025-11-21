@@ -48,9 +48,9 @@ const UploadPage = () => {
       name: f.name,
       size: f.size,
       readableSize: humanFileSize(f.size),
-      status: f.size <= maxBytes ? "completed" : "error",
+      status: f.size <= maxBytes ? "ready" : "error",
       error: f.size <= maxBytes ? null : `File too large (max 60MB).`,
-      progress: f.size <= maxBytes ? 100 : 0,
+      progress: 0,
     }));
     setFiles((prev) => [...newFiles, ...prev]);
   };
@@ -153,6 +153,7 @@ const UploadPage = () => {
 
     try {
       setUploading(true);
+      
       // Update status to uploading
       setFiles(prev => prev.map(f => 
         f.id === fileItem.id ? { ...f, status: 'uploading', progress: 0 } : f
@@ -162,10 +163,9 @@ const UploadPage = () => {
       formData.append('file', fileItem.file);
 
       const token = localStorage.getItem('token');
-      console.log('Uploading to:', `${API_BASE_URL}/upload/parse-and-import`);
-      console.log('File:', fileItem.file.name, 'Size:', fileItem.file.size);
-
-      const response = await fetch(`${API_BASE_URL}/upload/parse-and-import`, {
+      console.log('Uploading to:', `${API_BASE_URL}/upload/parse`);
+      
+      const response = await fetch(`${API_BASE_URL}/upload/parse`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -178,8 +178,7 @@ const UploadPage = () => {
       console.log('Response data:', result);
 
       if (response.ok && result.success) {
-        console.log('Excel data received and imported:', result.data);
-        console.log('Imported:', result.data.imported, 'Duplicates:', result.data.duplicates);
+        console.log('Excel data received:', result.data);
         
         // Update status to completed
         setFiles(prev => prev.map(f => 
@@ -190,8 +189,8 @@ const UploadPage = () => {
         setExcelData(result.data);
         setCurrentPage(1);
         setSearchTerm("");
-
-        alert(`Successfully imported ${result.data.imported} customers! (${result.data.duplicates || 0} duplicates skipped)\n\nTotal processed: ${result.data.totalProcessed}`);
+        
+        console.log('Excel data state updated');
       } else {
         throw new Error(result.message || 'Upload failed');
       }
@@ -205,7 +204,6 @@ const UploadPage = () => {
           progress: 0 
         } : f
       ));
-      alert(`Upload failed: ${error.message}`);
     } finally {
       setUploading(false);
     }
@@ -266,18 +264,7 @@ const UploadPage = () => {
 
         <div className="separator" />
 
-        {files.length > 0 && (
-          <div className="file-list-header">
-            <button 
-              type="button" 
-              className="delete-all-btn" 
-              onClick={deleteAllFiles}
-              title="Delete all files"
-            >
-              Delete All
-            </button>
-          </div>
-        )}
+
 
         <div className="file-list">
           {files.length === 0 && (
@@ -360,7 +347,7 @@ const UploadPage = () => {
                     disabled={importing}
                     title="Import data to database and view in customers page"
                   >
-                    {importing ? '⟳ Importing...' : '📊Analyze & Import'}
+                    {importing ? '⟳ Importing...' : '📊 Analyze & Import'}
                   </button>
                   <button 
                     className="clear-data-btn" 
