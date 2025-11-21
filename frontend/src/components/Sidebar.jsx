@@ -9,6 +9,7 @@ import { IoFileTrayFullOutline } from "react-icons/io5";
 import { RiSettings4Line } from "react-icons/ri";
 import { TbLogout2 } from "react-icons/tb";
 import { NavLink } from "react-router-dom";
+import { MdOutlineFileUpload } from "react-icons/md";
 
 export default function Sidebar() {
   // Get user role from localStorage
@@ -81,6 +82,17 @@ export default function Sidebar() {
               >
                 <IoFileTrayFullOutline />
                 <span>Report</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/upload"
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <MdOutlineFileUpload />
+                <span>Upload</span>
               </NavLink>
             </li>
             

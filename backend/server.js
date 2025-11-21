@@ -21,6 +21,7 @@ import requestRoutes from './routes/requestRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 
 // Connect to MongoDB
@@ -47,6 +48,7 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
