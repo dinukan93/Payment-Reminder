@@ -90,7 +90,7 @@ const Login = () => {
             role: user.role || decoded.role || 'caller'
           }));
           
-          console.log('✅ User data saved to localStorage:', {
+          console.log('User data saved to localStorage:', {
             callerId: user.callerId,
             name: user.name,
             email: user.email
@@ -107,7 +107,7 @@ const Login = () => {
             avatar: data.user?.avatar || decoded.avatar,
             role: data.user?.role || decoded.role || 'caller'
           }));
-          console.warn('✅ Using token data with callerId/adminId:', data.user?.callerId || data.user?.adminId);
+          console.warn(' Using token data with callerId/adminId:', data.user?.callerId || data.user?.adminId);
         }
       } catch (profileErr) {
         console.error('Profile fetch error:', profileErr);
@@ -122,7 +122,7 @@ const Login = () => {
           avatar: data.user?.avatar || decoded.avatar,
           role: data.user?.role || decoded.role || 'caller'
         }));
-        console.warn('✅ Using token data (profile fetch failed) with callerId/adminId:', data.user?.callerId || data.user?.adminId);
+        console.warn(' Using token data (profile fetch failed) with callerId/adminId:', data.user?.callerId || data.user?.adminId);
       }
       
       // Redirect based on role
