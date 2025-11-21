@@ -1,14 +1,24 @@
 import React, { useState, useEffect } from "react";
 import "./EmployeeTable.css";
 import API_BASE_URL from "../config/api";
+import EditEmployeeModal from "./EditEmployeeModal";
+import TaskHistoryModal from "./TaskHistoryModal";
 
-function EmployeeTable() {
+function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
   const [callers, setCallers] = useState([]);
+  const [filteredCallers, setFilteredCallers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedCaller, setSelectedCaller] = useState(null);
 
   useEffect(() => {
     fetchCallers();
-  }, []);
+  }, [refreshTrigger]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [callers, searchFilter]);
 
   const fetchCallers = async () => {
     try {
@@ -26,16 +36,52 @@ function EmployeeTable() {
     }
   };
 
+  const applyFilters = () => {
+    let filtered = [...callers];
+    const { searchTerm = "", filterType = "All" } = searchFilter;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(c =>
+        c.name?.toLowerCase().includes(term) ||
+        c.callerId?.toLowerCase().includes(term) ||
+        c.email?.toLowerCase().includes(term) ||
+        c.phone?.toLowerCase().includes(term)
+      );
+    }
+
+    // Apply status filter
+    if (filterType !== "All") {
+      filtered = filtered.filter(c => c.status === filterType.toUpperCase());
+    }
+
+    setFilteredCallers(filtered);
+  };
+
   const handleShowHistory = (caller) => {
-    console.log('Show history for:', caller.name);
-    // TODO: Implement history modal
-    alert(`History for ${caller.name} - Coming soon!`);
+    setSelectedCaller(caller);
+    setShowHistoryModal(true);
   };
 
   const handleEdit = (caller) => {
-    console.log('Edit caller:', caller.name);
-    // TODO: Implement edit functionality
-    alert(`Edit ${caller.name} - Coming soon!`);
+    setSelectedCaller(caller);
+    setShowEditModal(true);
+  };
+
+  const handleEditClose = () => {
+    setShowEditModal(false);
+    setSelectedCaller(null);
+  };
+
+  const handleEditSave = (updatedCaller) => {
+    setCallers(callers.map(c => c._id === updatedCaller._id ? updatedCaller : c));
+    alert('Employee updated successfully');
+  };
+
+  const handleHistoryClose = () => {
+    setShowHistoryModal(false);
+    setSelectedCaller(null);
   };
 
   const handleDelete = async (caller) => {
@@ -92,8 +138,8 @@ function EmployeeTable() {
             </tr>
           </thead>
           <tbody>
-            {callers.length > 0 ? (
-              callers.map((caller) => (
+            {filteredCallers.length > 0 ? (
+              filteredCallers.map((caller) => (
                 <tr key={caller._id}>
                   <td>{caller.name}</td>
                   <td>{caller.callerId}</td>
@@ -157,13 +203,26 @@ function EmployeeTable() {
               <tr>
                 <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
                   <i className="bi bi-inbox" style={{ fontSize: '48px', display: 'block', marginBottom: '10px' }}></i>
-                  No callers found
+                  {searchFilter?.searchTerm ? 'No callers match your search' : 'No callers found'}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      <EditEmployeeModal 
+        show={showEditModal}
+        caller={selectedCaller}
+        onClose={handleEditClose}
+        onSave={handleEditSave}
+      />
+
+      <TaskHistoryModal 
+        show={showHistoryModal}
+        caller={selectedCaller}
+        onClose={handleHistoryClose}
+      />
     </>
   );
 }

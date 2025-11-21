@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from "react";
 import "./CustomerTable.css";
 import API_BASE_URL from "../config/api";
+import EditCustomerModal from "./EditCustomerModal";
 
-function CustomerTable() {
+function CustomerTable({ refreshTrigger, searchFilter = {} }) {
   const [customers, setCustomers] = useState([]);
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [refreshTrigger]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [customers, searchFilter]);
 
   const fetchCustomers = async () => {
     try {
@@ -18,21 +26,41 @@ function CustomerTable() {
       if (result.success && result.data) {
         // Show all customers except those marked as COMPLETED (unless they have PENDING/OVERDUE status)
         // This includes UNASSIGNED (even with assignedTo = null), PENDING, OVERDUE, and assigned customers
-        const filteredCustomers = result.data.filter(c => {
+        const filteredData = result.data.filter(c => {
           const status = c.status || 'UNASSIGNED';
-          // Include customers with active statuses
+        
           return status === 'PENDING' || status === 'UNASSIGNED' || status === 'OVERDUE' || c.assignedTo;
         });
-        console.log('Total customers fetched:', result.data.length);
-        console.log('Filtered customers to display:', filteredCustomers.length);
-        console.log('Sample filtered customer:', filteredCustomers[0]);
-        setCustomers(filteredCustomers);
+        setCustomers(filteredData);
       }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching customers:', error);
       setLoading(false);
     }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...customers];
+    const { searchTerm = "", filterType = "All" } = searchFilter;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(c =>
+        c.name?.toLowerCase().includes(term) ||
+        c.accountNumber?.toLowerCase().includes(term) ||
+        c.contactNumber?.toLowerCase().includes(term) ||
+        c.emailAddress?.toLowerCase().includes(term)
+      );
+    }
+
+    // Apply status filter
+    if (filterType !== "All") {
+      filtered = filtered.filter(c => c.status === filterType.toUpperCase());
+    }
+
+    setFilteredCustomers(filtered);
   };
 
   const formatDate = (dateString) => {
@@ -45,9 +73,18 @@ function CustomerTable() {
   };
 
   const handleEdit = (customer) => {
-    console.log('Edit customer:', customer.name);
-    // TODO: Implement edit functionality
-    alert(`Edit ${customer.name} - Coming soon!`);
+    setSelectedCustomer(customer);
+    setShowEditModal(true);
+  };
+
+  const handleEditClose = () => {
+    setShowEditModal(false);
+    setSelectedCustomer(null);
+  };
+
+  const handleEditSave = (updatedCustomer) => {
+    setCustomers(customers.map(c => c._id === updatedCustomer._id ? updatedCustomer : c));
+    alert('Customer updated successfully');
   };
 
   const handleDelete = async (customer) => {
@@ -114,8 +151,8 @@ function CustomerTable() {
             </tr>
           </thead>
           <tbody>
-            {customers.length > 0 ? (
-              customers.map((customer) => (
+            {filteredCustomers.length > 0 ? (
+              filteredCustomers.map((customer) => (
                 <tr key={customer._id}>
                   <td>{customer.accountNumber}</td>
                   <td>{customer.name}</td>
@@ -174,13 +211,20 @@ function CustomerTable() {
               <tr>
                 <td colSpan="19" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
                   <i className="bi bi-inbox" style={{ fontSize: '48px', display: 'block', marginBottom: '10px' }}></i>
-                  No customers found
+                  {searchFilter.searchTerm ? 'No customers match your search' : 'No customers found'}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      <EditCustomerModal
+        show={showEditModal}
+        customer={selectedCustomer}
+        onClose={handleEditClose}
+        onSave={handleEditSave}
+      />
     </>
   );
 }
