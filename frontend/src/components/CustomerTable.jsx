@@ -1,33 +1,66 @@
 import React, { useState, useEffect } from "react";
 import "./CustomerTable.css";
 import API_BASE_URL from "../config/api";
+import EditCustomerModal from "./EditCustomerModal";
 
-function CustomerTable() {
+function CustomerTable({ refreshTrigger, searchFilter = {} }) {
   const [customers, setCustomers] = useState([]);
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [refreshTrigger]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [customers, searchFilter]);
 
   const fetchCustomers = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/customers`);
       const result = await response.json();
-      
       if (result.success && result.data) {
-        // Only show customers with PENDING or assigned status
-        const filteredCustomers = result.data.filter(c => 
-          c.status === 'PENDING' || c.assignedTo
-        );
-        setCustomers(filteredCustomers);
+        // Show all customers except those marked as COMPLETED (unless they have PENDING/OVERDUE status)
+        // This includes UNASSIGNED (even with assignedTo = null), PENDING, OVERDUE, and assigned customers
+        const filteredData = result.data.filter(c => {
+          const status = c.status || 'UNASSIGNED';
+        
+          return status === 'PENDING' || status === 'UNASSIGNED' || status === 'OVERDUE' || c.assignedTo;
+        });
+        setCustomers(filteredData);
       }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching customers:', error);
       setLoading(false);
     }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...customers];
+    const { searchTerm = "", filterType = "All" } = searchFilter;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(c =>
+        c.name?.toLowerCase().includes(term) ||
+        c.accountNumber?.toLowerCase().includes(term) ||
+        c.contactNumber?.toLowerCase().includes(term) ||
+        c.emailAddress?.toLowerCase().includes(term)
+      );
+    }
+
+    // Apply status filter
+    if (filterType !== "All") {
+      filtered = filtered.filter(c => c.status === filterType.toUpperCase());
+    }
+
+    setFilteredCustomers(filtered);
   };
 
   const formatDate = (dateString) => {
@@ -40,9 +73,18 @@ function CustomerTable() {
   };
 
   const handleEdit = (customer) => {
-    console.log('Edit customer:', customer.name);
-    // TODO: Implement edit functionality
-    alert(`Edit ${customer.name} - Coming soon!`);
+    setSelectedCustomer(customer);
+    setShowEditModal(true);
+  };
+
+  const handleEditClose = () => {
+    setShowEditModal(false);
+    setSelectedCustomer(null);
+  };
+
+  const handleEditSave = (updatedCustomer) => {
+    setCustomers(customers.map(c => c._id === updatedCustomer._id ? updatedCustomer : c));
+    alert('Customer updated successfully');
   };
 
   const handleDelete = async (customer) => {
@@ -51,7 +93,6 @@ function CustomerTable() {
         const response = await fetch(`${API_BASE_URL}/customers/${customer._id}`, {
           method: 'DELETE'
         });
-        
         if (response.ok) {
           alert('Customer deleted successfully');
           fetchCustomers(); // Refresh the list
@@ -67,19 +108,17 @@ function CustomerTable() {
 
   if (loading) {
     return (
-      <div className="table-card">
-        <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #f3f3f3',
-            borderTop: '4px solid #1488ee',
-            borderRadius: '50%',
-            margin: '0 auto 20px',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-          <p>Loading customers...</p>
-        </div>
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #1488ee',
+          borderRadius: '50%',
+          margin: '0 auto 20px',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <p>Loading customers...</p>
       </div>
     );
   }
@@ -90,26 +129,48 @@ function CustomerTable() {
         <table className="custom-table">
           <thead>
             <tr>
-              <th>Customer</th>
               <th>Account Number</th>
-              <th>Contact</th>
+              <th>Customer Name</th>
+              <th>Region</th>
+              <th>RTOM</th>
+              <th>Product</th>
+              <th>Medium</th>
+              <th>Latest Bill</th>
+              <th>New Arrears</th>
+              <th>Credit Score</th>
+              <th>Credit Class</th>
+              <th>Contact Number</th>
+              <th>Mobile Contact</th>
+              <th>Email</th>
+              <th>Bill Handling</th>
+              <th>Account Manager</th>
+              <th>Sales Person</th>
               <th>Caller</th>
-              <th>Amount</th>
-              <th>Date</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {customers.length > 0 ? (
-              customers.map((customer) => (
+            {filteredCustomers.length > 0 ? (
+              filteredCustomers.map((customer) => (
                 <tr key={customer._id}>
-                  <td>{customer.name}</td>
                   <td>{customer.accountNumber}</td>
-                  <td>{customer.contactNumber}</td>
+                  <td>{customer.name}</td>
+                  <td>{customer.region || '-'}</td>
+                  <td>{customer.rtom || '-'}</td>
+                  <td>{customer.productLabel || '-'}</td>
+                  <td>{customer.medium || '-'}</td>
+                  <td>{customer.latestBillAmount || '0'}</td>
+                  <td>{customer.newArrears || '0'}</td>
+                  <td>{customer.creditScore || '0'}</td>
+                  <td>{customer.creditClassName || '-'}</td>
+                  <td>{customer.contactNumber || '-'}</td>
+                  <td>{customer.mobileContactTel || '-'}</td>
+                  <td>{customer.emailAddress || '-'}</td>
+                  <td>{customer.billHandlingCodeName || '-'}</td>
+                  <td>{customer.accountManager || '-'}</td>
+                  <td>{customer.salesPerson || '-'}</td>
                   <td>{customer.assignedTo ? customer.assignedTo.name : 'Unassigned'}</td>
-                  <td>{customer.amountOverdue}</td>
-                  <td>{formatDate(customer.assignedDate || customer.createdAt)}</td>
                   <td className="status">
                     <span className={`status-badge ${(customer.status || '').toLowerCase()}`}>
                       {customer.status}
@@ -148,15 +209,22 @@ function CustomerTable() {
               ))
             ) : (
               <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                <td colSpan="19" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
                   <i className="bi bi-inbox" style={{ fontSize: '48px', display: 'block', marginBottom: '10px' }}></i>
-                  No customers found
+                  {searchFilter.searchTerm ? 'No customers match your search' : 'No customers found'}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      <EditCustomerModal
+        show={showEditModal}
+        customer={selectedCustomer}
+        onClose={handleEditClose}
+        onSave={handleEditSave}
+      />
     </>
   );
 }

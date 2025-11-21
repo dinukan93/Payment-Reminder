@@ -95,6 +95,7 @@ export default function Sidebar() {
                 <span>Upload</span>
               </NavLink>
             </li>
+            
           </ul>
         </nav>
         <div className="sidebar-end">

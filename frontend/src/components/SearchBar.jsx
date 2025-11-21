@@ -1,21 +1,53 @@
-import React from "react";
+import React, { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./searchBar.css";
 
-function SearchBar() {
+function SearchBar({ onAddClick, onSearch, onFilterChange, searchPlaceholder = "Search customer..." }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("All");
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    if (onSearch) {
+      onSearch(value);
+    }
+  };
+
+  const handleFilterChange = (e) => {
+    const value = e.target.value;
+    setFilterType(value);
+    if (onFilterChange) {
+      onFilterChange(value);
+    }
+  };
+
+  const handleSearchClick = () => {
+    if (onSearch) {
+      onSearch(searchTerm);
+    }
+  };
+
   return (
     <div className="searchbar">
-      <input type="text" placeholder="Search customer..." />
-      <select name="payType">
-        <option>All payments</option>
+      <input 
+        type="text" 
+        placeholder={searchPlaceholder}
+        value={searchTerm}
+        onChange={handleSearchChange}
+      />
+      <select name="filterType" value={filterType} onChange={handleFilterChange}>
+        <option>All</option>
         <option>Pending</option>
-        <option>Failed</option>
+        <option>Active</option>
+        <option>Inactive</option>
+        <option>Completed</option>
       </select>
-      <button className="search-icon">
-        <i class="bi bi-search"></i>
+      <button className="search-icon" onClick={handleSearchClick}>
+        <i className="bi bi-search"></i>
       </button>
-      <button className="add-button">
-        <i class="bi bi-person-add"></i>
+      <button className="add-button" onClick={onAddClick}>
+        <i className="bi bi-person-add"></i>
         Add
       </button>
     </div>
