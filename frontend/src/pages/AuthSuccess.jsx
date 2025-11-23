@@ -43,7 +43,6 @@ const AuthSuccess = () => {
                 email: user.email || decoded.email,
                 name: user.name || decoded.name,
                 phone: user.phone,
-                phoneNumber: user.phone,
                 avatar: user.avatar || decoded.avatar,
                 googleId: user.googleId,
                 role: user.role || decoded.role || 'caller'
@@ -64,6 +63,7 @@ const AuthSuccess = () => {
                 email: decoded.email,
                 name: decoded.name,
                 avatar: decoded.avatar,
+                phone: decoded.phone,
                 role: decoded.role || 'caller'
               }));
               console.warn('✅ Using decoded token data with callerId/adminId:', decoded.callerId || decoded.adminId);
