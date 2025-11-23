@@ -85,7 +85,6 @@ const Login = () => {
             email: user.email || decoded.email,
             name: user.name || decoded.name,
             phone: user.phone,
-            phoneNumber: user.phone,
             avatar: user.avatar || decoded.avatar || data.user?.avatar,
             role: user.role || decoded.role || 'caller'
           }));
