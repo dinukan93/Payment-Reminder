@@ -86,8 +86,7 @@ const Register = () => {
             callerId: user.callerId || decoded.callerId,  // Get callerId from profile!
             email: user.email || decoded.email,
             name: user.name || decoded.name,
-            phone: user.phone,
-            phoneNumber: user.phone,
+            phone: user.phone || user.number,
             avatar: user.avatar || decoded.avatar,
             role: user.role || decoded.role || 'caller'
           };
