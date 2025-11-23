@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import './Settings.css';
+import { useTheme } from "../context/ThemeContext";
 import { FaUser, FaBell, FaShieldAlt, FaCog, FaSave, FaEnvelope, FaPhone, FaMoon, FaSun } from 'react-icons/fa';
-import { useTheme } from '../context/ThemeContext';
-import API_BASE_URL from '../config/api';
+import API_BASE_URL from "../config/api";
 
 const Settings = () => {
   const { darkMode, toggleDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     callerId: '',
-    fullName: '',
+    name: '',
     email: '',
-    phoneNumber: '',
+    phone: '',
     avatar: '', // base64 or url
     currentPassword: '',
     newPassword: '',
@@ -25,74 +26,68 @@ const Settings = () => {
   const [error, setError] = useState('');
 
   const [preferences, setPreferences] = useState({
-    emailNotifications: true,
-    paymentReminder: true,
+    emailNotifications: false,
+    paymentReminder: false,
     callNotifications: false,
     language: 'English',
-    timezone: 'UTC'
+    timezone: 'UTC',
+    darkMode: false
   });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_BASE_URL}/settings`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // Set profile data
+        setFormData(prev => ({
+          ...prev,
+          callerId: res.data.callerId || '',
+          name: res.data.name || '',
+          email: res.data.email || '',
+          phone: res.data.phone || '',
+          avatar: res.data.avatar || '',
+        }));
+
+        // Set avatar preview if available
+        if (res.data.avatar) {
+          setAvatarPreview(res.data.avatar);
+        }
+
+        // Set preferences (flat structure)
+        if (res.data.preferences) {
+          setPreferences({
+            emailNotifications: res.data.preferences.emailNotifications || false,
+            paymentReminder: res.data.preferences.paymentReminder || false,
+            callNotifications: res.data.preferences.callNotifications || false,
+            language: res.data.preferences.language || 'English',
+            timezone: res.data.preferences.timezone || 'UTC',
+            darkMode: res.data.preferences.darkMode || false
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load settings', err);
+        setError('Failed to load settings');
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // Load profile from localStorage on mount
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        // Try to get token from localStorage (if you use JWT auth)
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-        let callerId = userData.callerId || userData.adminId || '';
-        let token = userData.token;
-        let role = userData.role;
-        let headers = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-
-        // Fetch latest profile from backend
-        const res = await fetch(`${API_BASE_URL}/users/profile`, { headers });
-        if (res.ok) {
-          const data = await res.json();
-          const user = data.user || {};
-          // Update localStorage and state
-          localStorage.setItem('userData', JSON.stringify({ ...userData, ...user }));
-          setFormData(prev => ({
-            ...prev,
-            callerId: user.callerId || user.adminId || '',
-            fullName: user.name || '',
-            email: user.email || '',
-            phoneNumber: user.phone || '',
-            avatar: user.avatar || '',
-          }));
-          setAvatarPreview(user.avatar || '');
-        } else {
-          // fallback to localStorage if backend fails
-          setFormData(prev => ({
-            ...prev,
-            callerId: callerId,
-            fullName: userData.name || '',
-            email: userData.email || '',
-            phoneNumber: userData.phoneNumber || '',
-            avatar: userData.avatar || '',
-          }));
-          setAvatarPreview(userData.avatar || '');
-        }
-        // Load preferences from localStorage if available
-        const savedPreferences = JSON.parse(localStorage.getItem('preferences') || '{}');
-        if (Object.keys(savedPreferences).length > 0) {
-          setPreferences(savedPreferences);
-        }
-      } catch (err) {
-        // fallback to localStorage if error
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-        setFormData(prev => ({
-          ...prev,
-          callerId: userData.callerId || userData.adminId || '',
-          fullName: userData.name || '',
-          email: userData.email || '',
-          phoneNumber: userData.phoneNumber || '',
-          avatar: userData.avatar || '',
-        }));
-        setAvatarPreview(userData.avatar || '');
-      }
-    };
-    fetchProfile();
-  }, []);
+    if (preferences.darkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.classList.add('dark-mode');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.body.classList.remove('dark-mode');
+    }
+  }, [preferences.darkMode]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -125,39 +120,30 @@ const Settings = () => {
   // Save profile image
   const saveProfileImage = async () => {
     try {
-      if (!formData.callerId) {
-        throw new Error('Caller ID is missing. Please refresh the page and try again.');
-      }
       setLoading(true);
       setError('');
       setMessage('');
 
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      const updatedUser = {
-        callerId: userData.role === 'admin' ? undefined : formData.callerId,
-        adminId: userData.role === 'admin' ? formData.callerId : undefined,
-        avatar: formData.avatar,
-      };
-      // Remove undefined keys
-      Object.keys(updatedUser).forEach(key => updatedUser[key] === undefined && delete updatedUser[key]);
+      const token = localStorage.getItem('token');
+      const res = await axios.put(
+        `${API_BASE_URL}/settings/profile`,
+        { avatar: formData.avatar },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      console.log('Sending profile image update payload:', updatedUser);
-      const res = await fetch(`${API_BASE_URL}/users/profile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedUser)
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || `Server error: ${res.status}`);
-      }
-      // Save to localStorage as well
-      localStorage.setItem('userData', JSON.stringify({ ...userData, avatar: formData.avatar }));
       setMessage('Profile image updated successfully!');
+
+      // Update localStorage
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      localStorage.setItem('userData', JSON.stringify({ ...userData, avatar: formData.avatar }));
       window.dispatchEvent(new Event('storage'));
     } catch (err) {
       console.error('Save profile image error:', err);
-      setError('Failed to save profile image: ' + err.message);
+      setError(err.response?.data?.msg || 'Failed to save profile image');
     } finally {
       setLoading(false);
     }
@@ -166,48 +152,55 @@ const Settings = () => {
   // Update profile information (name, email, phone)
   const updateProfileInfo = async () => {
     try {
-      if (!formData.callerId) {
-        throw new Error('Caller ID is missing.');
+      // Validation
+      if (!formData.name || !formData.name.trim()) {
+        setError('Name is required');
+        return;
       }
+      if (!formData.email || !formData.email.trim()) {
+        setError('Email is required');
+        return;
+      }
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        setError('Please enter a valid email address');
+        return;
+      }
+
       setLoading(true);
       setError('');
       setMessage('');
 
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      const updatedUser = {
-        callerId: userData.role === 'admin' ? undefined : formData.callerId,
-        adminId: userData.role === 'admin' ? formData.callerId : undefined,
-        name: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        avatar: formData.avatar // Always send avatar with profile info
-      };
-      // Remove undefined keys
-      Object.keys(updatedUser).forEach(key => updatedUser[key] === undefined && delete updatedUser[key]);
+      const token = localStorage.getItem('token');
+      const res = await axios.put(
+        `${API_BASE_URL}/settings/profile`,
+        {
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          phone: formData.phone.trim(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      console.log('Sending profile info update payload:', updatedUser);
-      const res = await fetch(`${API_BASE_URL}/users/profile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedUser)
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || `Server error: ${res.status}`);
-      }
-      // Save to localStorage as well
-      localStorage.setItem('userData', JSON.stringify({ 
-        ...userData, 
-        name: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        avatar: formData.avatar
+      setMessage(res.data.msg || 'Profile updated successfully!');
+
+      // Update localStorage
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      localStorage.setItem('userData', JSON.stringify({
+        ...userData,
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
       }));
-      setMessage('Profile information updated successfully!');
       window.dispatchEvent(new Event('storage'));
     } catch (err) {
       console.error('Update profile info error:', err);
-      setError('Failed to update profile: ' + err.message);
+      setError(err.response?.data?.msg || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -217,35 +210,37 @@ const Settings = () => {
   const changePassword = async () => {
     try {
       if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-        throw new Error('All password fields are required.');
+        setError('All password fields are required.');
+        return;
       }
       if (formData.newPassword !== formData.confirmPassword) {
-        throw new Error('New passwords do not match.');
+        setError('New passwords do not match.');
+        return;
       }
       if (formData.newPassword.length < 6) {
-        throw new Error('New password must be at least 6 characters long.');
+        setError('New password must be at least 6 characters long.');
+        return;
       }
 
       setLoading(true);
       setError('');
       setMessage('');
 
-      const res = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
+      const token = localStorage.getItem('token');
+      const res = await axios.put(
+        `${API_BASE_URL}/settings/password`,
+        {
           currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword
-        })
-      });
+          newPassword: formData.newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Failed to change password');
-      }
-
-      setMessage('Password changed successfully!');
+      setMessage(res.data.msg || 'Password changed successfully!');
       setFormData(prev => ({
         ...prev,
         currentPassword: '',
@@ -254,7 +249,7 @@ const Settings = () => {
       }));
     } catch (err) {
       console.error('Change password error:', err);
-      setError('Failed to change password: ' + err.message);
+      setError(err.response?.data?.msg || 'Failed to change password');
     } finally {
       setLoading(false);
     }
@@ -268,16 +263,68 @@ const Settings = () => {
     setError('');
   };
 
+  // Handle dark mode toggle
+  const handleDarkModeToggle = () => {
+    const newDarkMode = !darkMode;
+    toggleDarkMode(); // Update theme context
+    setPreferences(prev => ({
+      ...prev,
+      darkMode: newDarkMode
+    }));
+  };
+
   // Save preferences
-  const savePreferences = () => {
+  const saveNotificationPreferences = async () => {
     try {
-      localStorage.setItem('preferences', JSON.stringify(preferences));
-      setMessage('Preferences saved successfully!');
-      setTimeout(() => setMessage(''), 3000);
+      setLoading(true);
+      setError('');
+      setMessage('');
+
+      const { emailNotifications, paymentReminder, callNotifications } = preferences;
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API_BASE_URL}/settings/preferences?type=notification`,
+        { emailNotifications, paymentReminder, callNotifications },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setMessage('Notification preferences saved successfully!');
     } catch (err) {
-      setError('Failed to save preferences: ' + err.message);
+      console.error("Failed to update preferences:", err);
+      setError(err.response?.data?.msg || 'Failed to update notification preferences');
+    } finally {
+      setLoading(false);
     }
   };
+
+  const saveSystemPreferences = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      setMessage('');
+
+      const { language, timezone, darkMode } = preferences;
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API_BASE_URL}/settings/preferences?type=system`,
+        { language, timezone, darkMode },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setMessage('System preferences saved successfully!');
+    } catch (err) {
+      console.error("Failed to update preferences:", err);
+      setError(err.response?.data?.msg || 'Failed to update system preferences');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -370,29 +417,44 @@ const Settings = () => {
                   style={{ marginBottom: 8 }}
                   onClick={() => fileInputRef.current && fileInputRef.current.click()}
                   disabled={loading}
-                >Upload Image</button>
-                {avatarPreview && (
-                  <button
-                    type="button"
-                    className="remove-image-btn"
-                    style={{ color: '#d00', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.95em' }}
-                    onClick={() => { setFormData(prev => ({ ...prev, avatar: '' })); setAvatarPreview(''); }}
-                    disabled={loading}
-                  >Remove Image</button>
+                >
+                  {loading ? 'Uploading...' : 'Choose Image'}
+                </button>
+                {avatarPreview && formData.avatar && (
+                  <>
+                    <button
+                      type="button"
+                      className="save-button"
+                      style={{ marginBottom: 8, padding: '8px 20px', fontSize: '0.9em' }}
+                      onClick={saveProfileImage}
+                      disabled={loading}
+                    >
+                      {loading ? 'Saving...' : 'Save Image'}
+                    </button>
+                    <button
+                      type="button"
+                      className="remove-image-btn"
+                      style={{ color: '#d00', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.95em' }}
+                      onClick={() => { setFormData(prev => ({ ...prev, avatar: '' })); setAvatarPreview(''); }}
+                      disabled={loading}
+                    >Remove Image</button>
+                  </>
                 )}
               </div>
             </div>
+
+            <div className="section-divider"></div>
 
             {/* Full Name */}
             <div className="form-group">
               <label className="form-label bold-label">Full Name :-</label>
               <input
                 type="text"
-                name="fullName"
-                value={formData.fullName}
+                name="name"
+                value={formData.name}
                 onChange={handleInputChange}
                 className="form-input"
-                placeholder="Enter your full name"
+                placeholder="Enter your name"
               />
             </div>
 
@@ -414,8 +476,8 @@ const Settings = () => {
               <label className="form-label bold-label">Phone Number :-</label>
               <input
                 type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
+                name="phone"
+                value={formData.phone}
                 onChange={handleInputChange}
                 className="form-input"
                 placeholder="Enter your phone number"
@@ -506,10 +568,11 @@ const Settings = () => {
             <button
               type="button"
               className="save-button"
-              onClick={savePreferences}
+              onClick={saveNotificationPreferences}
+              disabled={loading}
               style={{ marginTop: 12, width: '100%' }}
             >
-              Save Notification Preferences
+              {loading ? 'Saving...' : 'Save Notification Preferences'}
             </button>
           </section>
         </div>
@@ -632,7 +695,7 @@ const Settings = () => {
                         <input
                           type="checkbox"
                           checked={darkMode}
-                          onChange={toggleDarkMode}
+                          onChange={handleDarkModeToggle}
                         />
                         <span className="toggle-slider"></span>
                       </label>
@@ -645,10 +708,11 @@ const Settings = () => {
             <button
               type="button"
               className="save-button"
-              onClick={savePreferences}
+              onClick={saveSystemPreferences}
+              disabled={loading}
               style={{ marginTop: 12, width: '100%' }}
             >
-              Save System Preferences
+              {loading ? 'Saving...' : 'Save System Preferences'}
             </button>
           </section>
         </div>
