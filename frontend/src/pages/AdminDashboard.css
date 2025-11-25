@@ -1,0 +1,582 @@
+.admin-dashboard {
+  width: 100%;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.admin-dashboard-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.admin-dashboard-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  text-align: center;
+}
+
+.admin-dashboard-layout {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 20px;
+}
+
+.admin-dashboard-main {
+  min-width: 0;
+}
+
+.admin-dashboard-sidebar {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+/* Stats Grid */
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px 20px;
+  margin-bottom: 30px;
+}
+
+.admin-stat-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  min-height: 75px;
+}
+
+.admin-stat-card:nth-child(1) {
+  grid-column: 1 / 3;
+}
+
+.admin-stat-card:nth-child(2) {
+  grid-column: 3 / 5;
+}
+
+.admin-stat-card:nth-child(3) {
+  grid-column: 5 / 6;
+}
+
+.admin-stat-card:nth-child(4) {
+  grid-column: 2 / 4;
+  grid-row: 2;
+}
+
+.admin-stat-card:nth-child(5) {
+  grid-column: 4 / 6;
+  grid-row: 2;
+}
+
+.admin-stat-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.admin-stat-details {
+  flex: 1;
+}
+
+.admin-stat-details h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.2;
+}
+
+.admin-stat-details p {
+  margin: 5px 0 0 0;
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.admin-stat-menu {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 5px;
+}
+
+.admin-stat-menu:hover {
+  color: #666;
+}
+
+/* Tables Section */
+.admin-assigned-callers-section,
+.admin-unassigned-callers-section,
+.admin-sent-requests-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.admin-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.admin-section-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.admin-see-all {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.admin-see-all:hover {
+  text-decoration: underline;
+}
+
+.admin-callers-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-callers-table thead {
+  background-color: #f8f9fa;
+}
+
+.admin-callers-table th {
+  text-align: left;
+  padding: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-callers-table td {
+  padding: 15px 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.admin-caller-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-caller-info strong {
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.admin-caller-id,
+.admin-caller-date {
+  color: #999;
+  font-size: 12px;
+}
+
+.admin-status-badge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+.admin-status-badge.ongoing {
+  background-color: #ffe0e0;
+  color: #d32f2f;
+}
+
+.admin-status-badge.completed {
+  background-color: #d4f4dd;
+  color: #2e7d32;
+}
+
+.admin-status-badge.available {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.admin-status-badge.accepted {
+  background-color: #d4f4dd;
+  color: #2e7d32;
+}
+
+.admin-status-badge.declined {
+  background-color: #ffe0e0;
+  color: #d32f2f;
+}
+
+.admin-status-badge.pending {
+  background-color: #fff4e0;
+  color: #f57c00;
+}
+
+.admin-response-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-action-button {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.admin-action-button:hover {
+  background-color: #bbdefb;
+}
+
+.admin-action-button.assign {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.admin-action-button.assign:hover {
+  background-color: #bbdefb;
+}
+
+/* Sidebar */
+.admin-user-profile-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.admin-profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.admin-profile-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.admin-menu-btn {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 5px;
+}
+
+.admin-menu-btn:hover {
+  color: #666;
+}
+
+.admin-profile-content {
+  text-align: center;
+  padding: 20px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.admin-profile-avatar {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 15px;
+  border-radius: 50%;
+  border: 3px solid #2743B3;
+  overflow: hidden;
+}
+
+.admin-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-profile-content h3 {
+  font-size: 16px;
+  color: #333;
+  margin: 0 0 15px 0;
+  font-weight: 600;
+}
+
+.admin-profile-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.admin-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.admin-icon-btn:hover {
+  background: #e0e0e0;
+}
+
+.admin-icon-btn i {
+  font-size: 18px;
+  color: #666;
+}
+
+.admin-notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ff4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Weekly Calls */
+.admin-weekly-calls-section {
+  padding: 20px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.admin-weekly-calls-section h4 {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.admin-calls-chart {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 120px;
+  gap: 8px;
+}
+
+.admin-call-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.admin-bar {
+  width: 100%;
+  background: linear-gradient(to top, #2A9B8E, #38C12D);
+  border-radius: 4px 4px 0 0;
+  min-height: 5px;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+}
+
+.admin-bar:hover {
+  background: linear-gradient(to top, #2743B3, #2A9B8E);
+  transform: scaleY(1.05);
+}
+
+.admin-day-label {
+  position: absolute;
+  bottom: 0;
+  font-size: 10px;
+  color: #999;
+  font-weight: 500;
+}
+
+/* Completed Payments */
+.admin-completed-payments-section {
+  padding: 20px 0 0 0;
+}
+
+.admin-completed-payments-section .admin-section-header {
+  margin-bottom: 15px;
+}
+
+.admin-completed-payments-section h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.admin-add-btn {
+  background: none;
+  border: none;
+  color: #38C12D;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.admin-add-btn:hover {
+  color: #2A9B8E;
+}
+
+.admin-payments-list {
+  max-height: 250px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+.admin-payment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.admin-payment-item:last-child {
+  border-bottom: none;
+}
+
+.admin-payment-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-payment-info strong {
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.admin-payment-date {
+  font-size: 11px;
+  color: #999;
+}
+
+.admin-payment-badge {
+  background-color: #38C12D;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-see-all-btn {
+  width: 100%;
+  padding: 10px;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  color: #1976d2;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.admin-see-all-btn:hover {
+  background: #e0e0e0;
+}
+
+/* Scrollbar Styling */
+.admin-payments-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-payments-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.admin-payments-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.admin-payments-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+  .admin-dashboard-layout {
+    grid-template-columns: 1fr 300px;
+  }
+  
+  .admin-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .admin-dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard-sidebar {
+    position: static;
+  }
+  
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .admin-stat-card:nth-child(1),
+  .admin-stat-card:nth-child(2),
+  .admin-stat-card:nth-child(3),
+  .admin-stat-card:nth-child(4),
+  .admin-stat-card:nth-child(5),
+  .admin-stat-card:nth-child(6),
+  .admin-stat-card:nth-child(7) {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}

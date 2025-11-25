@@ -1,0 +1,148 @@
+
+.login-page {
+  width: 100vw;
+  height: 100vh;
+  background-image: url('../assets/bckgrd.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  font-family: "Poppins", sans-serif;
+  color: white;
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh;
+  padding: 0 100px;
+  max-width: 100vw;
+}
+
+/* LEFT SECTION */
+.logo {
+  width: 200px;
+  margin-bottom: 100px;
+}
+
+.welcome {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+  animation: fadeIn 1s ease-in-out infinite alternate;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.right-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+/* LOGIN BOX */
+.login-card {
+  width: 330px;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+}
+
+.login-card h2 {
+  margin-top: 20;
+  text-align:center;
+}
+
+.login-card label {
+  display: block;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.login-card input {
+  margin-top: 15px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+}
+
+.signin-btn {
+  margin-top: 15px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #042b5f;
+  color: white;
+  cursor: pointer;
+}
+
+.signin-btn:hover {
+  background: white;
+  color:black}
+
+.google-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  font-size: 20px;
+  background: rgb(210, 210, 210);
+  cursor: pointer;
+}
+.google-btn:hover {
+  background: #042b5f;
+}
+.fp {
+  display: block;
+  margin-top: 5px;
+  text-align: left;
+  font-size: 13px;
+  color: #ddd;
+  cursor: pointer;
+}
+
+.divider {
+  text-align: center;
+  margin: 14px 0;
+  color: #ccc;
+}
+
+/* ADMIN BUTTON*/
+.admin-btn {
+margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  font-weight: 600;
+  width: fit-content;
+  justify-content: center;
+  text-align: center;
+}
+
+.admin-btn:hover {
+  background: #042b5f;
+}
+

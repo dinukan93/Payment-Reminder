@@ -1,0 +1,384 @@
+/* Admin Customer Details Modal Overlay */
+.admin-customer-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  padding: 20px;
+  animation: adminCustomerFadeIn 0.3s ease;
+}
+
+@keyframes adminCustomerFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Content */
+.admin-customer-modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: adminCustomerSlideUp 0.3s ease;
+}
+
+@keyframes adminCustomerSlideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Modal Header */
+.admin-customer-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px;
+  border-bottom: 2px solid #e0e0e0;
+  background: linear-gradient(135deg, #1488ee 0%, #0d6ecc 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.admin-customer-modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-customer-modal-header h2 i {
+  font-size: 24px;
+}
+
+.admin-customer-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: white;
+  font-size: 18px;
+}
+
+.admin-customer-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+/* Modal Body */
+.admin-customer-modal-body {
+  padding: 28px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Customer Info Grid */
+.admin-customer-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.admin-customer-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-customer-info-item label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #666;
+  letter-spacing: 0.5px;
+}
+
+.admin-customer-info-item span {
+  font-size: 15px;
+  font-weight: 500;
+  color: #222;
+}
+
+.admin-customer-amount {
+  color: #d32f2f;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.admin-customer-days {
+  color: #ff6f00;
+  font-weight: 600;
+}
+
+/* Contact History */
+.admin-customer-history {
+  margin-bottom: 28px;
+  padding: 20px;
+  background: #fff8e1;
+  border-radius: 12px;
+  border: 1px solid #ffd54f;
+}
+
+.admin-customer-history h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-customer-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-customer-history-item {
+  background: white;
+  padding: 14px;
+  border-radius: 8px;
+  border-left: 4px solid #1488ee;
+}
+
+.admin-customer-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.admin-customer-history-date {
+  font-size: 13px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-customer-history-outcome {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-customer-history-outcome.paid {
+  background: #d4f4dd;
+  color: #2e7d32;
+}
+
+.admin-customer-history-outcome.pending {
+  background: #fff4e0;
+  color: #ed6c02;
+}
+
+.admin-customer-history-item p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+}
+
+.admin-customer-history-item p strong {
+  color: #222;
+  font-weight: 600;
+}
+
+/* Form Section */
+.admin-customer-form {
+  padding: 24px;
+  background: #f0f7ff;
+  border-radius: 12px;
+  border: 1px solid #bbdefb;
+}
+
+.admin-customer-form h3 {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1488ee;
+}
+
+.admin-customer-form-group {
+  margin-bottom: 20px;
+}
+
+.admin-customer-form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.admin-customer-required {
+  color: #d32f2f;
+  margin-left: 4px;
+}
+
+.admin-customer-select,
+.admin-customer-input,
+.admin-customer-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  background: white;
+}
+
+.admin-customer-select:focus,
+.admin-customer-input:focus,
+.admin-customer-textarea:focus {
+  outline: none;
+  border-color: #1488ee;
+  box-shadow: 0 0 0 3px rgba(20, 136, 238, 0.1);
+}
+
+.admin-customer-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.admin-customer-checkbox-group {
+  margin-top: 16px;
+}
+
+.admin-customer-checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.admin-customer-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #1488ee;
+}
+
+/* Modal Footer */
+.admin-customer-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 28px;
+  border-top: 2px solid #e0e0e0;
+  background: #f8f9fa;
+  border-radius: 0 0 16px 16px;
+}
+
+.admin-customer-cancel-btn,
+.admin-customer-save-btn {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-customer-cancel-btn {
+  background: white;
+  color: #666;
+  border: 2px solid #ddd;
+}
+
+.admin-customer-cancel-btn:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
+.admin-customer-save-btn {
+  background: linear-gradient(135deg, #1488ee 0%, #0d6ecc 100%);
+  color: white;
+}
+
+.admin-customer-save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(20, 136, 238, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-customer-modal-content {
+    max-width: 100%;
+    max-height: 95vh;
+    margin: 10px;
+  }
+
+  .admin-customer-info-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .admin-customer-modal-header {
+    padding: 20px;
+  }
+
+  .admin-customer-modal-body {
+    padding: 20px;
+  }
+
+  .admin-customer-form,
+  .admin-customer-history {
+    padding: 16px;
+  }
+
+  .admin-customer-modal-footer {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .admin-customer-cancel-btn,
+  .admin-customer-save-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,48 @@
+.overdue-payments-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  max-height: 500px;
+}
+
+.table-container {
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.overdue-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.overdue-table thead {
+  background-color: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: -1;
+}
+
+.overdue-table th {
+  text-align: left;
+  padding: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: #f8f9fa;
+}
+
+.overdue-table td {
+  padding: 15px 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.status-badge.overdue {
+  background-color: #ffe0e0;
+  color: #d32f2f;
+}
