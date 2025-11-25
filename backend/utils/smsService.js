@@ -9,7 +9,7 @@ import fetch from 'node-fetch';
 export const sendOtpSms = async (phone, otp) => {
   try {
     const token = process.env.TEXTLK_API_TOKEN;
-    const senderId = process.env.TEXTLK_SENDER_ID || 'TextLKDemo';
+    const senderId = process.env.TEXTLK_SENDER_ID;
     
     if (!token) {
       console.error('Text.lk API token not configured');
@@ -19,7 +19,7 @@ export const sendOtpSms = async (phone, otp) => {
     }
 
     // Format phone number (ensure it starts with 94)
-    let formattedPhone = phone.replace(/\D/g, ''); // Remove non-digits
+    let formattedPhone = phone.replace(/\D/g, ''); 
     if (formattedPhone.startsWith('0')) {
       formattedPhone = '94' + formattedPhone.substring(1);
     } else if (!formattedPhone.startsWith('94')) {

@@ -48,9 +48,9 @@ const UploadPage = () => {
       name: f.name,
       size: f.size,
       readableSize: humanFileSize(f.size),
-      status: f.size <= maxBytes ? "completed" : "error",
+      status: f.size <= maxBytes ? "ready" : "error",
       error: f.size <= maxBytes ? null : `File too large (max 60MB).`,
-      progress: f.size <= maxBytes ? 100 : 0,
+      progress: 0,
     }));
     setFiles((prev) => [...newFiles, ...prev]);
   };
@@ -266,18 +266,7 @@ const UploadPage = () => {
 
         <div className="separator" />
 
-        {files.length > 0 && (
-          <div className="file-list-header">
-            <button 
-              type="button" 
-              className="delete-all-btn" 
-              onClick={deleteAllFiles}
-              title="Delete all files"
-            >
-              Delete All
-            </button>
-          </div>
-        )}
+
 
         <div className="file-list">
           {files.length === 0 && (

@@ -271,8 +271,9 @@
 
 /* Toggle Switch Styles */
 .toggle-group {
-  space-y: 1rem;
+  display: flex;
   flex-direction: column;
+  gap: 1rem;
 }
 
 .toggle-item {
@@ -403,9 +404,10 @@ input:checked + .toggle-slider:before {
   transform: translateX(20px);
 }
 
-/* Preference Styles */
 .preference-group {
-  space-y: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .preference-item {
