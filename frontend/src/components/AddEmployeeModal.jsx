@@ -9,8 +9,9 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
     callerId: "",
     email: "",
     phone: "",
+    password: "",
     maxLoad: 20,
-    status: "ACTIVE"
+    status: "AVAILABLE"
   });
   const [error, setError] = useState("");
 
@@ -34,6 +35,11 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
     }
     if (!formData.callerId.trim()) {
       setError("Caller ID is required");
+      return;
+    }
+
+    if (!formData.password || formData.password.length < 6) {
+      setError("Password is required (min 6 characters)");
       return;
     }
     if (formData.maxLoad < 1 || formData.maxLoad > 100) {
@@ -63,6 +69,7 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
           callerId: "",
           email: "",
           phone: "",
+          password: "",
           maxLoad: 20,
           status: "ACTIVE"
         });
@@ -145,6 +152,19 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
           </div>
 
           <div className="form-group">
+            <label htmlFor="password">Password *</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="Enter password"
+              required
+              minLength={6}
+            />
+          </div>
+          <div className="form-group">
             <label htmlFor="maxLoad">Max Load</label>
             <input
               type="number"
@@ -165,8 +185,9 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
               value={formData.status}
               onChange={handleInputChange}
             >
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="BUSY">Busy</option>
+              <option value="OFFLINE">Offline</option>
             </select>
           </div>
 

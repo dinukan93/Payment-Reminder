@@ -270,26 +270,31 @@
 }
 
 /* Toggle Switch Styles */
+/* Notification toggles: left align everything */
 .toggle-group {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  align-items: flex-start;
 }
 
 .toggle-item {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   padding: 0.5rem 0;
   text-align: left;
-  gap: 20rem;
-  
+  gap: 1.5rem;
+  width: 100%;
 }
 
 .toggle-content {
   flex: 1;
   text-align: left;
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
 }
 
 .toggle-header {
@@ -355,7 +360,7 @@
   width: 44px;
   height: 24px;
   flex-shrink: 0;
-  margin-left: 1rem;
+  margin-left: 0.5rem;
 }
 
 .toggle-switch input {

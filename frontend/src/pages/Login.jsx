@@ -146,7 +146,7 @@ const Login = () => {
           <img src={logo} className="logo" alt="logo" />
 
           <h1 className="welcome">
-            Welcome! <br /> SLT <br /> Pay Reminder Portal
+            Welcome! <br /> SLT <br /> Payment Reminder Portal
           </h1>
         </div>
 
@@ -177,9 +177,11 @@ const Login = () => {
                   <>
                     <p className="rg">Don't have an account? <a href="#" onClick={(e)=>{e.preventDefault(); navigate('/register')}}>Register</a></p>
 
-                    <p className="divider">or continue with</p>
 
-                    <button
+                    {/* <p className="divider">or continue with</p> */}
+
+                  {/* loging with google */}
+                    {/* <button
                       type="button"
                       onClick={() => {
                         const redirect = encodeURIComponent(window.location.origin);
@@ -188,7 +190,7 @@ const Login = () => {
                       className="google-btn"
                     >
                       <FcGoogle size={20} />
-                    </button>
+                    </button> */}
                   </>
                 )}
                 

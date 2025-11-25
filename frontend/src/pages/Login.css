@@ -38,7 +38,7 @@
   font-weight: 750;
   line-height: 1.2;
   margin-bottom: 200px;
-  animation: fadeIn 1s ease-in-out infinite alternate;
+  animation: fadeIn 1.5s ease-in-out infinite alternate;
 }
 
 @keyframes fadeIn {

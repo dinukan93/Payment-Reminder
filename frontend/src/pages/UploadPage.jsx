@@ -347,7 +347,7 @@ const UploadPage = () => {
                     disabled={importing}
                     title="Import data to database and view in customers page"
                   >
-                    {importing ? '⟳ Importing...' : '📊 Analyze & Import'}
+                    {importing ? '⟳ Importing...' : 'Import'}
                   </button>
                   <button 
                     className="clear-data-btn" 

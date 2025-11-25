@@ -84,7 +84,9 @@ export default function Sidebar() {
                 <span>Report</span>
               </NavLink>
             </li>
+            {userRole === 'admin' && (
             <li>
+              
               <NavLink
                 to="/upload"
                 className={({ isActive }) =>
@@ -95,7 +97,7 @@ export default function Sidebar() {
                 <span>Upload</span>
               </NavLink>
             </li>
-            
+            )}
           </ul>
         </nav>
         <div className="sidebar-end">
