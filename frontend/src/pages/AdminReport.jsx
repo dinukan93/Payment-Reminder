@@ -142,7 +142,7 @@ function AdminReport() {
           totalPayments,
           pendingPayments,
           activeCallers,
-          completedRequests: 0 // Will be updated by fetchCompletedRequests
+          completedRequests: 0 
         });
       }
       
@@ -376,7 +376,7 @@ function AdminReport() {
           <div className='requests-overview'>
             <h3>Ongoing Requests</h3>
             {pendingRequests.length > 0 ? (
-              <div className='requests-table' style={{ maxHeight: 340, overflow: 'auto', minWidth: 0 }}>
+              <div className='requests-table' style={{ maxHeight: 340, overflowY: 'auto', minWidth: 0 }}>
                 <table style={{ minWidth: 900 }}>
                   <thead>
                     <tr>
@@ -428,7 +428,7 @@ function AdminReport() {
           <div className='completed-requests-section'>
             <h3>Completed Requests</h3>
             {completedRequests.length > 0 ? (
-              <div className='requests-table' style={{ maxHeight: 340, overflow: 'auto', minWidth: 0 }}>
+              <div className='requests-table' style={{ maxHeight: 340, overflowY: 'auto', minWidth: 0 }}>
                 <table style={{ minWidth: 900 }}>
                   <thead>
                     <tr>
