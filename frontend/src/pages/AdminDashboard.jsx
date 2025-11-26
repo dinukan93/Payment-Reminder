@@ -329,53 +329,55 @@ function AdminDashboard() {
               <h3>Assigned Callers</h3>
               <button className="admin-see-all" onClick={() => navigate('/employees')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1488eeff', fontWeight: '500' }}>See All</button>
             </div>
-            <table className="admin-callers-table">
-              <thead>
-                <tr>
-                  <th>CALLER NAME & ID</th>
-                  <th>TASK</th>
-                  <th>TASK PROGRESS</th>
-                  <th>ACTIONS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {assignedCallers.map((caller) => (
-                  <tr key={caller.id}>
-                    <td>
-                      <div className="admin-caller-info">
-                        <strong>{caller.name}</strong>
-                        <span className="admin-caller-id">{caller.callerId}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="admin-task-id" style={{ 
-                        fontFamily: 'monospace',
-                        fontSize: '0.9em',
-                        padding: '4px 8px',
-                        backgroundColor: '#f0f0f0',
-                        borderRadius: '4px',
-                        color: '#333'
-                      }}>
-                        {caller.task || 'N/A'}
-                      </span>
-                    </td>
-                    <td>
-                      <span style={{ fontWeight: '600', color: '#2e7d32' }}>
-                        {caller.customersContacted || '0/0'}
-                      </span>
-                    </td>
-                    <td>
-                      <button 
-                        className="admin-action-button" 
-                        onClick={() => handleShowCallerDetails(caller)}
-                      >
-                        SHOW DETAILS
-                      </button>
-                    </td>
+            <div className="admin-table-scroll">
+              <table className="admin-callers-table">
+                <thead>
+                  <tr>
+                    <th>CALLER NAME & ID</th>
+                    <th>TASK</th>
+                    <th>TASK PROGRESS</th>
+                    <th>ACTIONS</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {assignedCallers.map((caller) => (
+                    <tr key={caller.id}>
+                      <td>
+                        <div className="admin-caller-info">
+                          <strong>{caller.name}</strong>
+                          <span className="admin-caller-id">{caller.callerId}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="admin-task-id" style={{ 
+                          fontFamily: 'monospace',
+                          fontSize: '0.9em',
+                          padding: '4px 8px',
+                          backgroundColor: '#f0f0f0',
+                          borderRadius: '4px',
+                          color: '#333'
+                        }}>
+                          {caller.task || 'N/A'}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ fontWeight: '600', color: '#2e7d32' }}>
+                          {caller.customersContacted || '0/0'}
+                        </span>
+                      </td>
+                      <td>
+                        <button 
+                          className="admin-action-button" 
+                          onClick={() => handleShowCallerDetails(caller)}
+                        >
+                          SHOW DETAILS
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Unassigned Callers Table */}
@@ -384,37 +386,39 @@ function AdminDashboard() {
               <h3>Unassigned Callers</h3>
               <button className="admin-see-all" onClick={() => navigate('/employees')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1488eeff', fontWeight: '500' }}>See All</button>
             </div>
-            <table className="admin-callers-table">
-              <thead>
-                <tr>
-                  <th>CUSTOMER NAME & OVERDUE PAYMENT DATE</th>
-                  <th>PAYMENT STATUS</th>
-                  <th>LATEST WORK</th>
-                  <th>ACTIONS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {unassignedCallers.map((caller) => (
-                  <tr key={caller.id}>
-                    <td>
-                      <div className="admin-caller-info">
-                        <strong>{caller.name || 'Unknown'}</strong>
-                        <span className="admin-caller-date">{caller.date || 'N/A'}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="admin-status-badge available">
-                        {caller.status || 'N/A'}
-                      </span>
-                    </td>
-                    <td>{caller.latestWork || 'N/A'}</td>
-                    <td>
-                      <button className="admin-action-button assign" onClick={() => navigate('/admin/tasks')}>ASSIGN WORK</button>
-                    </td>
+            <div className="admin-table-scroll">
+              <table className="admin-callers-table">
+                <thead>
+                  <tr>
+                    <th>CUSTOMER NAME & OVERDUE PAYMENT DATE</th>
+                    <th>PAYMENT STATUS</th>
+                    <th>LATEST WORK</th>
+                    <th>ACTIONS</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {unassignedCallers.map((caller) => (
+                    <tr key={caller.id}>
+                      <td>
+                        <div className="admin-caller-info">
+                          <strong>{caller.name || 'Unknown'}</strong>
+                          <span className="admin-caller-date">{caller.date || 'N/A'}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="admin-status-badge available">
+                          {caller.status || 'N/A'}
+                        </span>
+                      </td>
+                      <td>{caller.latestWork || 'N/A'}</td>
+                      <td>
+                        <button className="admin-action-button assign" onClick={() => navigate('/admin/tasks')}>ASSIGN WORK</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Sent Requests Table */}
@@ -423,50 +427,52 @@ function AdminDashboard() {
               <h3>Sent Requests Status</h3>
               <button className="admin-see-all" onClick={handleRequestsClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1488eeff', fontWeight: '500' }}>See All</button>
             </div>
-            <table className="admin-callers-table">
-              <thead>
-                <tr>
-                  <th>CALLER NAME & ID</th>
-                  <th>CUSTOMERS SENT</th>
-                  <th>SENT DATE</th>
-                  <th>STATUS</th>
-                  <th>RESPONDED</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sentRequests.map((request) => (
-                  <tr key={request.id}>
-                    <td>
-                      <div className="admin-caller-info">
-                        <strong>{request.callerName || 'Unknown'}</strong>
-                        <span className="admin-caller-id">{request.callerId || 'N/A'}</span>
-                      </div>
-                    </td>
-                    <td>{request.customersSent || 0} customers</td>
-                    <td>{request.sentDate || 'N/A'}</td>
-                    <td>
-                      <span className={`admin-status-badge ${(request.status || 'pending').toLowerCase()}`}>
-                        {request.status || 'PENDING'}
-                      </span>
-                    </td>
-                    <td>
-                      {request.status === "PENDING" ? (
-                        <span style={{ color: "#999", fontSize: "13px" }}>Waiting for response...</span>
-                      ) : (
-                        <div className="admin-response-info">
-                          <span style={{ fontSize: "13px", color: "#333" }}>{request.respondedDate}</span>
-                          {request.reason && (
-                            <span style={{ fontSize: "12px", color: "#666", display: "block", marginTop: "4px" }}>
-                              Reason: {request.reason}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </td>
+            <div className="admin-table-scroll">
+              <table className="admin-callers-table">
+                <thead>
+                  <tr>
+                    <th>CALLER NAME & ID</th>
+                    <th>CUSTOMERS SENT</th>
+                    <th>SENT DATE</th>
+                    <th>STATUS</th>
+                    <th>RESPONDED</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {sentRequests.map((request) => (
+                    <tr key={request.id}>
+                      <td>
+                        <div className="admin-caller-info">
+                          <strong>{request.callerName || 'Unknown'}</strong>
+                          <span className="admin-caller-id">{request.callerId || 'N/A'}</span>
+                        </div>
+                      </td>
+                      <td>{request.customersSent || 0} customers</td>
+                      <td>{request.sentDate || 'N/A'}</td>
+                      <td>
+                        <span className={`admin-status-badge ${(request.status || 'pending').toLowerCase()}`}>
+                          {request.status || 'PENDING'}
+                        </span>
+                      </td>
+                      <td>
+                        {request.status === "PENDING" ? (
+                          <span style={{ color: "#999", fontSize: "13px" }}>Waiting for response...</span>
+                        ) : (
+                          <div className="admin-response-info">
+                            <span style={{ fontSize: "13px", color: "#333" }}>{request.respondedDate}</span>
+                            {request.reason && (
+                              <span style={{ fontSize: "12px", color: "#666", display: "block", marginTop: "4px" }}>
+                                Reason: {request.reason}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
