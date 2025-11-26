@@ -59,7 +59,7 @@ const Settings = () => {
           setAvatarPreview(res.data.avatar);
         }
 
-        // Set preferences (flat structure)
+        // Set preferences (flat structure) - sync darkMode from ThemeContext
         if (res.data.preferences) {
           setPreferences({
             emailNotifications: res.data.preferences.emailNotifications || false,
@@ -67,7 +67,7 @@ const Settings = () => {
             callNotifications: res.data.preferences.callNotifications || false,
             language: res.data.preferences.language || 'English',
             timezone: res.data.preferences.timezone || 'UTC',
-            darkMode: res.data.preferences.darkMode || false
+            darkMode: darkMode // Use darkMode from ThemeContext instead of server
           });
         }
       } catch (err) {
@@ -76,18 +76,7 @@ const Settings = () => {
       }
     };
     fetchSettings();
-  }, []);
-
-  // Load profile from localStorage on mount
-  useEffect(() => {
-    if (preferences.darkMode) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      document.body.classList.add('dark-mode');
-    } else {
-      document.documentElement.setAttribute('data-theme', 'light');
-      document.body.classList.remove('dark-mode');
-    }
-  }, [preferences.darkMode]);
+  }, [darkMode]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
