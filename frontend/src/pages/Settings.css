@@ -524,6 +524,47 @@ input:checked + .toggle-slider:before {
   background: #2563eb;
 }
 
+.upload-image-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 0.65rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.dark-mode .upload-image-btn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.4);
+}
+
+.upload-image-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.dark-mode .upload-image-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.5);
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+}
+
+.upload-image-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.upload-image-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
 /* Responsive Design */
 @media (max-width: 968px) {
   .settings-row {
