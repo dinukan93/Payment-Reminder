@@ -125,7 +125,7 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
 
   return (
     <>
-      <div className="table-card">
+      <div className="table-card" style={{border: 'none'}}>
         <table className="employee-table">
           <thead>
             <tr>

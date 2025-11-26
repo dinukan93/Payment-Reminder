@@ -6,7 +6,10 @@
   border-radius: 20px;
   overflow: hidden; /* clip inner content to rounded corners */
   padding: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+
+
 
 /* table without its own border; use separate mode so radius works */
 .employee-table {
