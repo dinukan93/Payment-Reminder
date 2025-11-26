@@ -108,14 +108,26 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(255,255,255,0.7)',
+        zIndex: 9999
+      }}>
         <div style={{
           width: '48px',
           height: '48px',
           border: '4px solid #f3f3f3',
           borderTop: '4px solid #1488ee',
           borderRadius: '50%',
-          margin: '0 auto 20px',
+          marginBottom: '20px',
           animation: 'spin 1s linear infinite'
         }}></div>
         <p>Loading customers...</p>
