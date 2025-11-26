@@ -3,7 +3,7 @@ import getUserModel from '../utils/getUserModel.js';
 
 export const getSettings = async (req, res) => {
   try {
-    console.log('\n📥 GET SETTINGS REQUEST');
+    console.log('\n GET SETTINGS REQUEST');
     const { id, role } = req.user;
 
     console.log('User ID:', id);
@@ -17,11 +17,11 @@ export const getSettings = async (req, res) => {
     const user = await Model.findById(id).select('-password');
 
     if (!user) {
-      console.log('❌ User not found');
+      console.log(' User not found');
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    console.log('✅ USER FOUND IN DATABASE');
+    console.log('USER FOUND IN DATABASE');
   console.log('Name:', user.name);
   console.log('Email:', user.email);
   console.log('Phone:', user.phone);
@@ -37,7 +37,7 @@ export const getSettings = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('❌ GET SETTINGS ERROR:', err);
+    console.error(' GET SETTINGS ERROR:', err);
     res.status(500).json({ msg: 'Server error' });
   }
 };
@@ -47,7 +47,7 @@ export const updateProfile = async (req, res) => {
   const { name, email, phone, avatar } = req.body;
     const { id, role } = req.user;
 
-    console.log('\n💾 UPDATE PROFILE REQUEST');
+    console.log('\n UPDATE PROFILE REQUEST');
     console.log('User ID:', id);
     console.log('Role:', role);
 
@@ -64,7 +64,7 @@ export const updateProfile = async (req, res) => {
       });
 
       if (existingUser) {
-        console.log('❌ Email already in use by another user');
+        console.log(' Email already in use by another user');
         return res.status(400).json({ msg: 'Email already in use' });
       }
     }
@@ -86,7 +86,7 @@ export const updateProfile = async (req, res) => {
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    console.log('✅ PROFILE UPDATED IN DATABASE');
+    console.log(' PROFILE UPDATED IN DATABASE');
   console.log('Name:', updatedUser.name);
   console.log('Email:', updatedUser.email);
   console.log('Phone:', updatedUser.phone);
@@ -102,7 +102,7 @@ export const updateProfile = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('❌ UPDATE PROFILE ERROR:', err);
+    console.error(' UPDATE PROFILE ERROR:', err);
     res.status(500).json({ msg: 'Failed to update profile' });
   }
 };
@@ -112,7 +112,7 @@ export const changePassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const { id, role } = req.user;
 
-    console.log('\n🔒 CHANGE PASSWORD REQUEST');
+    console.log('\n CHANGE PASSWORD REQUEST');
     console.log('User ID:', id);
     console.log('Role:', role);
 
@@ -140,12 +140,12 @@ export const changePassword = async (req, res) => {
     user.password = await bcrypt.hash(newPassword, 12);
     await user.save();
 
-    console.log('✅ PASSWORD CHANGED SUCCESSFULLY');
+    console.log('PASSWORD CHANGED SUCCESSFULLY');
 
     res.json({ msg: 'Password changed successfully' });
 
   } catch (err) {
-    console.error('❌ CHANGE PASSWORD ERROR:', err);
+    console.error(' CHANGE PASSWORD ERROR:', err);
     res.status(500).json({ msg: 'Server error' });
   }
 };
@@ -155,7 +155,7 @@ export const updatePreferences = async (req, res) => {
     const { id, role } = req.user;
     const { type } = req.query;
 
-    console.log('\n⚙️ UPDATE PREFERENCES REQUEST');
+    console.log('\n UPDATE PREFERENCES REQUEST');
     console.log('User ID:', id);
     console.log('Role:', role);
     console.log('Type:', type);
@@ -192,7 +192,7 @@ export const updatePreferences = async (req, res) => {
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    console.log('✅ PREFERENCES UPDATED IN DATABASE');
+    console.log(' PREFERENCES UPDATED IN DATABASE');
     console.log('Updated Preferences:', updatedUser.preferences);
 
     res.json({
@@ -201,7 +201,7 @@ export const updatePreferences = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('❌ UPDATE PREFERENCES ERROR:', err);
+    console.error(' UPDATE PREFERENCES ERROR:', err);
     res.status(500).json({ msg: 'Failed to update preferences' });
   }
 };

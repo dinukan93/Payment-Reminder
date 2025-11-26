@@ -93,13 +93,13 @@ const Register = () => {
           
           localStorage.setItem('userData', JSON.stringify(completeUserData));
           
-          console.log('✅ Registration complete - User data saved to localStorage:', {
+          console.log('Registration complete - User data saved to localStorage:', {
             callerId: completeUserData.callerId,
             name: completeUserData.name,
             email: completeUserData.email
           });
         } else {
-          console.warn('⚠️ Could not fetch full profile, using token data only');
+          console.warn('Could not fetch full profile, using token data only');
         }
       } catch (profileErr) {
         console.error('Profile fetch error:', profileErr);

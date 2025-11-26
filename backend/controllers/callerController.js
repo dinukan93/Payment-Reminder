@@ -365,7 +365,7 @@ const generatePerformanceReport = async (req, res) => {
     const Report = (await import('../models/Report.js')).default;
     await Report.create(report);
 
-    console.log(`📊 Performance report generated and saved for ${caller.name} (${reportType})`);
+    console.log(`Performance report generated and saved for ${caller.name} (${reportType})`);
     res.status(200).json({
       success: true,
       message: 'Performance report generated and saved successfully',

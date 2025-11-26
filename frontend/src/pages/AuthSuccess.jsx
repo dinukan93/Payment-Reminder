@@ -48,7 +48,7 @@ const AuthSuccess = () => {
                 role: user.role || decoded.role || 'caller'
               }));
               
-              console.log('✅ Google login - User data saved to localStorage:', {
+              console.log('Google login - User data saved to localStorage:', {
                 callerId: user.callerId || user.adminId,
                 name: user.name,
                 email: user.email
@@ -66,7 +66,7 @@ const AuthSuccess = () => {
                 phone: decoded.phone,
                 role: decoded.role || 'caller'
               }));
-              console.warn('✅ Using decoded token data with callerId/adminId:', decoded.callerId || decoded.adminId);
+              console.warn('Using decoded token data with callerId/adminId:', decoded.callerId || decoded.adminId);
             }
           } catch (profileErr) {
             console.error('Profile fetch error:', profileErr);
@@ -81,7 +81,7 @@ const AuthSuccess = () => {
               avatar: decoded.avatar,
               role: decoded.role || 'caller'
             }));
-            console.warn('✅ Using decoded token data (profile fetch failed) with callerId/adminId:', decoded.callerId || decoded.adminId);
+            console.warn('Using decoded token data (profile fetch failed) with callerId/adminId:', decoded.callerId || decoded.adminId);
           }
           
           // Navigate to appropriate dashboard

@@ -299,12 +299,12 @@ const updateCustomerContact = async (req, res) => {
               }
               
               await caller.save();
-              console.log(`✅ Request ${request.taskId} completed. All ${request.customersSent} customers paid. Customers remain assigned to ${caller.name}.`);
+              console.log(`Request ${request.taskId} completed. All ${request.customersSent} customers paid. Customers remain assigned to ${caller.name}.`);
             }
           }
 
           await request.save();
-          console.log(`📊 Request ${request.taskId} progress: ${contactedCustomers}/${request.customersSent} contacted, ${completedCustomers}/${request.customersSent} paid`);
+          console.log(`Request ${request.taskId} progress: ${contactedCustomers}/${request.customersSent} contacted, ${completedCustomers}/${request.customersSent} paid`);
         }
       }
     }

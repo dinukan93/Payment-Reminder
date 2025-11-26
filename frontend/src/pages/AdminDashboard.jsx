@@ -244,9 +244,9 @@ function AdminDashboard() {
     
     localStorage.setItem('pendingAdminRequest', JSON.stringify(requestData));
     
-    console.log('✅ Request sent to caller:', callerName);
-    console.log('📦 Request data stored in localStorage:', requestData);
-    console.log('🔍 Verify localStorage:', localStorage.getItem('pendingAdminRequest'));
+    console.log('Request sent to caller:', callerName);
+    console.log('Request data stored in localStorage:', requestData);
+    console.log('Verify localStorage:', localStorage.getItem('pendingAdminRequest'));
     
     alert(`Request sent to ${callerName}!\n\nSwitch to Caller Dashboard to see the request.`);
   };

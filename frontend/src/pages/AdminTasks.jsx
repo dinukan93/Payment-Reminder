@@ -225,7 +225,7 @@ function AdminTasks() {
       });
 
       if (response.ok) {
-        console.log('✅ Request sent to caller:', callerName);
+        console.log('Request sent to caller:', callerName);
       } else {
         console.error('Failed to save request to backend');
         alert('Failed to send request. Please try again.');

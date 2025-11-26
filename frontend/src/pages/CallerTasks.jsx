@@ -108,17 +108,17 @@ function CallerTasks() {
       console.log('Response:', result);
 
       if (result.success) {
-        console.log("✅ Customer details saved successfully");
+        console.log(" Customer details saved successfully");
         // Close modal first
         handleCloseModal();
         // Then reload customers to get updated data
         await loadCustomers();
       } else {
-        console.error('❌ Error saving customer details:', result.message);
+        console.error('Error saving customer details:', result.message);
         alert('Failed to save: ' + result.message);
       }
     } catch (error) {
-      console.error('❌ Error saving customer details:', error);
+      console.error(' Error saving customer details:', error);
       alert('Failed to save customer details. Please try again.');
     }
   };

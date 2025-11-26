@@ -228,14 +228,14 @@ function Report() {
       const result = await response.json();
       if (result.success) {
         alert(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} performance report sent to admin successfully!\n\nReport ID: ${result.data.reportId}`);
-        console.log('📊 Report generated:', result.data);
+        console.log(' Report generated:', result.data);
       } else {
         alert('Failed to send report: ' + result.message);
       }
       setSendingReport(false);
     } catch (error) {
       console.error('Error sending report:', error);
-      alert('❌ Error sending report to admin');
+      alert(' Error sending report to admin');
       setSendingReport(false);
     }
   };

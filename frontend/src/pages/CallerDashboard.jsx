@@ -111,7 +111,7 @@ function CallerDashboard() {
     const existingCustomer = overdueCustomer || contactedCustomers.find(c => c.id === accountNumber);
     
     if (!existingCustomer) {
-      console.error('❌ Customer not found');
+      console.error('Customer not found');
       alert('Customer not found');
       return;
     }
@@ -144,17 +144,17 @@ function CallerDashboard() {
       console.log('Backend response:', result);
       
       if (result.success) {
-        console.log('✅ Customer updated successfully in database');
+        console.log(' Customer updated successfully in database');
         
         // Refetch all customers from backend to get the latest data
         await fetchCustomers();
-        console.log('✅ Customers refreshed from database');
+        console.log(' Customers refreshed from database');
       } else {
-        console.error('❌ Failed to update customer:', result.message);
+        console.error(' Failed to update customer:', result.message);
         alert('Failed to save: ' + result.message);
       }
     } catch (error) {
-      console.error('❌ Error saving customer details to backend:', error);
+      console.error(' Error saving customer details to backend:', error);
       alert('Failed to save customer details. Please try again.');
     }
   };
