@@ -4,6 +4,9 @@ import logo from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config/api';
 import { jwtDecode } from 'jwt-decode';
+import { MdOutlineMailOutline } from 'react-icons/md';
+import { FaUser, FaPhone } from 'react-icons/fa';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 
 const Register = () => {
   const [form, setForm] = useState({ name:'', email:'', phone:'', password:'', confirmPassword:'' });
@@ -12,6 +15,8 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const onChange = e => setForm({...form, [e.target.name]: e.target.value });
@@ -119,18 +124,174 @@ const Register = () => {
       <div className="container">
         <div className="left-section">
           <img src={logo} className="logo" alt="logo" />
-          <h1 className="welcome">Create account</h1>
+          <h1 className="welcome">Register for <br /> SLT Payment Reminder</h1>
         </div>
 
         <div className="right-section">
           <div className="register-card">
+            <h2>Create Account</h2>
             {!showOtpInput ? (
               <form onSubmit={submit}>
-                <input name="name" value={form.name} onChange={onChange} placeholder="Full name" required />
-                <input name="email" value={form.email} onChange={onChange} placeholder="Email" type="email" required />
-                <input name="phone" value={form.phone} onChange={onChange} placeholder="Phone number (94XXXXXXXXX)" required />
-                <input name="password" value={form.password} onChange={onChange} placeholder="Password" type="password" required />
-                <input name="confirmPassword" value={form.confirmPassword} onChange={onChange} placeholder="Confirm password" type="password" required />
+                 {/* Full Name */}
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '15px' }}>
+                <input 
+                name="name" 
+                value={form.name} 
+                onChange={onChange} 
+                placeholder="Full name" 
+                required 
+                style={{ 
+                    paddingRight: '40px', 
+                    width: '100%',
+                    paddingTop: '12px',
+                    paddingBottom: '12px',
+                    fontSize: '16px'
+                  }}
+                />
+                <FaUser 
+                  size={16} 
+                  color="#0066cc" 
+                  style={{ 
+                    position: 'absolute', 
+                    right: '12px',
+                    pointerEvents: 'none'
+                  }} 
+                />
+                </div>
+                {/* Email */}
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '15px' }}>
+                <input 
+                  name="email" 
+                  value={form.email} 
+                  onChange={onChange} 
+                  placeholder="Email" 
+                  type="email" 
+                  required 
+                  style={{ 
+                    paddingRight: '40px', 
+                    width: '100%',
+                    paddingLeft: '12px',
+                    paddingTop: '12px',
+                    paddingBottom: '12px',
+                    fontSize: '16px',
+                    marginTop: '15px',
+                  }}
+                  />
+                  <MdOutlineMailOutline 
+                  size={20} 
+                  color="#0066cc" 
+                  style={{ 
+                    position: 'absolute', 
+                    right: '14px',
+                    pointerEvents: 'none',
+                    marginTop: '15px',
+                  }} 
+                />
+                </div>
+                {/* Phone Number */}
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '15px' }}>
+                <input 
+                  name="phone" 
+                  value={form.phone} 
+                  onChange={onChange} 
+                  placeholder="Phone number (94XXXXXXXXX)" 
+                  required 
+                  style={{ 
+                    paddingRight: '40px', 
+                    width: '100%',
+                    paddingTop: '12px',
+                    paddingBottom: '12px',
+                    fontSize: '16px'
+                  }}
+                  />
+                  <FaPhone 
+                  size={16} 
+                  color="#0066cc" 
+                  style={{ 
+                    position: 'absolute', 
+                    right: '12px',
+                    pointerEvents: 'none'
+                  }} 
+                />
+                </div>
+                
+                {/* Password */}
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '15px' }}>
+                <input 
+                  name="password" 
+                  value={form.password} 
+                  onChange={onChange} 
+                  placeholder="Password" 
+                  type={showPassword ? "text" : "password"} 
+                  required
+                  style={{ 
+                    paddingRight: '40px', 
+                    paddingLeft: '12px',
+                    width: '100%',
+                    paddingTop: '12px',
+                    paddingBottom: '12px',
+                    fontSize: '16px',
+                  }}
+                  />
+                  <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0',
+                  color: '#0066cc',
+                }}
+              >
+                {showPassword ? (
+                    <AiOutlineEyeInvisible size={20} />
+                  ) : (
+                    <AiOutlineEye size={20} />
+                  )}
+                </button>
+              </div>
+
+              {/* Confirm Password */}
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '15px' }}>
+                <input 
+                  name="confirmPassword" 
+                  value={form.confirmPassword} 
+                  onChange={onChange} 
+                  placeholder="Confirm password" type={showConfirmPassword ? "text" : "password"} required 
+                  style={{ 
+                    paddingRight: '40px', 
+                    paddingLeft: '12px',
+                    width: '100%',
+                    paddingTop: '12px',
+                    paddingBottom: '12px',
+                    fontSize: '16px'
+                  }}/>
+                  <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                  position: 'absolute',
+                  right: '12px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0',
+                  color: '#0066cc',
+                }}>
+                  {showConfirmPassword ? (
+                    <AiOutlineEyeInvisible size={20} />
+                  ) : (
+                    <AiOutlineEye size={20} />
+                  )}
+                  </button>
+                </div>
                 <button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Register'}</button>
                 {error && <p style={{color:'red'}}>{error}</p>}
                 {message && <p style={{color:'green'}}>{message}</p>}
