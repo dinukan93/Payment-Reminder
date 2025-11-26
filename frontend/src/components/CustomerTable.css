@@ -1,12 +1,48 @@
 .table-card {
   width: 100%;
   margin: 20px auto;
-  background: #ffffff;
-  border: 1px solid #d9d9d9;
-  border-radius: 20px;
+  background-color: #ffffff;
   overflow: hidden;
-  padding: 5px;
+  padding: 0;
   overflow-x: auto;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.dark-mode .table-card {
+  background: #201f1f;
+}
+
+/* Scrollbar styling */
+.table-card::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-card::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.table-card::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.table-card::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Dark mode scrollbar */
+.dark-mode .table-card::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.dark-mode .table-card::-webkit-scrollbar-thumb {
+  background: #555555;
+}
+
+.dark-mode .table-card::-webkit-scrollbar-thumb:hover {
+  background: #666666;
 }
 
 /* table without its own border; use separate mode so radius works */
@@ -17,6 +53,11 @@
   border-spacing: 0;
   color: #000;
   background: transparent;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .custom-table {
+  color: #ffffff;
 }
 
 /* keep your row styles */
@@ -27,6 +68,12 @@
   border-bottom: 1px solid #d9d9d9;
   white-space: nowrap;
   font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .custom-table th,
+.dark-mode .custom-table td {
+  border-bottom: 1px solid #404040;
 }
 
 .custom-table th {
@@ -38,8 +85,17 @@
   z-index: 10;
 }
 
+.dark-mode .custom-table th {
+  color: #ffffff;
+  background: #2d2d2d;
+}
+
 .custom-table tbody tr:hover {
   background: #f9f9f9;
+}
+
+.dark-mode .custom-table tbody tr:hover {
+  background: #2d2d2d;
 }
 
 .custom-table tbody tr:last-child td {

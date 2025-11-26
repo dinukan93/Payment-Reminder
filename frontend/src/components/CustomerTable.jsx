@@ -125,7 +125,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
 
   return (
     <>
-      <div className="table-card" style={{ overflowX: 'auto', width: '100%' }}>
+      <div className="table-card" style={{ overflowX: 'auto', width: '100%' , border: 'none'}}>
         <table className="custom-table" style={{ minWidth: '1200px' }}>
           <thead>
             <tr>

@@ -1,11 +1,20 @@
 .searchbar {
-  border: #d9d9d9 1px solid;
+  /* border: #d9d9d9 1px solid; */
   border-radius: 10px;
   padding: 25px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 5px;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .searchbar {
+  background-color: #201f1f;
+  /* border: 1px solid #404040; */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 input {
@@ -17,6 +26,24 @@ input {
   padding: 5px;
   flex: 1; /* allows input to grow */
   max-width: 600px;
+  background-color: #ffffff;
+  color: #252525;
+  transition: all 0.3s ease;
+}
+
+.dark-mode input {
+  background-color: #3d3d3d;
+  border: 1px solid #3d3d3d;
+  color: #ffffff;
+}
+
+.dark-mode input::placeholder {
+  color: #aaaaaa;
+}
+
+.dark-mode input:focus {
+  background-color: #4d4d4d;
+  border-color: #3b82f6;
 }
 
 select {
@@ -27,10 +54,24 @@ select {
   padding: 5px;
   flex: 1; /* allows input to grow */
   max-width: 250px;
+  background-color: #ffffff;
+  color: #252525;
+  transition: all 0.3s ease;
+}
+
+.dark-mode select {
+  background-color: #3d3d3d;
+  border: 1px solid #3d3d3d;
+  color: #ffffff;
 }
 
 option {
   color: #252525;
+}
+
+.dark-mode option {
+  background-color: #3d3d3d;
+  color: #ffffff;
 }
 
 .search-icon {
