@@ -147,9 +147,9 @@ const Register = () => {
                   style={{ 
                     paddingRight: '40px', // space for icon on right
                     width: '100%',
-                    paddingTop: '12px',
-                    paddingBottom: '12px',
-                    fontSize: '16px'
+                    fontSize: '16px',
+                    height: '44px',
+                    lineHeight: '44px',
                   }}
                 />
                 <FaUser 
@@ -158,6 +158,8 @@ const Register = () => {
                   style={{ 
                     position: 'absolute', 
                     right: '12px',
+                    top: '60%',
+                    transform: 'translateY(-50%)',
                     zIndex: 2
                   }} 
                 />
@@ -175,9 +177,9 @@ const Register = () => {
                   style={{
                     paddingRight: '40px', // space for icon on right
                     width: '100%',
-                    paddingTop: '12px',
-                    paddingBottom: '12px',
-                    fontSize: '16px'
+                    fontSize: '16px',
+                    height: '44px',
+                    lineHeight: '44px',
                   }}
                 />
                 <MdOutlineMailOutline
@@ -186,6 +188,8 @@ const Register = () => {
                   style={{
                     position: 'absolute',
                     right: '12px',
+                    top: '60%',
+                    transform: 'translateY(-50%)',
                     zIndex: 2
                   }}
                 />
@@ -202,9 +206,9 @@ const Register = () => {
                   style={{
                     paddingRight: '40px', // space for icon on right
                     width: '100%',
-                    paddingTop: '12px',
-                    paddingBottom: '12px',
-                    fontSize: '16px'
+                    fontSize: '16px',
+                    height: '44px',
+                    lineHeight: '44px',
                   }}
                 />
                 <FaPhone
@@ -213,6 +217,8 @@ const Register = () => {
                   style={{
                     position: 'absolute',
                     right: '12px',
+                    top: '60%',
+                    transform: 'translateY(-50%)',
                     zIndex: 2
                   }}
                 />
@@ -231,15 +237,15 @@ const Register = () => {
                     paddingRight: '40px',
                     width: '100%',
                     paddingLeft: '12px',
-                    paddingTop: '12px',
-                    paddingBottom: '12px',
                     fontSize: '16px',
+                    height: '44px',
+                    lineHeight: '44px',
                   }}
                 />
                 <span style={{
                   position: 'absolute',
                   right: '12px',
-                  top: '50%',
+                  top: '60%',
                   transform: 'translateY(-50%)',
                   zIndex: 2,
                   display: 'flex',
@@ -273,15 +279,15 @@ const Register = () => {
                     paddingRight: '40px',
                     width: '100%',
                     paddingLeft: '12px',
-                    paddingTop: '12px',
-                    paddingBottom: '12px',
                     fontSize: '16px',
+                    height: '40px',
+                    lineHeight: '40px',
                   }}
                 />
                 <span style={{
                   position: 'absolute',
                   right: '12px',
-                  top: '50%',
+                  top: '60%',
                   transform: 'translateY(-50%)',
                   zIndex: 2,
                   display: 'flex',
