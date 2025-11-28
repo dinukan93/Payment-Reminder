@@ -64,9 +64,10 @@ const Login = () => {
       
       // OTP verified - decode token
       const decoded = jwtDecode(data.token);
+      // Clear previous session before setting new session data
       clearSession();
       localStorage.setItem('token', data.token);
-      
+
       // Fetch full user profile to get all fields including callerId
       try {
         const profileEndpoint = decoded.role === 'admin' ? '/admin/profile' : '/users/profile';
@@ -76,13 +77,12 @@ const Login = () => {
             'Content-Type': 'application/json'
           }
         });
-        
+
         if (profileRes.ok) {
           const profileData = await profileRes.json();
           const user = profileData.user || profileData;
-          
+
           // Save complete user data including callerId/adminId
-          clearSession();
           localStorage.setItem('userData', JSON.stringify({
             id: user._id || decoded.id,
             _id: user._id || decoded.id,
@@ -94,7 +94,7 @@ const Login = () => {
             avatar: user.avatar || decoded.avatar || data.user?.avatar,
             role: user.role || decoded.role || 'caller'
           }));
-          
+
           console.log('User data saved to localStorage:', {
             callerId: user.callerId,
             name: user.name,
@@ -102,7 +102,6 @@ const Login = () => {
           });
         } else {
           // Fallback: use data from token response which now includes callerId/adminId
-          clearSession();
           localStorage.setItem('userData', JSON.stringify({
             id: data.user?.id || decoded.id,
             _id: data.user?.id || decoded.id,
@@ -118,7 +117,6 @@ const Login = () => {
       } catch (profileErr) {
         console.error('Profile fetch error:', profileErr);
         // Fallback: use data from token response which now includes callerId/adminId
-        clearSession();
         localStorage.setItem('userData', JSON.stringify({
           id: data.user?.id || decoded.id,
           _id: data.user?.id || decoded.id,
@@ -131,7 +129,7 @@ const Login = () => {
         }));
         console.warn(' Using token data (profile fetch failed) with callerId/adminId:', data.user?.callerId || data.user?.adminId);
       }
-      
+
       // Redirect based on role
       if (decoded.role === 'admin') {
         navigate('/admin');

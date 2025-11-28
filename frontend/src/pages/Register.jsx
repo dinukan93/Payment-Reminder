@@ -149,7 +149,6 @@ const Register = () => {
                     width: '100%',
                     fontSize: '16px',
                     height: '44px',
-                    lineHeight: '44px',
                   }}
                 />
                 <FaUser 
@@ -158,9 +157,10 @@ const Register = () => {
                   style={{ 
                     position: 'absolute', 
                     right: '12px',
-                    top: '60%',
-                    transform: 'translateY(-50%)',
-                    zIndex: 2
+                    zIndex: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '100%',
                   }} 
                 />
               </div>
@@ -175,22 +175,22 @@ const Register = () => {
                   type="email"
                   required
                   style={{
-                    paddingRight: '40px', // space for icon on right
+                    paddingRight: '40px', 
                     width: '100%',
                     fontSize: '16px',
                     height: '44px',
-                    lineHeight: '44px',
                   }}
                 />
                 <MdOutlineMailOutline
-                  size={16}
+                  size={20}
                   color="#0066cc"
                   style={{
                     position: 'absolute',
                     right: '12px',
-                    top: '60%',
-                    transform: 'translateY(-50%)',
-                    zIndex: 2
+                    zIndex: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '100%',
                   }}
                 />
               </div>
@@ -208,18 +208,18 @@ const Register = () => {
                     width: '100%',
                     fontSize: '16px',
                     height: '44px',
-                    lineHeight: '44px',
                   }}
                 />
                 <FaPhone
-                  size={16}
+                  size={20}
                   color="#0066cc"
                   style={{
                     position: 'absolute',
                     right: '12px',
-                    top: '60%',
-                    transform: 'translateY(-50%)',
-                    zIndex: 2
+                    zIndex: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '100%',
                   }}
                 />
               </div>
@@ -239,17 +239,15 @@ const Register = () => {
                     paddingLeft: '12px',
                     fontSize: '16px',
                     height: '44px',
-                    lineHeight: '44px',
                   }}
                 />
                 <span style={{
                   position: 'absolute',
                   right: '12px',
-                  top: '60%',
-                  transform: 'translateY(-50%)',
                   zIndex: 2,
                   display: 'flex',
                   alignItems: 'center',
+                  height: '100%',
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
@@ -280,18 +278,16 @@ const Register = () => {
                     width: '100%',
                     paddingLeft: '12px',
                     fontSize: '16px',
-                    height: '40px',
-                    lineHeight: '40px',
+                    height: '44px',
                   }}
                 />
                 <span style={{
                   position: 'absolute',
                   right: '12px',
-                  top: '60%',
-                  transform: 'translateY(-50%)',
                   zIndex: 2,
                   display: 'flex',
                   alignItems: 'center',
+                  height: '100%',
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
