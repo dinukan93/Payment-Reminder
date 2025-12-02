@@ -27,7 +27,7 @@ export const ThemeProvider = ({ children }) => {
       document.body.classList.remove('dark-mode');
     }
     
-    // Save to localStorage
+    // localStorage
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
 

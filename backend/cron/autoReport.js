@@ -104,10 +104,10 @@ async function generateAndSaveReportForCaller(caller, reportType = 'daily') {
   console.log(`[AUTO] Performance report generated and saved for ${caller.name} (${reportType})`);
 }
 
-// Schedule: 4:30pm Sri Lankan time (Asia/Colombo) daily
+// Schedule: 4:30pm daily
 cron.schedule('30 16 * * *', async () => {
   try {
-    console.log('[AUTO] Generating daily performance reports for all callers (Asia/Colombo 4:30pm)');
+    console.log('[AUTO] Generating daily performance reports for all callers');
     const callers = await Caller.find({ role: 'caller' });
     for (const caller of callers) {
       await generateAndSaveReportForCaller(caller, 'daily');
