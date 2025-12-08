@@ -53,7 +53,7 @@ const Register = () => {
       const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email, otp, isPasswordReset: false })
+        body: JSON.stringify({ phone: form.phone, otp, isPasswordReset: false })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'OTP verification failed');
@@ -136,182 +136,165 @@ const Register = () => {
             <h2>Create Account</h2>
             {!showOtpInput ? (
               <form onSubmit={submit}>
-                 {/* Full Name */}
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '15px' }}>
-                <input 
-                  name="name" 
-                  value={form.name} 
-                  onChange={onChange} 
-                  placeholder="Full name" 
-                  required 
-                  style={{ 
-                    paddingRight: '40px', // space for icon on right
-                    width: '100%',
-                    fontSize: '16px',
-                    height: '44px',
-                  }}
-                />
-                <FaUser 
-                  size={16} 
-                  color="#0066cc" 
-                  style={{ 
-                    position: 'absolute', 
-                    right: '12px',
-                    zIndex: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    height: '100%',
-                  }} 
-                />
-              </div>
+                {/* Full Name */}
+                <label>Full Name</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input 
+                    name="name" 
+                    value={form.name} 
+                    onChange={onChange} 
+                    placeholder="Enter User Name" 
+                    required 
+                    style={{ 
+                      paddingRight: '40px',
+                      width: '100%',
+                      fontSize: '16px',
+                      height: '44px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <FaUser 
+                    size={16} 
+                    color="#0066cc" 
+                    style={{ 
+                      position: 'absolute', 
+                      right: '12px',
+                      zIndex: 2,
+                    }} 
+                  />
+                </div>
 
-              {/* Email */}
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '15px' }}>
-                <input
-                  name="email"
-                  value={form.email}
-                  onChange={onChange}
-                  placeholder="Email"
-                  type="email"
-                  required
-                  style={{
-                    paddingRight: '40px', 
-                    width: '100%',
-                    fontSize: '16px',
-                    height: '44px',
-                  }}
-                />
-                <MdOutlineMailOutline
-                  size={20}
-                  color="#0066cc"
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    zIndex: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    height: '100%',
-                  }}
-                />
-              </div>
+                {/* Email */}
+                <label>Email</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    name="email"
+                    value={form.email}
+                    onChange={onChange}
+                    placeholder="user@email.com"
+        
+                    type="email"
+                    required
+                    style={{
+                      paddingRight: '40px', 
+                      width: '100%',
+                      fontSize: '16px',
+                      height: '44px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <MdOutlineMailOutline
+                    size={20}
+                    color="#0066cc"
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      zIndex: 2,
+                    }}
+                  />
+                </div>
 
-              {/* Phone */}
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '15px' }}>
-                <input
-                  name="phone"
-                  value={form.phone}
-                  onChange={onChange}
-                  placeholder="Phone"
-                  required
-                  style={{
-                    paddingRight: '40px', // space for icon on right
-                    width: '100%',
-                    fontSize: '16px',
-                    height: '44px',
-                  }}
-                />
-                <FaPhone
-                  size={20}
-                  color="#0066cc"
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    zIndex: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    height: '100%',
-                  }}
-                />
-              </div>
+                {/* Phone */}
+                <label>Phone Number</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    name="phone"
+                    value={form.phone}
+                    onChange={onChange}
+                    placeholder="+94XXXXXXXXX"
+                    required
+                    style={{
+                      paddingRight: '40px',
+                      width: '100%',
+                      fontSize: '16px',
+                      height: '44px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <FaPhone
+                    size={20}
+                    color="#0066cc"
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      zIndex: 2,
+                    }}
+                  />
+                </div>
 
-              {/* Password */}
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '15px' }}>
-                <input
-                  name="password"
-                  value={form.password}
-                  onChange={onChange}
-                  placeholder="Password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  style={{
-                    paddingRight: '40px',
-                    width: '100%',
-                    paddingLeft: '12px',
-                    fontSize: '16px',
-                    height: '44px',
-                  }}
-                />
-                <span style={{
-                  position: 'absolute',
-                  right: '12px',
-                  zIndex: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  height: '100%',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#0066cc',
-                  padding: 0
-                }}
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <AiOutlineEyeInvisible size={20} />
-                  ) : (
-                    <AiOutlineEye size={20} />
-                  )}
-                </span>
-              </div>
+                {/* Password */}
+                <label>Password</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    name="password"
+                    value={form.password}
+                    onChange={onChange}
+                    placeholder="Enter password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    style={{
+                      paddingRight: '40px',
+                      width: '100%',
+                      fontSize: '16px',
+                      height: '44px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="password-eye-btn"
+                  >
+                    {showPassword ? (
+                      <AiOutlineEyeInvisible size={20} />
+                    ) : (
+                      <AiOutlineEye size={20} />
+                    )}
+                  </button>
+                </div>
 
-              {/* Confirm Password */}
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '15px' }}>
-                <input
-                  name="confirmPassword"
-                  value={form.confirmPassword}
-                  onChange={onChange}
-                  placeholder="Confirm password"
-                  type={showConfirmPassword ? "text" : "password"}
-                  required
-                  style={{
-                    paddingRight: '40px',
-                    width: '100%',
-                    paddingLeft: '12px',
-                    fontSize: '16px',
-                    height: '44px',
-                  }}
-                />
-                <span style={{
-                  position: 'absolute',
-                  right: '12px',
-                  zIndex: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  height: '100%',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#0066cc',
-                  padding: 0
-                }}
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <AiOutlineEyeInvisible size={20} />
-                  ) : (
-                    <AiOutlineEye size={20} />
-                  )}
-                </span>
-              </div>
-                <button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Register'}</button>
-                {error && <p style={{color:'red'}}>{error}</p>}
-                {message && <p style={{color:'green'}}>{message}</p>}
-                <p className="sn"style={{marginTop:10}}>Already have an account? <a href="#" onClick={(e)=>{e.preventDefault(); navigate('/login')}}>Sign in</a></p>
+                {/* Confirm Password */}
+                <label>Confirm Password</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    name="confirmPassword"
+                    value={form.confirmPassword}
+                    onChange={onChange}
+                    placeholder="Confirm password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
+                    style={{
+                      paddingRight: '40px',
+                      width: '100%',
+                      fontSize: '16px',
+                      height: '44px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="password-eye-btn"
+                  >
+                    {showConfirmPassword ? (
+                      <AiOutlineEyeInvisible size={20} />
+                    ) : (
+                      <AiOutlineEye size={20} />
+                    )}
+                  </button>
+                </div>
+                <button type="submit" disabled={loading} style={{marginTop: '20px'}}>{loading ? 'Creating Account...' : 'Register'}</button>
+                {error && <div className="error-message">{error}</div>}
+                {message && <div className="success-message">{message}</div>}
+                <div className="register-footer">
+                  Already have an account? <a href="#" onClick={(e)=>{e.preventDefault(); navigate('/login')}}>Sign in</a>
+                </div>
               </form>
             ) : (
               <form onSubmit={verifyOtp}>
-                <h3>Verify Your Phone</h3>
-                <p style={{fontSize:'14px', marginBottom:'20px'}}>Enter the 6-digit code sent to {form.phone}</p>
+                <h3 style={{marginTop: 0, marginBottom: 5, textAlign: 'center', fontSize: '18px', fontWeight: 600}}>Verify Your Phone</h3>
+                <p style={{fontSize:'13px', marginBottom:'20px', marginTop: '10px', textAlign: 'center', color: '#ddd'}}>Enter the 6-digit code sent to <strong>{form.phone}</strong></p>
+                <label>Verification Code</label>
                 <input 
                   type="text" 
                   value={otp} 
@@ -319,12 +302,13 @@ const Register = () => {
                   placeholder="Enter 6-digit OTP" 
                   maxLength="6"
                   required 
+                  style={{marginTop: '8px'}}
                 />
-                <button type="submit" disabled={loading}>{loading ? 'Verifying...' : 'Verify OTP'}</button>
-                {error && <p style={{color:'red'}}>{error}</p>}
-                <p className="sn" style={{marginTop:10}}>
+                <button type="submit" disabled={loading} style={{marginTop: '20px'}}>{loading ? 'Verifying...' : 'Verify OTP'}</button>
+                {error && <div className="error-message">{error}</div>}
+                <div className="register-footer">
                   <a href="#" onClick={(e)=>{e.preventDefault(); setShowOtpInput(false); setOtp('');}}>Change phone number</a>
-                </p>
+                </div>
               </form>
             )}
           </div>
