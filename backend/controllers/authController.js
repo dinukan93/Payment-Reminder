@@ -142,46 +142,63 @@ export const logout = (req, res) => {
 // POST /auth/forgot-password
 export const forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email is required' });
+    const { phone, email } = req.body;
+    
+    if (!phone && !email) return res.status(400).json({ message: 'Phone number or email is required' });
 
-    const user = await Caller.findOne({ email });
+    // Find user by phone or email
+    const user = await Caller.findOne(
+      phone ? { phone } : { email }
+    );
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     // generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const otp = generateOtp();
+    const expiry = getOtpExpiry(parseInt(process.env.OTP_EXPIRY_MINUTES || '10'));
 
     user.otp = otp;
     user.otpExpiry = expiry;
     await user.save();
 
-    // send email (simple nodemailer setup)
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-      port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587,
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER || undefined,
-        pass: process.env.SMTP_PASS || undefined,
-      }
-    });
-
-    const mailOptions = {
-      from: process.env.SMTP_FROM || 'no-reply@example.com',
-      to: user.email,
-      subject: 'Password reset OTP',
-      text: `Your OTP for password reset is ${otp}. It is valid for 15 minutes.`
-    };
-
-    // attempt to send, but don't fail overall if email config is missing
-    try {
-      await transporter.sendMail(mailOptions);
-    } catch (e) {
-      console.warn('Failed to send OTP email (development):', e.message);
+    // Send OTP via SMS if phone is provided
+    if (phone || user.phone) {
+      sendOtpSms(user.phone, otp).catch(err => {
+        console.error('SMS sending failed:', err);
+      });
+      console.log(`[DEV MODE] OTP for ${user.phone}: ${otp}`);
+      return res.json({ message: 'OTP sent to your phone number' });
     }
 
-    return res.json({ message: 'OTP sent if the email exists' });
+    // Fallback: send email if email is provided
+    if (email || user.email) {
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+        port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587,
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER || undefined,
+          pass: process.env.SMTP_PASS || undefined,
+        }
+      });
+
+      const mailOptions = {
+        from: process.env.SMTP_FROM || 'no-reply@example.com',
+        to: user.email,
+        subject: 'Password reset OTP',
+        text: `Your OTP for password reset is ${otp}. It is valid for ${process.env.OTP_EXPIRY_MINUTES || '10'} minutes.`
+      };
+
+      // attempt to send, but don't fail overall if email config is missing
+      try {
+        await transporter.sendMail(mailOptions);
+      } catch (e) {
+        console.warn('Failed to send OTP email (development):', e.message);
+      }
+
+      return res.json({ message: 'OTP sent if the email exists' });
+    }
+
+    return res.json({ message: 'OTP sent' });
   } catch (error) {
     console.error('forgotPassword error', error);
     return res.status(500).json({ message: 'Server error' });
@@ -191,10 +208,14 @@ export const forgotPassword = async (req, res) => {
 // POST /auth/verify-otp
 export const verifyOtp = async (req, res) => {
   try {
-    const { email, otp, isPasswordReset } = req.body;
-    if (!email || !otp) return res.status(400).json({ message: 'Email and OTP required' });
+    const { email, phone, otp, isPasswordReset } = req.body;
+    
+    if (!otp) return res.status(400).json({ message: 'OTP is required' });
+    if (!email && !phone) return res.status(400).json({ message: 'Email or phone number is required' });
 
-    const user = await Caller.findOne({ email });
+    const user = await Caller.findOne(
+      email ? { email } : { phone }
+    );
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (!user.otp || user.otp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
@@ -243,18 +264,49 @@ export const verifyOtp = async (req, res) => {
 
 // POST /auth/reset-password
 export const resetPassword = async (req, res) => {
+  console.log('===== RESET PASSWORD ENDPOINT CALLED =====');
+  console.log('Full request body:', req.body);
   try {
-    const { email, resetToken, newPassword, confirmPassword } = req.body;
-    if (!email || !resetToken || !newPassword || !confirmPassword) return res.status(400).json({ message: 'All fields are required' });
-    if (newPassword !== confirmPassword) return res.status(400).json({ message: 'Passwords do not match' });
+    const { email, phone, resetToken, newPassword, confirmPassword } = req.body;
+    
+    console.log('Reset password request received:', { email, phone, resetToken: resetToken ? 'present' : 'missing', newPassword: newPassword ? 'present' : 'missing' });
+    
+    if (!resetToken || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: 'Reset token and passwords are required' });
+    }
+    if (!email && !phone) {
+      return res.status(400).json({ message: 'Email or phone number is required' });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'Passwords do not match' });
+    }
 
-    const user = await Caller.findOne({ email, token: resetToken });
-    if (!user) return res.status(400).json({ message: 'Invalid or expired reset token' });
+    // Debug: Check what's in the database
+    const searchCriteria = email ? { email, token: resetToken } : { phone, token: resetToken };
+    console.log('Searching with criteria:', searchCriteria);
+    
+    const user = await Caller.findOne(searchCriteria);
+    
+    console.log('User found:', user ? `${user.email} (${user.phone})` : 'not found');
+    
+    if (!user) {
+      // Try to find user without token to debug
+      const userWithoutToken = await Caller.findOne(
+        email ? { email } : { phone }
+      );
+      console.log('User exists without token check:', userWithoutToken ? `${userWithoutToken.email} (${userWithoutToken.phone})` : 'not found');
+      if (userWithoutToken) {
+        console.log('User token in DB:', userWithoutToken.token);
+      }
+      return res.status(400).json({ message: 'Invalid or expired reset token' });
+    }
 
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
     user.token = null;
     await user.save();
+
+    console.log('Password reset successful for user:', user.email);
 
     return res.json({ message: 'Password reset successful' });
   } catch (error) {
