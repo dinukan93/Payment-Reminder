@@ -52,12 +52,12 @@ function AdminDashboard() {
       
       // Fetch all data in parallel
       const [statsRes, assignedRes, unassignedRes, requestsRes, weeklyRes, paymentsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/admin/stats`),
-        fetch(`${API_BASE_URL}/admin/assigned-callers`),
-        fetch(`${API_BASE_URL}/admin/unassigned-callers`),
-        fetch(`${API_BASE_URL}/admin/sent-requests${adminId ? `?adminId=${adminId}` : ''}`),
-        fetch(`${API_BASE_URL}/admin/weekly-calls`),
-        fetch(`${API_BASE_URL}/admin/completed-payments?limit=5`)
+        fetch(`${API_BASE_URL}/api/admin/stats`),
+        fetch(`${API_BASE_URL}/api/admin/assigned-callers`),
+        fetch(`${API_BASE_URL}/api/admin/unassigned-callers`),
+        fetch(`${API_BASE_URL}/api/admin/sent-requests${adminId ? `?adminId=${adminId}` : ''}`),
+        fetch(`${API_BASE_URL}/api/admin/weekly-calls`),
+        fetch(`${API_BASE_URL}/api/admin/completed-payments?limit=5`)
       ]);
 
       if (statsRes.ok) {
@@ -171,7 +171,7 @@ function AdminDashboard() {
       setIsCallerDetailsModalOpen(true);
       
       // Fetch detailed caller information from backend
-      const response = await fetch(`${API_BASE_URL}/admin/callers/${caller.id}/details`);
+      const response = await fetch(`${API_BASE_URL}/api/admin/callers/${caller.id}/details`);
       if (response.ok) {
         const result = await response.json();
         setCallerDetailsData(result.data);

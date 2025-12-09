@@ -12,7 +12,7 @@ const Logout = () => {
         // Call backend logout endpoint if token exists
         const token = localStorage.getItem('token');
         if (token) {
-          await fetch(`${API_BASE_URL}/auth/logout`, {
+          await fetch(`${API_BASE_URL}/api/auth/logout`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

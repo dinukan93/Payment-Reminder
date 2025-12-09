@@ -89,7 +89,7 @@ function EditCustomerModal({ show, customer, onClose, onSave }) {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/customers/${customer._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/customers/${customer._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

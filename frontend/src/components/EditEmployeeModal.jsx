@@ -51,7 +51,7 @@ function EditEmployeeModal({ show, caller, onClose, onSave }) {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/callers/${caller._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/callers/${caller._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

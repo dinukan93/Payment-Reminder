@@ -34,13 +34,13 @@ router.get('/google/callback',
 
             // prefer redirect from state param if present, otherwise fallback to env Client_URL
             const state = req.query.state ? decodeURIComponent(req.query.state) : null;
-            const redirectBase = state || process.env.Client_URL || 'http://localhost:5173';
+            const redirectBase = state || process.env.Client_URL;
 
             return res.redirect(`${redirectBase.replace(/\/$/, '')}/auth-success?token=${token}`);
         } catch (error) {
             console.error('Error during Google authentication callback:', error);
             const state = req.query.state ? decodeURIComponent(req.query.state) : null;
-            const redirectBase = state || process.env.Client_URL || 'http://localhost:5173';
+            const redirectBase = state || process.env.Client_URL ;
             return res.redirect(`${redirectBase.replace(/\/$/, '')}/login?error=google_failed`);
         }
     }

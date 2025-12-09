@@ -14,12 +14,12 @@ function CallerStatisticsTable() {
     try {
       setLoading(true);
       // Fetch all callers
-      const callersResponse = await fetch(`${API_BASE_URL}/callers`);
+      const callersResponse = await fetch(`${API_BASE_URL}/api/callers`);
       const callersResult = await callersResponse.json();
       
       if (callersResult.success && callersResult.data) {
         // Fetch all customers
-        const customersResponse = await fetch(`${API_BASE_URL}/customers`);
+        const customersResponse = await fetch(`${API_BASE_URL}/api/customers`);
         const customersResult = await customersResponse.json();
         
         if (customersResult.success && customersResult.data) {

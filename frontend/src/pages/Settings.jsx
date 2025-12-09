@@ -38,7 +38,7 @@ const Settings = () => {
     const fetchSettings = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE_URL}/settings`, {
+        const res = await axios.get(`${API_BASE_URL}/api/settings`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -126,7 +126,7 @@ const Settings = () => {
 
       const token = localStorage.getItem('token');
       const res = await axios.put(
-        `${API_BASE_URL}/settings/profile`,
+        `${API_BASE_URL}/api/settings/profile`,
         { avatar: formData.avatar },
         {
           headers: {
@@ -158,7 +158,7 @@ const Settings = () => {
 
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API_BASE_URL}/settings/profile`,
+        `${API_BASE_URL}/api/settings/profile`,
         { avatar: '' },
         {
           headers: {
@@ -208,7 +208,7 @@ const Settings = () => {
 
       const token = localStorage.getItem('token');
       const res = await axios.put(
-        `${API_BASE_URL}/settings/profile`,
+        `${API_BASE_URL}/api/settings/profile`,
         {
           name: formData.name.trim(),
           email: formData.email.trim().toLowerCase(),
@@ -262,7 +262,7 @@ const Settings = () => {
 
       const token = localStorage.getItem('token');
       const res = await axios.put(
-        `${API_BASE_URL}/settings/password`,
+        `${API_BASE_URL}/api/settings/password`,
         {
           currentPassword: formData.currentPassword,
           newPassword: formData.newPassword,
@@ -317,7 +317,7 @@ const Settings = () => {
       const { emailNotifications, paymentReminder, callNotifications } = preferences;
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API_BASE_URL}/settings/preferences?type=notification`,
+        `${API_BASE_URL}/api/settings/preferences?type=notification`,
         { emailNotifications, paymentReminder, callNotifications },
         {
           headers: {
@@ -343,7 +343,7 @@ const Settings = () => {
       const { language, timezone, darkMode } = preferences;
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API_BASE_URL}/settings/preferences?type=system`,
+        `${API_BASE_URL}/api/settings/preferences?type=system`,
         { language, timezone, darkMode },
         {
           headers: {

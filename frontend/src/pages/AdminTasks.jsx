@@ -23,7 +23,7 @@ function AdminTasks() {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/customers`);
+      const response = await fetch(`${API_BASE_URL}/api/customers`);
       if (response.ok) {
         const result = await response.json();
         // Get data from the response (could be result.data or result directly)
@@ -59,8 +59,8 @@ function AdminTasks() {
     try {
       // Fetch both assigned and unassigned callers
       const [assignedRes, unassignedRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/admin/assigned-callers`),
-        fetch(`${API_BASE_URL}/admin/unassigned-callers`)
+        fetch(`${API_BASE_URL}/api/admin/assigned-callers`),
+        fetch(`${API_BASE_URL}/api/admin/unassigned-callers`)
       ]);
       
       let allCallersData = [];
@@ -216,7 +216,7 @@ function AdminTasks() {
       console.log('Request payload:', requestData);
 
       // Save request to backend
-      const response = await fetch(`${API_BASE_URL}/requests`, {
+      const response = await fetch(`${API_BASE_URL}/api/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

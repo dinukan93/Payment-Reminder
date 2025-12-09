@@ -27,7 +27,7 @@ function CallerTasks() {
       }
 
       // Fetch customers assigned to this caller
-      const response = await fetch(`${API_BASE_URL}/customers?callerId=${callerId}`);
+      const response = await fetch(`${API_BASE_URL}/api/customers?callerId=${callerId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -91,7 +91,7 @@ function CallerTasks() {
       console.log('Data:', data);
       
       // Update customer via API
-      const response = await fetch(`${API_BASE_URL}/customers/${customerId}/contact`, {
+      const response = await fetch(`${API_BASE_URL}/api/customers/${customerId}/contact`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

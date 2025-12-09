@@ -23,7 +23,7 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
         
         if (!callerId) return;
         
-        const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`);
+        const response = await fetch(`${API_BASE_URL}/api/requests?callerId=${callerId}&status=PENDING`);
         
         if (response.ok) {
           const data = await response.json();

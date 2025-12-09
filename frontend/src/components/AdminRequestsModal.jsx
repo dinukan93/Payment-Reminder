@@ -23,7 +23,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     console.log('AdminRequestsModal - Fetching requests for callerId:', callerId);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`);
+      const response = await fetch(`${API_BASE_URL}/api/requests?callerId=${callerId}&status=PENDING`);
       
       if (response.ok) {
         const result = await response.json();
@@ -72,7 +72,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     
     try {
       // Update request status in backend
-      const response = await fetch(`${API_BASE_URL}/requests/${request.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/requests/${request.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     
     try {
       // Update request status in backend
-      const response = await fetch(`${API_BASE_URL}/requests/${request.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/requests/${request.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

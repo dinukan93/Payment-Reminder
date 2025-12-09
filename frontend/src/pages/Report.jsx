@@ -38,7 +38,7 @@ function Report() {
       const callerId = userData.id;
       
       // Fetch only this caller's customers
-      const response = await fetch(`${API_BASE_URL}/customers?callerId=${callerId}`);
+      const response = await fetch(`${API_BASE_URL}/api/customers?callerId=${callerId}`);
       const result = await response.json();
       
       if (result.success && result.data) {
@@ -129,7 +129,7 @@ function Report() {
       const callerId = userData.id;
       
       // Fetch only this caller's completed requests
-      const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=COMPLETED`);
+      const response = await fetch(`${API_BASE_URL}/api/requests?callerId=${callerId}&status=COMPLETED`);
       const result = await response.json();
       
       if (result.success && result.data) {
@@ -218,7 +218,7 @@ function Report() {
         stats,
         customerDetails
       };
-      const response = await fetch(`${API_BASE_URL}/callers/${callerId}/report`, {
+      const response = await fetch(`${API_BASE_URL}/api/callers/${callerId}/report`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

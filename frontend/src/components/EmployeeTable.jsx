@@ -23,7 +23,7 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
   const fetchCallers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/callers`);
+      const response = await fetch(`${API_BASE_URL}/api/callers`);
       const result = await response.json();
       
       if (result.success && result.data) {
@@ -87,7 +87,7 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
   const handleDelete = async (caller) => {
     if (window.confirm(`Are you sure you want to delete ${caller.name}?`)) {
       try {
-        const response = await fetch(`${API_BASE_URL}/callers/${caller._id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/callers/${caller._id}`, {
           method: 'DELETE'
         });
         

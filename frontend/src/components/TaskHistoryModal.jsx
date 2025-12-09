@@ -18,7 +18,7 @@ function TaskHistoryModal({ show, caller, onClose }) {
     setError('');
     try {
       const response = await fetch(
-        `${API_BASE_URL}/requests/caller/${caller.callerId}`,
+        `${API_BASE_URL}/api/requests/caller/${caller.callerId}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`

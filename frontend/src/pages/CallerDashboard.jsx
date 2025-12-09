@@ -37,7 +37,7 @@ function CallerDashboard() {
         console.error('No caller ID found in localStorage');
         return;
       }
-      const response = await fetch(`${API_BASE_URL}/customers?callerId=${callerId}`);
+      const response = await fetch(`${API_BASE_URL}/api/customers?callerId=${callerId}`);
       const data = await response.json();
       if (data.success && data.data) {
         // Separate customers by status
@@ -127,12 +127,12 @@ function CallerDashboard() {
       };
       
       console.log('Sending request to backend:', {
-        url: `${API_BASE_URL}/customers/${existingCustomer._id}/contact`,
+        url: `${API_BASE_URL}/api/customers/${existingCustomer._id}/contact`,
         body: requestBody
       });
       
       // Save to backend API using the contact endpoint
-      const response = await fetch(`${API_BASE_URL}/customers/${existingCustomer._id}/contact`, {
+      const response = await fetch(`${API_BASE_URL}/api/customers/${existingCustomer._id}/contact`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
