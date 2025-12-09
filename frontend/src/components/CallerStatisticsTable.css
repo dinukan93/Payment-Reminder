@@ -2,7 +2,7 @@
   width: 70%;
   margin:auto;
   background: #ffffff;
-  border: 1px solid #d9d9d9;
+  border: none;
   border-radius: 20px;
   overflow: hidden; /* clip inner content to rounded corners */
   padding: 15px;

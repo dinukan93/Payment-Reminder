@@ -9,8 +9,10 @@ import { FaUserCheck } from "react-icons/fa";
 import { MdPendingActions } from "react-icons/md";
 import CallerStatisticsTable from '../components/CallerStatisticsTable';
 import API_BASE_URL from "../config/api";
+import { useTheme } from '../context/ThemeContext';
 
 function AdminReport() {
+  const { darkMode } = useTheme();
   // State for dropdown selection per caller row
   const [reportDropdownState, setReportDropdownState] = useState({});
   const [stats, setStats] = useState({
@@ -466,17 +468,17 @@ function AdminReport() {
           </div>
 
           {/* Report List Section - Show all reports that are sent */}
-          <div className='report-list-section' style={{ margin: '30px 0 20px 0', padding: '20px', background: '#f8f9fa', borderRadius: '8px' }}>
+          <div className='report-list-section' >
             <h3 style={{ marginBottom: '15px' }}>Performance Reports</h3>
             <div style={{ maxHeight: 340, overflow: 'auto', minWidth: 0 }}>
               <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse' }}>
                 <thead>
-                <tr style={{ background: '#e9ecef' }}>
-                  <th style={{ padding: '8px', border: '1px solid #ddd' }}>Caller</th>
-                  <th style={{ padding: '8px', border: '1px solid #ddd' }}>Caller ID</th>
-                  <th style={{ padding: '8px', border: '1px solid #ddd' }}>Report ID</th>
-                  <th style={{ padding: '8px', border: '1px solid #ddd' }}>Sent</th>
-                  <th style={{ padding: '8px', border: '1px solid #ddd' }}>Download</th>
+                <tr style={{ background: darkMode ? '#2d3748' : '#e9ecef' }}>
+                  <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Caller</th>
+                  <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Caller ID</th>
+                  <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Report ID</th>
+                  <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Sent</th>
+                  <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Download</th>
                 </tr>
               </thead>
               <tbody>

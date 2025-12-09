@@ -22,7 +22,7 @@ hr {
 }
 
 .total-calls{
-    border: 1px solid #D9D9D9;
+    box-shadow: 0 0 10px #D9D9D9;
     padding: 10px;
     border-radius: 10px;
     width: 200px;
@@ -31,61 +31,67 @@ hr {
 
 .dark-mode .total-calls{
     border: none;
+    box-shadow: none;
    background-color: #242424;
 }
 
 .sucessful-calls{
-    border: 1px solid #D9D9D9;
+    box-shadow: 0 0 10px #D9D9D9;
     padding: 10px;
     border-radius: 10px;
 }
 
 .dark-mode .sucessful-calls{
     border: none;
+    box-shadow: none;
    background-color: #242424;
 }
 
 .total-payments{
-    border: 1px solid #D9D9D9;
+    box-shadow: 0 0 10px #D9D9D9;
     padding: 10px;
     border-radius: 10px;
 }
 
 .dark-mode .total-payments{
     border: none;
+    box-shadow: none;
    background-color: #242424;
 }
 
 .pending-payments{
-    border: 1px solid #D9D9D9;
+    box-shadow: 0 0 10px #D9D9D9;
     padding: 10px;
     border-radius: 10px;
 }
 
 .dark-mode .pending-payments{
     border: none;
+    box-shadow: none;
    background-color: #242424;
 }
 
 .active-callers{
-    border: 1px solid #D9D9D9;
+    box-shadow: 0 0 10px #D9D9D9;
     padding: 10px;
     border-radius: 10px;
 }
 
 .dark-mode .active-callers{
     border: none;
+    box-shadow: none;
    background-color: #242424;
 }
 
 .completed-requests-widget{
-    border: 1px solid #D9D9D9;
+    box-shadow: 0 0 10px #D9D9D9;
     padding: 10px;
     border-radius: 10px;
 }
 
 .dark-mode .completed-requests-widget{
     border: none;
+    box-shadow: none;
    background-color: #242424;
 }   
 
@@ -120,7 +126,7 @@ hr {
 }
 
 .caller-statistics{
-    border: 1px solid #D9D9D9;
+    border: none;
     border-radius: 10px;
     padding: 10px;
     margin: auto;
@@ -128,10 +134,14 @@ hr {
 }
 
 .completed-requests-section {
-    border: 1px solid #D9D9D9;
+    box-shadow: 0 0 10px #D9D9D9;
     border-radius: 10px;
     padding: 20px;
     margin: 20px;
+}
+
+.dark-mode .completed-requests-section {
+    box-shadow: 0 0 10px #272727;
 }
 
 .completed-requests-section h3 {
@@ -189,11 +199,17 @@ hr {
     color: white;
 }
 
+
 .requests-overview {
-    border: 1px solid #D9D9D9;
+    /* border: 1px solid #D9D9D9; */
+    box-shadow: 0 0 10px #D9D9D9;
     border-radius: 10px;
     padding: 20px;
     margin: 20px;
+}
+
+.dark-mode .requests-overview {
+    box-shadow: 0 0 10px #272727;
 }
 
 .requests-overview h3 {
@@ -309,6 +325,19 @@ hr {
     border-radius: 50%;
     margin-right: 8px;
     animation: spin 1s linear infinite;
+}
+
+
+
+.report-list-section {
+    margin: 30px 0 20px 0; 
+    padding: 20px; 
+    border-radius: 8px;
+    box-shadow: 0 0 10px #D9D9D9;
+}
+
+.dark-mode .report-list-section {
+    box-shadow: 0 0 10px #272727;
 }
 
 @keyframes spin {
