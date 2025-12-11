@@ -108,7 +108,7 @@ function CallerTasks() {
       console.log('Response:', result);
 
       if (result.success) {
-        console.log("✅ Customer details saved successfully");
+        console.log("Customer details saved successfully");
         // Close modal first
         handleCloseModal();
         // Then reload customers to get updated data
