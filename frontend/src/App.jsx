@@ -19,6 +19,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminTasks from "./pages/AdminTasks";
 import UploadPage from "./pages/UploadPage";
 import DisplayDataPage from "./pages/DisplayDataPage";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 function App() {
@@ -57,6 +59,15 @@ function App() {
           </Routes>
         </div>
       </div>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          draggable
+        />
     </>
   );
 }
