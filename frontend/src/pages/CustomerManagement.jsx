@@ -5,6 +5,7 @@ import "../components/CustomerTable.css";
 import SearchBar from "../components/SearchBar";
 import "../components/SearchBar.css";
 import AddCustomerModal from "../components/AddCustomerModal";
+import { showSuccess } from "../components/Notifications";
 
 function CustomerManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -16,6 +17,7 @@ function CustomerManagement() {
   };
 
   const handleAddSuccess = () => {
+    showSuccess("Customer added successfully!");
     setRefreshTrigger(prev => prev + 1);
   };
 
