@@ -24,14 +24,8 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
       const response = await fetch(`${API_BASE_URL}/api/customers`);
       const result = await response.json();
       if (result.success && result.data) {
-        // Show all customers except those marked as COMPLETED (unless they have PENDING/OVERDUE status)
-        // This includes UNASSIGNED (even with assignedTo = null), PENDING, OVERDUE, and assigned customers
-        const filteredData = result.data.filter(c => {
-          const status = c.status || 'UNASSIGNED';
-        
-          return status === 'PENDING' || status === 'UNASSIGNED' || status === 'OVERDUE' || c.assignedTo;
-        });
-        setCustomers(filteredData);
+        // Show all customers including COMPLETED
+        setCustomers(result.data);
       }
       setLoading(false);
     } catch (error) {

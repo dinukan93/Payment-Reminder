@@ -169,3 +169,26 @@ margin-top: 15px;
   background: #042b5f;
 }
 
+/* Override dark mode for login page */
+.dark-mode .login-page {
+  background-image: url('../assets/bckgrd.png') !important;
+  background-color: transparent !important;
+  color: white !important;
+}
+
+.dark-mode .login-card {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark-mode .login-card input {
+  background: white !important;
+  color: #333 !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.dark-mode .login-card input::placeholder {
+  color: #666 !important;
+  opacity: 1 !important;
+}

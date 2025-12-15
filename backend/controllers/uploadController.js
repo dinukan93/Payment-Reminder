@@ -117,32 +117,101 @@ const mapRowToCustomer = (rowData) => {
 };
 
 // Parse Excel file and return data structure
-const parseExcelFile = async (fileBuffer) => {
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(fileBuffer);
-
-  const worksheet = workbook.worksheets[0];
-  const rows = [];
-  const headers = [];
-
-  // Get headers from first row
-  worksheet.getRow(1).eachCell((cell, colNumber) => {
-    headers.push(cell.value?.toString().trim() || `Column${colNumber}`);
-  });
-
-  // Get data rows (skip header row)
-  worksheet.eachRow((row, rowNumber) => {
-    if (rowNumber > 1) {
-      const rowData = {};
-      row.eachCell((cell, colNumber) => {
-        const header = headers[colNumber - 1];
-        rowData[header] = cell.value;
-      });
-      rows.push(rowData);
+const parseExcelFile = async (fileBuffer, fileName = '') => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    
+    // Determine file type and parse accordingly
+    const isXlsx = fileName.toLowerCase().endsWith('.xlsx');
+    const isXls = fileName.toLowerCase().endsWith('.xls');
+    const isCsv = fileName.toLowerCase().endsWith('.csv');
+    
+    console.log('File type detection:', { fileName, isXlsx, isXls, isCsv });
+    
+    if (isCsv) {
+      // Parse CSV - convert buffer to stream
+      const { Readable } = await import('stream');
+      const stream = Readable.from(fileBuffer.toString('utf-8'));
+      await workbook.csv.read(stream);
+    } else {
+      // Try parsing as XLSX (supports both .xlsx and .xls in most cases)
+      try {
+        await workbook.xlsx.load(fileBuffer);
+      } catch (xlsxError) {
+        console.error('XLSX parsing failed:', xlsxError.message);
+        throw new Error('Unable to parse file. Please save it as .xlsx format in Excel and try again.');
+      }
     }
-  });
 
-  return { headers, rows };
+    const worksheet = workbook.worksheets[0];
+    
+    if (!worksheet) {
+      throw new Error('No worksheet found in the Excel file');
+    }
+
+    const rows = [];
+    const headers = [];
+
+    // Get headers from first row
+    const headerRow = worksheet.getRow(1);
+    if (!headerRow) {
+      throw new Error('No header row found in the worksheet');
+    }
+
+    headerRow.eachCell((cell, colNumber) => {
+      const value = cell.value;
+      // Handle different cell value types
+      let headerText = '';
+      if (typeof value === 'string') {
+        headerText = value.trim();
+      } else if (value && typeof value === 'object' && value.text) {
+        headerText = value.text.trim();
+      } else if (value !== null && value !== undefined) {
+        headerText = value.toString().trim();
+      }
+      headers.push(headerText || `Column${colNumber}`);
+    });
+
+    if (headers.length === 0) {
+      throw new Error('No headers found in the Excel file');
+    }
+
+    console.log('Headers found:', headers);
+
+    // Get data rows (skip header row)
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber > 1) {
+        const rowData = {};
+        row.eachCell((cell, colNumber) => {
+          const header = headers[colNumber - 1];
+          if (header) {
+            let cellValue = cell.value;
+            // Handle rich text and formula values
+            if (cellValue && typeof cellValue === 'object') {
+              if (cellValue.result !== undefined) {
+                cellValue = cellValue.result; // Formula result
+              } else if (cellValue.richText) {
+                cellValue = cellValue.richText.map(t => t.text).join('');
+              } else if (cellValue.text) {
+                cellValue = cellValue.text;
+              }
+            }
+            rowData[header] = cellValue;
+          }
+        });
+        // Only add rows that have at least one non-empty value
+        if (Object.values(rowData).some(val => val !== null && val !== undefined && val !== '')) {
+          rows.push(rowData);
+        }
+      }
+    });
+
+    console.log(`Parsed ${rows.length} data rows`);
+    return { headers, rows };
+  } catch (error) {
+    console.error('Excel parsing error:', error);
+    throw new Error(`Failed to parse Excel file: ${error.message}`);
+  }
 };
 
 // @desc    Upload and parse Excel file (display only, no import)
@@ -157,7 +226,21 @@ export const uploadExcelFile = async (req, res) => {
       });
     }
 
-    const { headers, rows } = await parseExcelFile(req.file.buffer);
+    console.log('Parsing file:', req.file.originalname);
+    console.log('File size:', req.file.size);
+    console.log('File mimetype:', req.file.mimetype);
+
+    // Validate file buffer
+    if (!req.file.buffer || req.file.buffer.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'File buffer is empty'
+      });
+    }
+
+    const { headers, rows } = await parseExcelFile(req.file.buffer, req.file.originalname);
+
+    console.log('Parsed successfully:', headers.length, 'headers,', rows.length, 'rows');
 
     res.status(200).json({
       success: true,
@@ -196,7 +279,7 @@ export const parseAndImport = async (req, res) => {
     console.log('File name:', req.file.originalname);
     console.log('File size:', req.file.size);
 
-    const { headers, rows } = await parseExcelFile(req.file.buffer);
+    const { headers, rows } = await parseExcelFile(req.file.buffer, req.file.originalname);
 
     console.log('Headers found:', headers);
     console.log('Total rows in Excel:', rows.length);
@@ -292,7 +375,7 @@ export const importCustomers = async (req, res) => {
       });
     }
 
-    const { headers, rows } = await parseExcelFile(req.file.buffer);
+    const { headers, rows } = await parseExcelFile(req.file.buffer, req.file.originalname);
 
     // Map and filter for Customer model
     const customers = rows
@@ -360,7 +443,7 @@ export const importArrears = async (req, res) => {
       });
     }
 
-    const { headers, rows } = await parseExcelFile(req.file.buffer);
+    const { headers, rows } = await parseExcelFile(req.file.buffer, req.file.originalname);
 
     console.log('=== IMPORT ARREARS ===');
     console.log('File name:', req.file.originalname);
@@ -479,7 +562,7 @@ export const markCustomersAsPaid = async (req, res) => {
       });
     }
 
-    const { headers, rows } = await parseExcelFile(req.file.buffer);
+    const { headers, rows } = await parseExcelFile(req.file.buffer, req.file.originalname);
 
     console.log('=== MARK AS PAID ===');
     console.log('File name:', req.file.originalname);
@@ -540,34 +623,37 @@ export const markCustomersAsPaid = async (req, res) => {
         console.log(`Processing Account ${accountNumber}:`, {
           currentArrears: customer.newArrears,
           newArrears,
+          newArrearsType: typeof newArrears,
           hasNewArrearsField,
+          willBeCompleted: !(hasNewArrearsField && newArrears > 0),
           paymentType: hasNewArrearsField ? 'PARTIAL' : 'FULL'
         });
 
-        // Update customer with new arrears value
-        if (newArrears >= 0) {
-          customer.newArrears = newArrears;
-          console.log(`Updated new arrears to: ${newArrears}`);
-        }
+        // Update customer with new arrears value (allow negative for credit balance)
+        customer.newArrears = newArrears;
+        console.log(`Updated new arrears to: ${newArrears}`);
 
-        // Update customer status: COMPLETED if full payment (no NEW_ARREARS field), PENDING if partial
-        customer.status = hasNewArrearsField ? 'PENDING' : 'COMPLETED';
+        // Update customer status: COMPLETED if full payment (no NEW_ARREARS field, newArrears = 0, or negative/overpayment), PENDING if partial
+        customer.status = (hasNewArrearsField && newArrears > 0) ? 'PENDING' : 'COMPLETED';
+        console.log(`Status set to: ${customer.status} (hasNewArrearsField: ${hasNewArrearsField}, newArrears > 0: ${newArrears > 0})`);
         
-        // Update amountOverdue to reflect remaining balance
+        // Update amountOverdue to reflect remaining balance (negative values allowed for credit)
         customer.amountOverdue = (customer.newArrears || 0).toString();
         
         // Save updated customer
         await customer.save();
 
         // Create request record for the payment (for tracking)
-        if (paidAmount > 0 || newArrears > 0) {
+        if (newArrears > 0 || !hasNewArrearsField) {
+          const description = hasNewArrearsField 
+            ? `Partial payment received. Remaining arrears: ${customer.newArrears}`
+            : `Full payment received. Account settled.`;
+            
           const newRequest = new Request({
             customerId: customer._id,
             accountNumber: customer.accountNumber,
-            paymentAmount: paidAmount > 0 ? paidAmount : (customer.newArrears > 0 ? 0 : (customer.amountOverdue || 0)),
-            description: paidAmount > 0 
-              ? `Payment received. Amount: ${paidAmount}. Remaining arrears: ${customer.newArrears}`
-              : `Status updated to PAID. Remaining arrears: ${customer.newArrears}`,
+            paymentAmount: hasNewArrearsField ? 0 : customer.newArrears,
+            description: description,
             status: 'COMPLETED',
             completedDate: new Date()
           });

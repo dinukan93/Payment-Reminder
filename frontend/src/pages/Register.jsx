@@ -26,6 +26,13 @@ const Register = () => {
     e.preventDefault();
     setError('');
     setMessage('');
+    
+    // Validate phone number: must be 10 digits starting with 0
+    const phoneRegex = /^0\d{9}$/;
+    if (!phoneRegex.test(form.phone)) {
+      return setError('Phone number must be 10 digits starting with 0');
+    }
+    
     if (form.password !== form.confirmPassword) return setError('Passwords do not match');
     setLoading(true);
     try{
@@ -151,6 +158,7 @@ const Register = () => {
                       fontSize: '16px',
                       height: '44px',
                       boxSizing: 'border-box',
+                      backgroundColor: 'white',
                     }}
                   />
                   <FaUser 
@@ -201,7 +209,10 @@ const Register = () => {
                     name="phone"
                     value={form.phone}
                     onChange={onChange}
-                    placeholder="+94XXXXXXXXX"
+                    placeholder="0XXXXXXXXX"
+                    type="tel"
+                    pattern="0\d{9}"
+                    maxLength="10"
                     required
                     style={{
                       paddingRight: '40px',

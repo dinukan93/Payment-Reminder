@@ -51,7 +51,7 @@ router.get('/google/callback',
 
 router.get('/me', isAuthenticated, async (req, res)=>{
     try {
-        // fetch full caller document from DB to include avatar and other fields
+        
         const caller = await Caller.findById(req.user.id).select('-password -token -otp -otpExpiry');
         if (!caller) return res.status(404).json({success:false, message:'Caller not found'});
         res.json({success:true, user: caller});

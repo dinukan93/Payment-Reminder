@@ -170,9 +170,9 @@ const UploadPage = () => {
       formData.append('file', fileItem.file);
 
       const token = localStorage.getItem('token');
-      console.log('Uploading paid customers file to:', `${API_BASE_URL}/upload/parse`);
+      console.log('Uploading paid customers file to:', `${API_BASE_URL}/api/upload/parse`);
       
-      const response = await fetch(`${API_BASE_URL}/upload/parse`, {
+      const response = await fetch(`${API_BASE_URL}/api/upload/parse`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -197,18 +197,25 @@ const UploadPage = () => {
         
         console.log('Paid data state updated');
       } else {
-        throw new Error(result.message || 'Upload failed');
+        const errorMsg = result.error || result.message || 'Upload failed';
+        throw new Error(errorMsg);
       }
     } catch (error) {
       console.error('Paid upload error:', error);
+      const errorMessage = error.message.includes('zip file') 
+        ? 'Invalid Excel file format. Please ensure the file is a valid .xlsx or .xls file.'
+        : error.message;
+      
       setPaidFiles(prev => prev.map(f => 
         f.id === fileItem.id ? { 
           ...f, 
           status: 'error', 
-          error: error.message || 'Upload failed',
+          error: errorMessage,
           progress: 0 
         } : f
       ));
+      
+      alert(`Upload failed: ${errorMessage}`);
     } finally {
       setPaidUploading(false);
     }
@@ -232,7 +239,7 @@ const UploadPage = () => {
       const token = localStorage.getItem('token');
       console.log('Importing paid customers to database...');
       
-      const response = await fetch(`${API_BASE_URL}/upload/mark-paid`, {
+      const response = await fetch(`${API_BASE_URL}/api/upload/mark-paid`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -368,18 +375,25 @@ const UploadPage = () => {
         
         console.log('Excel data state updated');
       } else {
-        throw new Error(result.message || 'Upload failed');
+        const errorMsg = result.error || result.message || 'Upload failed';
+        throw new Error(errorMsg);
       }
     } catch (error) {
       console.error('Upload error:', error);
+      const errorMessage = error.message.includes('zip file') 
+        ? 'Invalid Excel file format. Please ensure the file is a valid .xlsx or .xls file.'
+        : error.message;
+      
       setFiles(prev => prev.map(f => 
         f.id === fileItem.id ? { 
           ...f, 
           status: 'error', 
-          error: error.message || 'Upload failed',
+          error: errorMessage,
           progress: 0 
         } : f
       ));
+      
+      alert(`Upload failed: ${errorMessage}`);
     } finally {
       setUploading(false);
     }
@@ -424,6 +438,7 @@ const UploadPage = () => {
             onDragOver={onDragOver}
             onDragEnter={onDragEnter}
             onDragLeave={onDragLeave}
+             style={{ backgroundColor: '#ff025647' }}
           >
             <input
               ref={inputRef}
@@ -436,7 +451,7 @@ const UploadPage = () => {
             <div className="drop-inner">
               <MdOutlineFileUpload size={48} />
               <p className="drop-text">Choose a file or drag &amp; drop it here</p>
-              <p className="drop-sub">excel up to 60MB</p>
+              <p className="drop-sub"> Overdue Customer List (up to 60MB)</p>
               <button type="button" className="browse-btn" aria-label="Browse File">Browse File</button>
             </div>
           </div>
@@ -608,7 +623,7 @@ const UploadPage = () => {
             onDragOver={onDragOver}
             onDragEnter={(e) => { e.preventDefault(); setPaidDragActive(true); }}
             onDragLeave={(e) => { if (e.currentTarget === e.target) setPaidDragActive(false); }}
-            style={{ backgroundColor: '#f5f5ff' }}
+            style={{ backgroundColor: '#4cec5166' }}
           >
             <input
               ref={paidInputRef}
@@ -621,7 +636,7 @@ const UploadPage = () => {
             <div className="drop-inner">
               <MdOutlineFileUpload size={48} />
               <p className="drop-text">Choose a file or drag &amp; drop it here</p>
-              <p className="drop-sub">excel with paid customers up to 60MB</p>
+              <p className="drop-sub">Paid Customer List (up to 60MB)</p>
               <button type="button" className="browse-btn" aria-label="Browse Paid File">Browse File</button>
             </div>
           </div>
@@ -689,7 +704,7 @@ const UploadPage = () => {
           {paidData && (
             <>
               <div className="separator" />
-              <div className="excel-data-section" style={{ backgroundColor: '#f5fff5' }}>
+              <div className="excel-data-section" style={{ backgroundColor: '#ffffffff' }}>
                 <div className="data-header">
                   <div>
                     <h3 className="data-title">Preview</h3>
