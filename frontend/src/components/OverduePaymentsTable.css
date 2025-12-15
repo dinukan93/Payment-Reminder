@@ -9,6 +9,12 @@
   max-height: 500px;
 }
 
+
+.dark-mode .overdue-payments-section {
+  background: #242424;
+  border: none;
+}
+
 .table-container {
   overflow-y: auto;
   overflow-x: auto;
@@ -35,6 +41,11 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background-color: #f8f9fa;
+}
+
+.dark-mode .overdue-table th {
+  background-color: #333;
+  color: #ddd;
 }
 
 .overdue-table td {

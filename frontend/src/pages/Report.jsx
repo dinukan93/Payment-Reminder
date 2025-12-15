@@ -140,11 +140,6 @@ function Report() {
     }
   };
 
-  const handleDownloadPDF = () => {
-    alert('PDF download feature - Coming soon!');
-    // TODO: Implement PDF generation
-  };
-
   // Download all customer analytics as CSV
   const handleDownloadExcel = () => {
     if (!customerDetails.length) {
@@ -436,7 +431,6 @@ function Report() {
               <option value="weekly">Weekly Report</option>
               <option value="monthly">Monthly Report</option>
             </select>
-            <button className='download-pdf' onClick={handleDownloadPDF}>PDF</button>
             <button className='download-excel' onClick={handleDownloadExcel}>Excel</button>
           </div>
         </>

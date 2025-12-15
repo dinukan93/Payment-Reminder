@@ -185,11 +185,7 @@ function AdminReport() {
     }
   };
 
-  const handleDownloadPDF = () => {
-    alert('PDF download feature - Coming soon!');
-    // TODO: Implement PDF generation
-  };
-
+ 
   // Download selected report for selected caller as CSV
   const handleDownloadExcel = () => {
     if (!performanceReports.length) {
