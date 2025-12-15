@@ -9,6 +9,12 @@
   max-height: 500px;
 }
 
+.dark-mode .contacted-customers-section {
+  background: #242424;
+  border: none;
+}
+
+
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -35,6 +41,7 @@
   overflow-x: auto;
 }
 
+
 .contacted-table {
   width: 100%;
   border-collapse: collapse;
@@ -56,6 +63,12 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background-color: #f8f9fa;
+}
+
+.dark-mode .contacted-table th {
+  background-color: #242424;
+  color: #aaa;
+  border: none;
 }
 
 .contacted-table td {
