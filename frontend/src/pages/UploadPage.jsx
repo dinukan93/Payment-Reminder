@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./UploadPage.css";
 import { MdOutlineFileUpload } from "react-icons/md";
 import API_BASE_URL from "../config/api";
+import { toast } from "react-toastify";
 
 const humanFileSize = (size) => {
   if (size === 0) return "0 B";
@@ -215,7 +216,7 @@ const UploadPage = () => {
         } : f
       ));
       
-      alert(`Upload failed: ${errorMessage}`);
+      toast.error(`Upload failed: ${errorMessage}`);
     } finally {
       setPaidUploading(false);
     }
@@ -223,7 +224,7 @@ const UploadPage = () => {
 
   const importPaid = async () => {
     if (!paidFiles.find(f => f.status === 'completed')) {
-      alert('Please upload a paid customers file first');
+      toast.warning('Please upload a paid customers file first');
       return;
     }
 
@@ -251,7 +252,7 @@ const UploadPage = () => {
       console.log('Paid import result:', result);
 
       if (response.ok && result.success) {
-        alert(`Successfully marked ${result.data.marked} customers as paid! (${result.data.skipped || 0} records skipped)`);
+        toast.success(`Successfully marked ${result.data.marked} customers as paid! (${result.data.skipped || 0} records skipped)`);
         
         deleteAllPaidFiles();
         
@@ -263,7 +264,7 @@ const UploadPage = () => {
       }
     } catch (error) {
       console.error('Paid import error:', error);
-      alert(`Import failed: ${error.message}`);
+      toast.error(`Import failed: ${error.message}`);
     } finally {
       setPaidImporting(false);
     }
@@ -283,7 +284,7 @@ const UploadPage = () => {
 
   const analyzeAndImport = async () => {
     if (!files.find(f => f.status === 'completed')) {
-      alert('Please upload a file first');
+      toast.warning('Please upload a file first');
       return;
     }
 
@@ -311,7 +312,7 @@ const UploadPage = () => {
       console.log('Import result:', result);
 
       if (response.ok && result.success) {
-        alert(`Successfully imported ${result.data.imported} customers! (${result.data.duplicates || 0} duplicates skipped)`);
+        toast.success(`Successfully imported ${result.data.imported} customers! (${result.data.duplicates || 0} duplicates skipped)`);
         
         // Clear the upload data
         deleteAllFiles();
@@ -325,7 +326,7 @@ const UploadPage = () => {
       }
     } catch (error) {
       console.error('Import error:', error);
-      alert(`Import failed: ${error.message}`);
+      toast.error(`Import failed: ${error.message}`);
     } finally {
       setImporting(false);
     }
@@ -393,7 +394,7 @@ const UploadPage = () => {
         } : f
       ));
       
-      alert(`Upload failed: ${errorMessage}`);
+      toast.error(`Upload failed: ${errorMessage}`);
     } finally {
       setUploading(false);
     }

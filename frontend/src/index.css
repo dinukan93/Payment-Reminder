@@ -106,7 +106,7 @@ body.dark-mode {
 }
 
 .dark-mode .dashboard-stats,
-.dark-mode .admin-stats-grid,
+
 .dark-mode .stat-card,
 .dark-mode .admin-stat-card,
 .dark-mode .profile-card,
@@ -126,6 +126,11 @@ body.dark-mode {
   color: var(--text-primary) !important;
 }
 
+.dark-mode .admin-stats-grid{
+    background-color: transparent !important;
+
+  color: var(--text-primary) !important;
+}
 .dark-mode .stat-card,
 .dark-mode .admin-stat-card {
   box-shadow: 0 2px 8px var(--shadow) !important;
