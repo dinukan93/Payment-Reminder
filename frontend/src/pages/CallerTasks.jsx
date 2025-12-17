@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from 'react-toastify';
 import "./CallerTasks.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import ShowCustomerDetailsModal from "../components/ShowCustomerDetailsModal";
@@ -115,11 +116,11 @@ function CallerTasks() {
         await loadCustomers();
       } else {
         console.error('❌ Error saving customer details:', result.message);
-        alert('Failed to save: ' + result.message);
+        toast.error('Failed to save: ' + result.message);
       }
     } catch (error) {
       console.error('❌ Error saving customer details:', error);
-      alert('Failed to save customer details. Please try again.');
+      toast.error('Failed to save customer details. Please try again.');
     }
   };
 

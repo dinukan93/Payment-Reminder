@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./AddCustomerModal.css";
 import API_BASE_URL from "../config/api";
 import { ALL_REGIONS, getRtomsForRegion } from "../config/regionConfig";
+import { showSuccess } from "./Notifications";
 
 function AddCustomerModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -86,7 +87,7 @@ function AddCustomerModal({ isOpen, onClose, onSuccess }) {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        alert('Customer added successfully');
+        showSuccess('Customer added successfully');
         setFormData({
           accountNumber: "",
           name: "",

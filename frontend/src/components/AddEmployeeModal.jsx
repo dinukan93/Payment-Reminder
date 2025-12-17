@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./AddEmployeeModal.css";
 import API_BASE_URL from "../config/api";
+import { showSuccess } from "./Notifications";
 
 function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -63,7 +64,7 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        alert('Caller added successfully');
+        showSuccess('Caller added successfully');
         setFormData({
           name: "",
           callerId: "",

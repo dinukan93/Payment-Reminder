@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./CustomerTable.css";
 import API_BASE_URL from "../config/api";
 import EditCustomerModal from "./EditCustomerModal";
+import { showSuccess, showError, showWarning } from "./Notifications";
 
 function CustomerTable({ refreshTrigger, searchFilter = {} }) {
   const [customers, setCustomers] = useState([]);
@@ -9,6 +10,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -78,25 +80,34 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
 
   const handleEditSave = (updatedCustomer) => {
     setCustomers(customers.map(c => c._id === updatedCustomer._id ? updatedCustomer : c));
-    alert('Customer updated successfully');
+    showSuccess('Customer updated successfully');
   };
 
   const handleDelete = async (customer) => {
-    if (window.confirm(`Are you sure you want to delete ${customer.name}?`)) {
+    if (deleteConfirmation === customer._id) {
+      // Second click - proceed with delete
+      setDeleteConfirmation(null);
       try {
         const response = await fetch(`${API_BASE_URL}/customers/${customer._id}`, {
           method: 'DELETE'
         });
         if (response.ok) {
-          alert('Customer deleted successfully');
+          showSuccess('Customer deleted successfully');
           fetchCustomers(); // Refresh the list
         } else {
-          alert('Failed to delete customer');
+          showError('Failed to delete customer');
         }
       } catch (error) {
         console.error('Error deleting customer:', error);
-        alert('Error deleting customer');
+        showError('Error deleting customer');
       }
+    } else {
+      // First click - show confirmation toast
+      setDeleteConfirmation(customer._id);
+      showWarning(`Click delete again to confirm deletion of ${customer.name}`);
+      
+      // Reset confirmation after 3 seconds
+      setTimeout(() => setDeleteConfirmation(null), 3000);
     }
   };
 

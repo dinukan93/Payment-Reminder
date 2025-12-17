@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { isAuthenticated, getUserRole, clearSession } from '../utils/auth';
+import { showWarning } from './Notifications';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     const sessionCheckInterval = setInterval(() => {
       if (!isAuthenticated()) {
         clearSession();
-        alert('Your session has expired. Please login again.');
+        showWarning('Your session has expired. Please login again.');
         navigate('/login', { replace: true });
       }
     }, 10 * 60 * 1000); // 10 minutes

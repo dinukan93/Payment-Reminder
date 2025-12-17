@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from 'react-toastify';
 import "./ShowCustomerDetailsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
@@ -47,7 +48,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
   const handleSave = () => {
     // Validate that customerResponse is not empty
     if (!customerResponse || customerResponse.trim() === '') {
-      alert('Please enter a customer response before saving.');
+      toast.warning('Please enter a customer response before saving.');
       return;
     }
     

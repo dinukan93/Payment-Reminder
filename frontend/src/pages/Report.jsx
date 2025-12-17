@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import "../components/SearchBar.css";
 import "./Report.css";
 import { LuPhoneCall } from "react-icons/lu";
@@ -143,7 +144,7 @@ function Report() {
   // Download all customer analytics as CSV
   const handleDownloadExcel = () => {
     if (!customerDetails.length) {
-      alert('No customer data to download.');
+      toast.warning('No customer data to download.');
       return;
     }
     // Define headers for all analytics
@@ -203,7 +204,7 @@ function Report() {
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       const callerId = userData.id;
       if (!callerId) {
-        alert('Error: Caller ID not found');
+        toast.error('Error: Caller ID not found');
         setSendingReport(false);
         return;
       }
@@ -222,15 +223,15 @@ function Report() {
       });
       const result = await response.json();
       if (result.success) {
-        alert(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} performance report sent to admin successfully!\n\nReport ID: ${result.data.reportId}`);
+        toast.success(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} performance report sent to admin successfully! Report ID: ${result.data.reportId}`);
         console.log(' Report generated:', result.data);
       } else {
-        alert('Failed to send report: ' + result.message);
+        toast.error('Failed to send report: ' + result.message);
       }
       setSendingReport(false);
     } catch (error) {
       console.error('Error sending report:', error);
-      alert(' Error sending report to admin');
+      toast.error('Error sending report to admin');
       setSendingReport(false);
     }
   };

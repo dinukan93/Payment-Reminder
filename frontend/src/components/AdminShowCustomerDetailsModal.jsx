@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./AdminShowCustomerDetailsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { showError } from "./Notifications";
 
 function AdminShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
   const [callOutcome, setCallOutcome] = useState("");
@@ -12,7 +13,7 @@ function AdminShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
 
   const handleSave = () => {
     if (!callOutcome || !customerResponse) {
-      alert("Please fill in all required fields");
+      showError("Please fill in all required fields");
       return;
     }
 

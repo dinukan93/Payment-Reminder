@@ -10,6 +10,7 @@ import { MdPendingActions } from "react-icons/md";
 import CallerStatisticsTable from '../components/CallerStatisticsTable';
 import API_BASE_URL from "../config/api";
 import { useTheme } from '../context/ThemeContext';
+import { showError } from '../components/Notifications';
 
 function AdminReport() {
   const { darkMode } = useTheme();
@@ -189,25 +190,25 @@ function AdminReport() {
   // Download selected report for selected caller as CSV
   const handleDownloadExcel = () => {
     if (!performanceReports.length) {
-      alert('No performance reports to download.');
+      showError('No performance reports to download.');
       return;
     }
     if (!selectedCallerId) {
-      alert('Please select a caller.');
+      showError('Please select a caller.');
       return;
     }
     if (!selectedReportId) {
-      alert('Please select a report.');
+      showError('Please select a report.');
       return;
     }
     const report = performanceReports.find(r => r.reportId === selectedReportId && r.caller && r.caller._id === selectedCallerId);
     if (!report) {
-      alert('Selected report not found.');
+      showError('Selected report not found.');
       return;
     }
     const rows = getReportRows(report);
     if (!rows.length) {
-      alert('No customer analytics found in selected report.');
+      showError('No customer analytics found in selected report.');
       return;
     }
     downloadRowsAsCSV(rows, `performance_report_${report.reportId}.csv`);
@@ -217,7 +218,7 @@ function AdminReport() {
   const handleDownloadSingleReport = (report) => {
     const rows = getReportRows(report);
     if (!rows.length) {
-      alert('No customer analytics found in this report.');
+      showError('No customer analytics found in this report.');
       return;
     }
     downloadRowsAsCSV(rows, `performance_report_${report.reportId}.csv`);
@@ -564,7 +565,7 @@ function AdminReport() {
               className='download-excel'
               onClick={() => {
                 if (!performanceReports.length) {
-                  alert('No performance reports to download.');
+                  showError('No performance reports to download.');
                   return;
                 }
                 // Gather all rows from all reports
@@ -574,7 +575,7 @@ function AdminReport() {
                   if (rows.length) allRows = allRows.concat(rows);
                 });
                 if (!allRows.length) {
-                  alert('No customer analytics found in any report.');
+                  showError('No customer analytics found in any report.');
                   return;
                 }
                 downloadRowsAsCSV(allRows, 'all_performance_reports.csv');

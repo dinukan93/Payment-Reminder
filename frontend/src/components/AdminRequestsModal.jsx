@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./AdminRequestsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import API_BASE_URL from "../config/api";
+import { showSuccess, showError } from "./Notifications";
 
 function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestProcessed, callerId }) {
   const [requests, setRequests] = useState([]);
@@ -107,13 +108,13 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         // Notify parent that request is processed
         if (onRequestProcessed) onRequestProcessed();
         
-        alert('Request accepted successfully!');
+        showSuccess('Request accepted successfully!');
       } else {
-        alert('Failed to accept request. Please try again.');
+        showError('Failed to accept request. Please try again.');
       }
     } catch (error) {
       console.error('Error accepting request:', error);
-      alert('Failed to accept request. Please try again.');
+      showError('Failed to accept request. Please try again.');
     }
   };
 
@@ -149,13 +150,13 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         // Notify parent that request is processed
         if (onRequestProcessed) onRequestProcessed();
         
-        alert('Request declined successfully!');
+        showSuccess('Request declined successfully!');
       } else {
-        alert('Failed to decline request. Please try again.');
+        showError('Failed to decline request. Please try again.');
       }
     } catch (error) {
       console.error('Error declining request:', error);
-      alert('Failed to decline request. Please try again.');
+      showError('Failed to decline request. Please try again.');
     }
   };
 

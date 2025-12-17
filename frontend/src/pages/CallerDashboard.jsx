@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { toast } from 'react-toastify';
 import "./CallerDashboard.css";
 import DashboardStats from "../components/DashboardStats";
 import ContactedCustomersTable from "../components/ContactedCustomersTable";
@@ -64,7 +65,7 @@ function CallerDashboard() {
       }
     } catch (error) {
       console.error('Error fetching customers from backend:', error);
-      alert('Failed to load customer data. Please check if the backend server is running.');
+      toast.error('Failed to load customer data. Please check if the backend server is running.');
     }
   };
 
@@ -112,7 +113,7 @@ function CallerDashboard() {
     
     if (!existingCustomer) {
       console.error('Customer not found');
-      alert('Customer not found');
+      toast.error('Customer not found');
       return;
     }
     
@@ -151,11 +152,11 @@ function CallerDashboard() {
         console.log(' Customers refreshed from database');
       } else {
         console.error(' Failed to update customer:', result.message);
-        alert('Failed to save: ' + result.message);
+        toast.error('Failed to save: ' + result.message);
       }
     } catch (error) {
       console.error(' Error saving customer details to backend:', error);
-      alert('Failed to save customer details. Please try again.');
+      toast.error('Failed to save customer details. Please try again.');
     }
   };
 

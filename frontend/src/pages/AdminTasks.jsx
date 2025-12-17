@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { toast } from 'react-toastify';
 import "./AdminTasks.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import API_BASE_URL from "../config/api";
+import { showError } from "../components/Notifications";
 
 function AdminTasks() {
   const [allCustomers, setAllCustomers] = useState([]);
@@ -145,7 +147,7 @@ function AdminTasks() {
   const handleSelectCount = () => {
     const count = parseInt(selectCount);
     if (isNaN(count) || count <= 0) {
-      alert("Please enter a valid number");
+      showError("Please enter a valid number");
       return;
     }
     
@@ -155,7 +157,7 @@ function AdminTasks() {
 
   const handleAssignClick = () => {
     if (selectedCustomers.length === 0) {
-      alert("Please select at least one customer");
+      showError("Please select at least one customer");
       return;
     }
     setShowAssignModal(true);
@@ -163,7 +165,7 @@ function AdminTasks() {
 
   const handleConfirmAssign = async () => {
     if (!selectedCaller) {
-      alert("Please select a caller");
+      showError("Please select a caller");
       return;
     }
 
@@ -182,7 +184,7 @@ function AdminTasks() {
     setSelectedCaller("");
     setShowAssignModal(false);
 
-    alert(`Successfully assigned ${selectedCustomerData.length} customer(s) to ${caller.name}`);
+    toast.success(`Successfully assigned ${selectedCustomerData.length} customer(s) to ${caller.name}`);
   };
 
   const sendRequestToCaller = async (callerName, callerId, customers) => {
@@ -228,11 +230,11 @@ function AdminTasks() {
         console.log('Request sent to caller:', callerName);
       } else {
         console.error('Failed to save request to backend');
-        alert('Failed to send request. Please try again.');
+        toast.error('Failed to send request. Please try again.');
       }
     } catch (error) {
       console.error('Error sending request to caller:', error);
-      alert('Failed to send request. Please try again.');
+      toast.error('Failed to send request. Please try again.');
     }
   };
 

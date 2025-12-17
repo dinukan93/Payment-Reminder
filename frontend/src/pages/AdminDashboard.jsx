@@ -5,6 +5,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import AdminSentRequestsModal from "../components/AdminSentRequestsModal";
 import CallerDetailsModal from "../components/CallerDetailsModal";
 import API_BASE_URL from "../config/api";
+import { showSuccess } from "../components/Notifications";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -248,7 +249,7 @@ function AdminDashboard() {
     console.log('Request data stored in localStorage:', requestData);
     console.log('Verify localStorage:', localStorage.getItem('pendingAdminRequest'));
     
-    alert(`Request sent to ${callerName}!\n\nSwitch to Caller Dashboard to see the request.`);
+    showSuccess(`Request sent to ${callerName}! Switch to Caller Dashboard to see the request.`);
   };
 
   return (

@@ -3,6 +3,7 @@ import "./EmployeeTable.css";
 import API_BASE_URL from "../config/api";
 import EditEmployeeModal from "./EditEmployeeModal";
 import TaskHistoryModal from "./TaskHistoryModal";
+import { showSuccess, showError, showWarning } from "./Notifications";
 
 function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
   const [callers, setCallers] = useState([]);
@@ -76,7 +77,7 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
 
   const handleEditSave = (updatedCaller) => {
     setCallers(callers.map(c => c._id === updatedCaller._id ? updatedCaller : c));
-    alert('Employee updated successfully');
+    showSuccess('Employee updated successfully');
   };
 
   const handleHistoryClose = () => {
@@ -92,14 +93,14 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
         });
         
         if (response.ok) {
-          alert('Caller deleted successfully');
+          showSuccess('Caller deleted successfully');
           fetchCallers(); // Refresh the list
         } else {
-          alert('Failed to delete caller');
+          showError('Failed to delete caller');
         }
       } catch (error) {
         console.error('Error deleting caller:', error);
-        alert('Error deleting caller');
+        showError('Error deleting caller');
       }
     }
   };
