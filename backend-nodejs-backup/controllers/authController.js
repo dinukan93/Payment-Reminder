@@ -239,7 +239,7 @@ export const verifyOtp = async (req, res) => {
     await user.save();
 
     const token = jwt.sign(
-      { id: user._id, callerId: user.callerId, email: user.email, name: user.name, role: user.role || 'caller' }, 
+      { id: user._id, callerId: user.callerId, email: user.email, name: user.name, role: user.role || 'caller', rtom: user.rtom || '' }, 
       process.env.SECRET_KEY || 'dev_secret', 
       { expiresIn: '1d' }
     );
@@ -252,7 +252,8 @@ export const verifyOtp = async (req, res) => {
         email: user.email, 
         name: user.name, 
         avatar: user.avatar,
-        role: user.role || 'caller'
+        role: user.role || 'caller',
+        rtom: user.rtom || ''
       }, 
       token 
     });
@@ -387,7 +388,7 @@ export const verifyAdminOtp = async (req, res) => {
     await admin.save();
 
     const token = jwt.sign(
-      { id: admin._id, adminId: admin.adminId, email: admin.email, name: admin.name, role: 'admin' }, 
+      { id: admin._id, adminId: admin.adminId, email: admin.email, name: admin.name, role: admin.role, rtom: admin.rtom || '' }, 
       process.env.SECRET_KEY || 'dev_secret', 
       { expiresIn: '1d' }
     );
@@ -401,7 +402,8 @@ export const verifyAdminOtp = async (req, res) => {
         email: admin.email, 
         name: admin.name, 
         avatar: admin.avatar,
-        role: 'admin'
+        role: admin.role,
+        rtom: admin.rtom || ''
       }, 
       token 
     });

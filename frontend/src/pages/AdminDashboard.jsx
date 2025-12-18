@@ -47,18 +47,21 @@ function AdminDashboard() {
       }
       setError(null);
       
-      // Get logged-in admin ID
+      // Get logged-in admin ID and token
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const token = localStorage.getItem('token');
       const adminId = userData.id;
       
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+      
       // Fetch all data in parallel
-      const [statsRes, assignedRes, unassignedRes, requestsRes, weeklyRes, paymentsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/admin/stats`),
-        fetch(`${API_BASE_URL}/admin/assigned-callers`),
-        fetch(`${API_BASE_URL}/admin/unassigned-callers`),
-        fetch(`${API_BASE_URL}/admin/sent-requests${adminId ? `?adminId=${adminId}` : ''}`),
-        fetch(`${API_BASE_URL}/admin/weekly-calls`),
-        fetch(`${API_BASE_URL}/admin/completed-payments?limit=5`)
+      const [statsRes, assignedRes, weeklyRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/admin/dashboard-stats`, { headers }),
+        fetch(`${API_BASE_URL}/admin/assigned-callers`, { headers }),
+        fetch(`${API_BASE_URL}/admin/weekly-calls`, { headers })
       ]);
 
       if (statsRes.ok) {
@@ -85,47 +88,9 @@ function AdminDashboard() {
         })));
       }
 
-      if (unassignedRes.ok) {
-        const unassignedData = await unassignedRes.json();
-        const unassignedArray = Array.isArray(unassignedData) ? unassignedData : (unassignedData.data || []);
-        setUnassignedCallers(unassignedArray.map(caller => ({
-          id: caller._id || caller.callerId || Math.random().toString(),
-          name: caller.name,
-          date: caller.joinedDate,
-          status: caller.status,
-          latestWork: caller.latestWork
-        })));
-      }
-
-      if (requestsRes.ok) {
-        const requestsData = await requestsRes.json();
-        const requestsArray = Array.isArray(requestsData) ? requestsData : (requestsData.data || []);
-        setSentRequests(requestsArray.map(req => ({
-          id: req.requestId || req._id || Math.random().toString(),
-          callerName: req.callerName,
-          callerId: req.callerId,
-          customersSent: req.customersSent,
-          sentDate: req.sentDate,
-          status: req.status,
-          respondedDate: req.respondedDate,
-          reason: req.declineReason || req.reason,
-          customers: req.customers
-        })));
-      }
-
       if (weeklyRes.ok) {
         const weeklyData = await weeklyRes.json();
         setWeeklyCalls(weeklyData.data || [0, 0, 0, 0, 0, 0, 0]);
-      }
-
-      if (paymentsRes.ok) {
-        const paymentsData = await paymentsRes.json();
-        const paymentsArray = Array.isArray(paymentsData) ? paymentsData : (paymentsData.data || []);
-        setCompletedPayments(paymentsArray.map((payment, index) => ({
-          id: payment._id || `${payment.accountNumber}-${index}` || Math.random().toString(),
-          name: payment.name,
-          date: payment.completedDate
-        })));
       }
 
       setLoading(false);

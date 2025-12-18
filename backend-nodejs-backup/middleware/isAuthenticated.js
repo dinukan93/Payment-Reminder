@@ -21,7 +21,7 @@ const isAuthenticated = (req, res, next) => {
 
 		const decoded = jwt.verify(token, process.env.SECRET_KEY || 'dev_secret');
 		// attach user info from JWT
-		req.user = { id: decoded.id, email: decoded.email, name: decoded.name, role: decoded.role || '' };
+		req.user = { id: decoded.id, email: decoded.email, name: decoded.name, role: decoded.role || '', rtom: decoded.rtom || '' };
 		next();
 	} catch (error) {
 		console.error('Auth middleware error', error);

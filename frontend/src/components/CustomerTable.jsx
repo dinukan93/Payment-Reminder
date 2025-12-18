@@ -23,7 +23,11 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/customers`);
+      const response = await fetch(`${API_BASE_URL}/customers`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       const result = await response.json();
       if (result.success && result.data) {
         // Show all customers including COMPLETED

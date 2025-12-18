@@ -7,21 +7,26 @@ import Request from '../models/Request.js';
 // @access  Public
 const getDashboardStats = async (req, res) => {
   try {
-    const totalCustomers = await Customer.countDocuments();
-    const assignedCallers = await Caller.countDocuments({ taskStatus: { $in: ['ONGOING', 'COMPLETED'] } });
-    const unassignedCallers = await Caller.countDocuments({ taskStatus: 'IDLE' });
+    const adminRtom = req.user?.rtom || '';
+    const rtomFilter = adminRtom ? { rtom: adminRtom } : {};
+    
+    const totalCustomers = await Customer.countDocuments(rtomFilter);
+    const assignedCallers = await Caller.countDocuments({ ...rtomFilter, taskStatus: { $in: ['ONGOING', 'COMPLETED'] } });
+    const unassignedCallers = await Caller.countDocuments({ ...rtomFilter, taskStatus: 'IDLE' });
     
     // Get customers contacted from ACCEPTED requests only (those with contactHistory and assigned to someone)
     const customersContacted = await Customer.countDocuments({
+      ...rtomFilter,
       contactHistory: { $exists: true, $ne: [] },
       assignedTo: { $exists: true, $ne: null }
     });
     
     // Get completed payments
-    const paymentsCompleted = await Customer.countDocuments({ status: 'COMPLETED' });
+    const paymentsCompleted = await Customer.countDocuments({ ...rtomFilter, status: 'COMPLETED' });
     
     // Get pending payments
     const pendingPayments = await Customer.countDocuments({ 
+      ...rtomFilter,
       status: { $in: ['PENDING', 'OVERDUE'] } 
     });
 
@@ -48,7 +53,11 @@ const getDashboardStats = async (req, res) => {
 // @access  Public
 const getAssignedCallers = async (req, res) => {
   try {
+    const adminRtom = req.user?.rtom || '';
+    const rtomFilter = adminRtom ? { rtom: adminRtom } : {};
+    
     const assignedCallers = await Caller.find({ 
+      ...rtomFilter,
       taskStatus: { $in: ['ONGOING', 'COMPLETED'] } 
     })
     .select('name callerId taskStatus customersContacted currentLoad maxLoad assignedCustomers');
@@ -67,6 +76,7 @@ const getAssignedCallers = async (req, res) => {
       if (activeRequest && activeRequest.taskId) {
         // Get customers assigned to this caller with the current task ID
         const taskCustomers = await Customer.find({ 
+          ...rtomFilter,
           assignedTo: caller._id,
           taskId: activeRequest.taskId
         }).select('status').lean();
@@ -106,7 +116,11 @@ const getAssignedCallers = async (req, res) => {
 // @access  Public
 const getUnassignedCallers = async (req, res) => {
   try {
+    const adminRtom = req.user?.rtom || '';
+    const rtomFilter = adminRtom ? { rtom: adminRtom } : {};
+    
     const unassignedCallers = await Caller.find({ 
+      ...rtomFilter,
       taskStatus: 'IDLE' 
     }).select('name callerId status updatedAt');
 
@@ -199,6 +213,9 @@ const getSentRequests = async (req, res) => {
 // @access  Public
 const getWeeklyCalls = async (req, res) => {
   try {
+    const adminRtom = req.user?.rtom || '';
+    const rtomFilter = adminRtom ? { rtom: adminRtom } : {};
+    
     const today = new Date();
     today.setHours(23, 59, 59, 999);
     
@@ -209,6 +226,7 @@ const getWeeklyCalls = async (req, res) => {
 
     // Get all customers with contact history, including COMPLETED
     const customers = await Customer.find({
+      ...rtomFilter,
       contactHistory: { $exists: true, $ne: [] }
     });
 
@@ -253,9 +271,13 @@ const getWeeklyCalls = async (req, res) => {
 // @access  Public
 const getCompletedPayments = async (req, res) => {
   try {
+    const adminRtom = req.user?.rtom || '';
+    const rtomFilter = adminRtom ? { rtom: adminRtom } : {};
+    
     const limit = parseInt(req.query.limit) || 10;
     
     const completedCustomers = await Customer.find({ 
+      ...rtomFilter,
       status: 'COMPLETED' 
     })
     .select('name accountNumber updatedAt')
@@ -342,7 +364,11 @@ const getCallerDetails = async (req, res) => {
     console.log('Active task IDs:', Array.from(activeTaskIds).join(', '));
 
     // Fetch customers using taskId for better performance and accuracy
+    const adminRtom = req.user?.rtom || '';
+    const rtomFilter = adminRtom ? { rtom: adminRtom } : {};
+    
     const assignedCustomers = await Customer.find({ 
+      ...rtomFilter,
       assignedTo: caller._id,
       taskId: { $in: Array.from(activeTaskIds) }
     })

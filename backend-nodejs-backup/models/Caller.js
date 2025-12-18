@@ -36,8 +36,13 @@ const callerSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'caller'],
+    enum: ['admin', 'caller', 'uploader'],
     default: 'caller'
+  },
+  rtom: {
+    type: String,
+    trim: true,
+    default: ''
   },
   isVerified: {
     type: Boolean,

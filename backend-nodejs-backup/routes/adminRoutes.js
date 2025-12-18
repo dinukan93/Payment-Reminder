@@ -2,10 +2,11 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import { getDashboardStats, getAssignedCallers, getUnassignedCallers, getSentRequests, getWeeklyCalls, getCompletedPayments, getCallerDetails } from '../controllers/adminController.js';
 import Admin from '../models/Admin.js';
+import isAuthenticated from '../middleware/isAuthenticated.js';
 
 const router = express.Router();
 
-// Middleware to verify JWT token
+// Middleware to verify JWT token (kept for backward compatibility on profile route)
 const verifyToken = (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -35,18 +36,18 @@ router.get('/profile', verifyToken, async (req, res) => {
 });
 
 // Dashboard statistics
-router.get('/stats', getDashboardStats);
+router.get('/stats', isAuthenticated, getDashboardStats);
 
 // Caller management
-router.get('/assigned-callers', getAssignedCallers);
-router.get('/unassigned-callers', getUnassignedCallers);
-router.get('/callers/:id/details', getCallerDetails);
+router.get('/assigned-callers', isAuthenticated, getAssignedCallers);
+router.get('/unassigned-callers', isAuthenticated, getUnassignedCallers);
+router.get('/callers/:id/details', isAuthenticated, getCallerDetails);
 
 // Requests tracking
-router.get('/sent-requests', getSentRequests);
+router.get('/sent-requests', isAuthenticated, getSentRequests);
 
 // Analytics
-router.get('/weekly-calls', getWeeklyCalls);
-router.get('/completed-payments', getCompletedPayments);
+router.get('/weekly-calls', isAuthenticated, getWeeklyCalls);
+router.get('/completed-payments', isAuthenticated, getCompletedPayments);
 
 export default router;

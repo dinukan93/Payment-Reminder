@@ -6,11 +6,32 @@ import bcrypt from 'bcryptjs';
 // @access  Public
 const getAllCallers = async (req, res) => {
   try {
+    const Request = (await import('../models/Request.js')).default;
     const callers = await Caller.find().select('-password').populate('assignedCustomers');
+    
+    // Recalculate currentLoad based on customers in active/accepted requests
+    const callersWithUpdatedLoad = await Promise.all(callers.map(async (caller) => {
+      // Count customers from ACCEPTED requests for this caller
+      const activeRequests = await Request.find({ 
+        caller: caller._id, 
+        status: 'ACCEPTED' 
+      });
+      
+      // Sum up all customers from active requests
+      const actualLoad = activeRequests.reduce((total, request) => {
+        return total + (request.customersSent || 0);
+      }, 0);
+      
+      return {
+        ...caller.toObject(),
+        currentLoad: actualLoad
+      };
+    }));
+    
     res.status(200).json({
       success: true,
-      count: callers.length,
-      data: callers
+      count: callersWithUpdatedLoad.length,
+      data: callersWithUpdatedLoad
     });
   } catch (error) {
     res.status(500).json({
@@ -74,6 +95,9 @@ const getCallerById = async (req, res) => {
 const createCaller = async (req, res) => {
   try {
     const { name, email, password, callerId } = req.body;
+    
+    // Get admin's RTOM from authenticated user (if admin is creating caller)
+    const adminRtom = req.user?.rtom || req.body.rtom || '';
 
     // Check if caller already exists
     const existingCaller = await Caller.findOne({ $or: [{ email }, { callerId }] });
@@ -90,7 +114,8 @@ const createCaller = async (req, res) => {
 
     const caller = await Caller.create({
       ...req.body,
-      password: hashedPassword
+      password: hashedPassword,
+      rtom: adminRtom  // Assign caller to admin's RTOM
     });
 
     // Remove password from response

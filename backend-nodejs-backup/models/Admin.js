@@ -32,7 +32,15 @@ const adminSchema = new mongoose.Schema({
   },
   role: {
     type: String,
+    enum: ['superadmin', 'admin', 'uploader'],
     default: 'admin'
+  },
+  rtom: {
+    type: String,
+    trim: true,
+    required: function() {
+      return this.role === 'admin'; // RTOM required only for admins
+    }
   },
   isVerified: {
     type: Boolean,

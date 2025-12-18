@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Login.css";
 import logo from "../assets/logo.png";
 import { FaUserShield } from "react-icons/fa";
@@ -22,24 +22,76 @@ const Login = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Clear any existing session when login page loads
+  useEffect(() => {
+    clearSession();
+  }, []);
+
   const handleSignIn = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
     setLoading(true);
     try {
-      const endpoint = isAdminLogin ? '/auth/admin/login' : '/auth/login';
+      const endpoint = '/login';
+      const userType = isAdminLogin ? 'admin' : 'caller';
+      console.log('Login attempt:', { email, userType }); // Debug log
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, userType })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Login failed');
+      console.log('Backend response:', data); // Debug log
+      if (!res.ok) throw new Error(data.error || data.message || 'Login failed');
       
-      // Login success - now show OTP input
-      setMessage(data.message);
+      // Check if OTP is required (2FA flow)
+      if (data.requiresOtp) {
+        setMessage(data.message || 'OTP sent to your phone');
+        setShowOtpInput(true);
+      } else {
+        // Direct login success (legacy flow) - store token and user data
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userData', JSON.stringify(data.user));
+        
+        // Redirect based on role
+        if (data.user.role === 'superadmin') {
+          navigate('/superadmin');
+        } else if (data.user.userType === 'caller') {
+          navigate('/dashboard');
+        } else {
+          navigate('/admin');
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const requestOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+    setLoading(true);
+    try {
+      const userType = isAdminLogin ? 'admin' : 'caller';
+      const res = await fetch(`${API_BASE_URL}/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, userType })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || 'Failed to send OTP');
+      
+      setMessage('OTP sent to your email!');
       setShowOtpInput(true);
+      
+      // Debug mode: show OTP if returned (remove in production)
+      if (data.otp) {
+        
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -50,92 +102,35 @@ const Login = () => {
   const verifyOtp = async (e) => {
     e.preventDefault();
     setError('');
+    setMessage('');
     setLoading(true);
     try {
-      const endpoint = isAdminLogin ? '/auth/admin/verify-otp' : '/auth/verify-otp';
-      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const userType = isAdminLogin ? 'admin' : 'caller';
+      const res = await fetch(`${API_BASE_URL}/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp, isPasswordReset: false })
+        body: JSON.stringify({ email, otp, userType })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'OTP verification failed');
+      if (!res.ok) throw new Error(data.error || data.message || 'OTP verification failed');
       
-      // OTP verified - decode token
-      const decoded = jwtDecode(data.token);
-      // Clear previous session before setting new session data
-      clearSession();
+      // Login success - store token and user data
       localStorage.setItem('token', data.token);
-
-      // Fetch full user profile to get all fields including callerId
-      try {
-        const profileEndpoint = decoded.role === 'admin' ? '/admin/profile' : '/users/profile';
-        const profileRes = await fetch(`${API_BASE_URL}${profileEndpoint}`, {
-          headers: { 
-            'Authorization': `Bearer ${data.token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          const user = profileData.user || profileData;
-
-          // Save complete user data including callerId/adminId
-          localStorage.setItem('userData', JSON.stringify({
-            id: user._id || decoded.id,
-            _id: user._id || decoded.id,
-            callerId: user.callerId || user.adminId || data.user?.callerId || data.user?.adminId || decoded.callerId || decoded.adminId,
-            adminId: user.adminId,
-            email: user.email || decoded.email,
-            name: user.name || decoded.name,
-            phone: user.phone,
-            avatar: user.avatar || decoded.avatar || data.user?.avatar,
-            role: user.role || decoded.role || 'caller'
-          }));
-
-          console.log('User data saved to localStorage:', {
-            callerId: user.callerId,
-            name: user.name,
-            email: user.email
-          });
-        } else {
-          // Fallback: use data from token response which now includes callerId/adminId
-          localStorage.setItem('userData', JSON.stringify({
-            id: data.user?.id || decoded.id,
-            _id: data.user?.id || decoded.id,
-            callerId: data.user?.callerId || data.user?.adminId || decoded.callerId || decoded.adminId,
-            adminId: data.user?.adminId,
-            email: data.user?.email || decoded.email,
-            name: data.user?.name || decoded.name,
-            avatar: data.user?.avatar || decoded.avatar,
-            role: data.user?.role || decoded.role || 'caller'
-          }));
-          console.warn(' Using token data with callerId/adminId:', data.user?.callerId || data.user?.adminId);
-        }
-      } catch (profileErr) {
-        console.error('Profile fetch error:', profileErr);
-        // Fallback: use data from token response which now includes callerId/adminId
-        localStorage.setItem('userData', JSON.stringify({
-          id: data.user?.id || decoded.id,
-          _id: data.user?.id || decoded.id,
-          callerId: data.user?.callerId || data.user?.adminId || decoded.callerId || decoded.adminId,
-          adminId: data.user?.adminId,
-          email: data.user?.email || decoded.email,
-          name: data.user?.name || decoded.name,
-          avatar: data.user?.avatar || decoded.avatar,
-          role: data.user?.role || decoded.role || 'caller'
-        }));
-        console.warn(' Using token data (profile fetch failed) with callerId/adminId:', data.user?.callerId || data.user?.adminId);
-      }
-
+      localStorage.setItem('userData', JSON.stringify(data.user));
+      
+      setMessage('Login successful!');
+      
       // Redirect based on role
-      if (decoded.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
-    } catch(err) {
+      setTimeout(() => {
+        if (data.user.role === 'superadmin') {
+          navigate('/superadmin');
+        } else if (data.user.userType === 'caller') {
+          navigate('/dashboard');
+        } else {
+          navigate('/admin');
+        }
+      }, 500);
+    } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -253,7 +248,7 @@ const Login = () => {
                   maxLength="6"
                   required 
                 />
-                <button type="submit" disabled={loading} className="signin-btn">
+                <button type="submit" disabled={loading} className="signin-btn">OTP 
                   {loading ? 'Verifying...' : 'Verify OTP'}
                 </button>
                 {error && <p style={{color:'red'}}>{error}</p>}

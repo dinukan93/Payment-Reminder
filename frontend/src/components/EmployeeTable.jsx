@@ -132,6 +132,7 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
             <tr>
               <th>Caller</th>
               <th>Caller ID</th>
+              <th>RTOM</th>
               <th>Customers</th>
               <th>Status</th>
               <th>Task Status</th>
@@ -144,6 +145,7 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
                 <tr key={caller._id}>
                   <td>{caller.name}</td>
                   <td>{caller.callerId}</td>
+                  <td>{caller.rtom || '-'}</td>
                   <td>{caller.currentLoad || 0}/{caller.maxLoad || 20}</td>
                   <td className="status">
                     <span className={`status-badge ${(caller.status || '').toLowerCase()}`}>
@@ -202,7 +204,7 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
               ))
             ) : (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
                   <i className="bi bi-inbox" style={{ fontSize: '48px', display: 'block', marginBottom: '10px' }}></i>
                   {searchFilter?.searchTerm ? 'No callers match your search' : 'No callers found'}
                 </td>

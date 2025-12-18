@@ -14,6 +14,7 @@ import callerRoutes from './routes/callerRoutes.js';
 import requestRoutes from './routes/requestRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import superadminRoutes from './routes/superadminRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
@@ -50,6 +51,7 @@ app.use('/api/callers', callerRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/superadmin', superadminRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/settings', settingsRoutes);
@@ -81,7 +83,7 @@ app.use((err, req, res, next) => {
 });
 
 // ================= START SERVER =================
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT ;
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ HTTP Server running on port ${PORT}`);

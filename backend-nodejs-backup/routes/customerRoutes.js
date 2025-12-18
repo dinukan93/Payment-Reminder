@@ -1,12 +1,13 @@
 import express from 'express';
 import { getAllCustomers, getCustomerById, createCustomer, updateCustomer, deleteCustomer, getCustomersByStatus, getAssignedCustomers, updateCustomerContact } from '../controllers/customerController.js';
+import isAuthenticated from '../middleware/isAuthenticated.js';
 
 const router = express.Router();
 
 // @route   GET /api/customers
-// @desc    Get all customers
-// @access  Public
-router.get('/', getAllCustomers);
+// @desc    Get all customers (filtered by RTOM for admins)
+// @access  Authenticated
+router.get('/', isAuthenticated, getAllCustomers);
 
 // @route   GET /api/customers/status/:status
 // @desc    Get customers by status

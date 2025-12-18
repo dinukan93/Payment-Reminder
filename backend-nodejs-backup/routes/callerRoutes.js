@@ -1,5 +1,6 @@
 import express from 'express';
 import { getAllCallers, getCallerById, createCaller, updateCaller, deleteCaller, getAvailableCallers, updateCallerWorkload, generatePerformanceReport } from '../controllers/callerController.js';
+import isAuthenticated from '../middleware/isAuthenticated.js';
 
 const router = express.Router();
 
@@ -20,8 +21,8 @@ router.get('/:id', getCallerById);
 
 // @route   POST /api/callers
 // @desc    Create new caller
-// @access  Public
-router.post('/', createCaller);
+// @access  Admin only (requires authentication for RTOM assignment)
+router.post('/', isAuthenticated, createCaller);
 
 // @route   PUT /api/callers/:id
 // @desc    Update caller

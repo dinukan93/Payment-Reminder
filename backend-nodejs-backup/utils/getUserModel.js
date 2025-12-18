@@ -5,6 +5,8 @@ import Caller from '../models/Caller.js';
 const modelMap = {
     user: User,
     admin: Admin,
+    superadmin: Admin,  // Superadmin uses Admin model
+    uploader: Admin,    // Uploader uses Admin model
     caller: Caller
 };
 

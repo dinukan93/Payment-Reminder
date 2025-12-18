@@ -175,7 +175,11 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
               onChange={handleInputChange}
               min="1"
               max="100"
+              title="Maximum number of customers that can be assigned in a single request"
             />
+            <small style={{ color: '#666', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+              Maximum customers per request (1-100)
+            </small>
           </div>
 
           <div className="form-group">

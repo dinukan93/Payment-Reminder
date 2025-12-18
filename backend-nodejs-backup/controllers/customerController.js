@@ -2,14 +2,24 @@ import Customer from '../models/Customer.js';
 
 // @desc    Get all customers
 // @route   GET /api/customers?callerId=xxx
-// @access  Public
+// @access  Authenticated (RTOM filtered for admins)
 const getAllCustomers = async (req, res) => {
   try {
     const { callerId } = req.query;
+    const userRole = req.user?.role || '';
+    const userRtom = req.user?.rtom || '';
     const query = {};
     
     console.log('=== GET CUSTOMERS ===');
+    console.log('User Role:', userRole);
+    console.log('User RTOM:', userRtom);
     console.log('callerId from query:', callerId);
+    
+    // Filter by RTOM if user is admin or caller (not superadmin/uploader)
+    if ((userRole === 'admin' || userRole === 'caller') && userRtom) {
+      query.rtom = userRtom;
+      console.log('Filtering by RTOM:', userRtom);
+    }
     
     // Filter by callerId if provided (supports both MongoDB _id and callerId string)
     if (callerId) {
