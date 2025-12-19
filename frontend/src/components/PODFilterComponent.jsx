@@ -214,6 +214,7 @@ function PODFilterComponent({ isOpen, onClose }) {
     
     const enterpriseGovRecords = [];
     const enterpriseLargeRecords = [];
+    const enterpriseMediumRecords = [];
     const smeRecords = [];
     const wholesalesRecords = [];
     const remainingRecords = [];
@@ -263,6 +264,15 @@ function PODFilterComponent({ isOpen, onClose }) {
             enterpriseType: 'Large',
             lastBillValue 
           });
+        } else if (subSegmentUpper.includes('MEDIUM')) {
+          console.log(`→ Categorized as Enterprise Medium: ${subSegment}`);
+          enterpriseMediumRecords.push({ 
+            ...row, 
+            path: 'Enterprise - Medium',
+            assignedTo: 'Enterprise Medium',
+            enterpriseType: 'Medium',
+            lastBillValue 
+          });
         } else if (subSegmentUpper.includes('SME')) {
           console.log(`→ Categorized as SME: ${subSegment}`);
           smeRecords.push({ 
@@ -291,12 +301,13 @@ function PODFilterComponent({ isOpen, onClose }) {
     });
     
     const totalEnterprise = enterpriseGovRecords.length + enterpriseLargeRecords.length + 
-                           smeRecords.length + wholesalesRecords.length;
-    console.log(`Enterprise Path: ${totalEnterprise} enterprise (Gov: ${enterpriseGovRecords.length}, Large: ${enterpriseLargeRecords.length}, SME: ${smeRecords.length}, Wholesales: ${wholesalesRecords.length}), ${remainingRecords.length} remaining`);
+                           enterpriseMediumRecords.length + wholesalesRecords.length;
+    console.log(`Enterprise Path: ${totalEnterprise} enterprise (Gov: ${enterpriseGovRecords.length}, Large: ${enterpriseLargeRecords.length}, Medium: ${enterpriseMediumRecords.length}, Wholesales: ${wholesalesRecords.length}), ${smeRecords.length} SME, ${remainingRecords.length} remaining`);
     
     return { 
       enterpriseGovRecords, 
       enterpriseLargeRecords, 
+      enterpriseMediumRecords,
       smeRecords, 
       wholesalesRecords,
       remainingRecords 
@@ -423,14 +434,14 @@ function PODFilterComponent({ isOpen, onClose }) {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Step 4: Enterprise Path (Bill > 5000 with specific segments)
-      const { enterpriseGovRecords, enterpriseLargeRecords, smeRecords, wholesalesRecords, remainingRecords } = applyEnterprisePath(nonVipAfterExclusion);
+      const { enterpriseGovRecords, enterpriseLargeRecords, enterpriseMediumRecords, smeRecords, wholesalesRecords, remainingRecords } = applyEnterprisePath(nonVipAfterExclusion);
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Combine all enterprise records
       const allEnterpriseRecords = [
         ...enterpriseGovRecords,
         ...enterpriseLargeRecords,
-        ...smeRecords,
+        ...enterpriseMediumRecords,
         ...wholesalesRecords
       ];
       
@@ -454,6 +465,7 @@ function PODFilterComponent({ isOpen, onClose }) {
         afterExclusion: nonVipAfterExclusion.length,
         enterpriseGov: enterpriseGovRecords.length,
         enterpriseLarge: enterpriseLargeRecords.length,
+        enterpriseMedium: enterpriseMediumRecords.length,
         sme: smeRecords.length,
         wholesales: wholesalesRecords.length,
         totalEnterprise: allEnterpriseRecords.length,
@@ -468,6 +480,7 @@ function PODFilterComponent({ isOpen, onClose }) {
         vipData: vipRecords,
         enterpriseGovData: enterpriseGovRecords,
         enterpriseLargeData: enterpriseLargeRecords,
+        enterpriseMediumData: enterpriseMediumRecords,
         smeData: smeRecords,
         wholesalesData: wholesalesRecords,
         retailMicroData: retailMicroRecords,
@@ -502,24 +515,24 @@ function PODFilterComponent({ isOpen, onClose }) {
       XLSX.utils.book_append_sheet(workbook, vipSheet, "VIP Records");
     }
     
-    if (type === 'all' || type === 'enterprise-gov') {
+    if (type === 'all' || type === 'enterprise') {
+      // Combine Enterprise Gov, Large, Medium, and Wholesales into separate sheets in one workbook
       const govSheet = XLSX.utils.json_to_sheet(results.enterpriseGovData);
       XLSX.utils.book_append_sheet(workbook, govSheet, "Enterprise-Gov");
-    }
-    
-    if (type === 'all' || type === 'enterprise-large') {
+      
       const largeSheet = XLSX.utils.json_to_sheet(results.enterpriseLargeData);
       XLSX.utils.book_append_sheet(workbook, largeSheet, "Enterprise-Large");
+      
+      const mediumSheet = XLSX.utils.json_to_sheet(results.enterpriseMediumData);
+      XLSX.utils.book_append_sheet(workbook, mediumSheet, "Enterprise-Medium");
+      
+      const wholesalesSheet = XLSX.utils.json_to_sheet(results.wholesalesData);
+      XLSX.utils.book_append_sheet(workbook, wholesalesSheet, "Wholesales");
     }
     
     if (type === 'all' || type === 'sme') {
       const smeSheet = XLSX.utils.json_to_sheet(results.smeData);
       XLSX.utils.book_append_sheet(workbook, smeSheet, "SME");
-    }
-    
-    if (type === 'all' || type === 'wholesales') {
-      const wholesalesSheet = XLSX.utils.json_to_sheet(results.wholesalesData);
-      XLSX.utils.book_append_sheet(workbook, wholesalesSheet, "Wholesales");
     }
     
     if (type === 'all' || type === 'retail') {
@@ -759,21 +772,13 @@ function PODFilterComponent({ isOpen, onClose }) {
                   <i className="fas fa-download"></i>
                   Download All
                 </button>
-                <button className="download-btn" onClick={() => downloadResults('enterprise-gov')}>
-                  <i className="fas fa-landmark"></i>
-                  Enterprise - Gov
-                </button>
-                <button className="download-btn" onClick={() => downloadResults('enterprise-large')}>
+                <button className="download-btn" onClick={() => downloadResults('enterprise')}>
                   <i className="fas fa-building"></i>
-                  Enterprise - Large
+                  Enterprise (Gov + Large + Wholesales)
                 </button>
                 <button className="download-btn" onClick={() => downloadResults('sme')}>
                   <i className="fas fa-briefcase"></i>
                   SME
-                </button>
-                <button className="download-btn" onClick={() => downloadResults('wholesales')}>
-                  <i className="fas fa-warehouse"></i>
-                  Wholesales
                 </button>
                 <button className="download-btn" onClick={() => downloadResults('vip')}>
                   <i className="fas fa-crown"></i>
@@ -808,7 +813,7 @@ function PODFilterComponent({ isOpen, onClose }) {
                   <div className="stat-value">{results.stats.totalRecords}</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-label">Excluded (SU) Records</div>
+                  <div className="stat-label">Excluded Records</div>
                   <div className="stat-value error">{results.stats.excludedAtStart}</div>
                 </div>
                 <div className="stat-card">
@@ -841,8 +846,8 @@ function PODFilterComponent({ isOpen, onClose }) {
                     <strong>{results.stats.enterpriseLarge}</strong>
                   </div>
                   <div className="assignment-item">
-                    <span>SME:</span>
-                    <strong>{results.stats.sme}</strong>
+                    <span>Enterprise - Medium:</span>
+                    <strong>{results.stats.enterpriseMedium}</strong>
                   </div>
                   <div className="assignment-item">
                     <span>Wholesales:</span>
@@ -851,6 +856,10 @@ function PODFilterComponent({ isOpen, onClose }) {
                   <div className="assignment-item">
                     <span><strong>Total Enterprise:</strong></span>
                     <strong>{results.stats.totalEnterprise}</strong>
+                  </div>
+                  <div className="assignment-item">
+                    <span>SME (Separate):</span>
+                    <strong>{results.stats.sme}</strong>
                   </div>
                 </div>
               </div>
@@ -880,14 +889,12 @@ function PODFilterComponent({ isOpen, onClose }) {
               <div className="export-info">
                 <h4>Export Options:</h4>
                 <ul>
-                  <li><strong>Enterprise - Gov:</strong> Government Institutions with Bill Value &gt; 5,000</li>
-                  <li><strong>Enterprise - Large:</strong> Large Enterprise with Bill Value &gt; 5,000</li>
-                  <li><strong>SME:</strong> Small & Medium Enterprises with Bill Value &gt; 5,000</li>
-                  <li><strong>Wholesales:</strong> Wholesale accounts with Bill Value &gt; 5,000</li>
+                  <li><strong>Enterprise (Gov + Large + Medium + Wholesales):</strong> One Excel with 4 sheets - Government Institutions, Large Enterprise, Medium Enterprise, and Wholesales (all with Bill Value &gt; 5,000)</li>
+                  <li><strong>SME:</strong> Separate Excel for Small & Medium Enterprises with Bill Value &gt; 5,000</li>
                   <li><strong>VIP Only:</strong> All VIP credit class records</li>
                   <li><strong>Retail/Micro Only:</strong> FTTH Retail/Micro Business assignments</li>
-                  <li><strong>Excluded Only:</strong> Records filtered out in initial filtration (likely Suspended status)</li>
-                  <li><strong>Download All:</strong> Complete processed dataset with all categories</li>
+                  <li><strong>Excluded (SU) Only:</strong> Records filtered out in initial filtration (likely Suspended status)</li>
+                  <li><strong>Download All:</strong> Complete processed dataset with all categories in separate sheets</li>
                 </ul>
               </div>
             </div>
