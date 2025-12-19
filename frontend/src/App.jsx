@@ -20,6 +20,7 @@ import AdminTasks from "./pages/AdminTasks";
 import UploadPage from "./pages/UploadPage";
 import DisplayDataPage from "./pages/DisplayDataPage";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import PODFilterPage from "./pages/PODFilterPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -55,6 +56,7 @@ function App() {
             <Route path="/reports" element={<ProtectedRoute><Report /></ProtectedRoute>} />
             <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
             <Route path="/display-data" element={<ProtectedRoute><DisplayDataPage /></ProtectedRoute>} />
+            <Route path="/pod-filter" element={<ProtectedRoute><PODFilterPage /></ProtectedRoute>} />
             <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><AdminReport /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/logout" element={<Logout />} />
