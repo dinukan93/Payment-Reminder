@@ -835,7 +835,7 @@ function PODFilterComponent({ isOpen, onClose }) {
               </div>
 
               <div className="assignment-summary">
-                <h4>Enterprise Breakdown (Bill {'>'} 5,000)</h4>
+                <h4>Enterprise Breakdown (Bill &gt; 5,000)</h4>
                 <div className="assignment-grid">
                   <div className="assignment-item">
                     <span>Enterprise - Government Inst.:</span>

@@ -45,6 +45,18 @@ class OtpService
             'expires_at' => $expiresAt->format('Y-m-d H:i:s')
         ]);
 
+        // Print OTP to console/terminal for development
+        if (config('app.debug')) {
+            error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            error_log(" OTP GENERATED");
+            error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            error_log(" Email: {$email}");
+            error_log(" User Type: {$userType}");
+            error_log("OTP Code: {$otpCode}");
+            error_log(" Expires: {$expiresAt->format('Y-m-d H:i:s')}");
+            error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        }
+
         // TODO: Send OTP via email/SMS
         // For development, we'll return it in response
         

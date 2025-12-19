@@ -41,6 +41,17 @@ export default function Sidebar() {
                   <span>Upload</span>
                 </NavLink>
               </li>
+              <li>
+                <NavLink
+                  to="/pod-filter"
+                  className={({ isActive }) =>
+                    `menu-item${isActive ? " active" : ""}`
+                  }
+                >
+                  <FaFilter />
+                  <span>POD Filter</span>
+                </NavLink>
+              </li>
             </ul>
           </nav>
           <div className="sidebar-end">
