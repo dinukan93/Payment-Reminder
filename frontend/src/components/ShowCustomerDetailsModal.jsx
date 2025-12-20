@@ -46,16 +46,13 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
   };
 
   const handleSave = () => {
-    // Validate that customerResponse is not empty
-    if (!customerResponse || customerResponse.trim() === '') {
-      toast.warning('Please enter a customer response before saving.');
-      return;
-    }
+    // If no customer response written, use call outcome as the response
+    const finalResponse = customerResponse.trim() === '' ? callOutcome : customerResponse;
     
     if (onSave) {
       onSave(customer._id || customer.id, {
         callOutcome,
-        customerResponse,
+        customerResponse: finalResponse,
         paymentMade,
         promisedDate: promisedDate,
       });
