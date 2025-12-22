@@ -5,18 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Admin;
 use App\Models\Caller;
-use App\Services\JwtService;
 use App\Services\OtpService;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    protected $jwtService;
     protected $otpService;
 
-    public function __construct(JwtService $jwtService, OtpService $otpService)
+    public function __construct(OtpService $otpService)
     {
-        $this->jwtService = $jwtService;
         $this->otpService = $otpService;
     }
 
@@ -59,16 +56,15 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        $user = $request->attributes->get('user');
-        $tokenData = $request->attributes->get('token_data');
+        $user = $request->user();
 
         return response()->json([
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'userType' => $tokenData->userType,
-                'role' => $tokenData->userType === 'admin' ? $tokenData->role : 'caller',
+                'userType' => $user instanceof Admin ? 'admin' : 'caller',
+                'role' => $user instanceof Admin ? $user->role : 'caller',
                 'rtom' => $user->rtom
             ]
         ]);
@@ -76,6 +72,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out successfully']);
     }
 
@@ -114,8 +111,8 @@ class AuthController extends Controller
             $user = $result['user'];
             $userType = $result['userType'];
             
-            // Generate JWT token
-            $token = $this->jwtService->generateToken($user, $userType);
+            // Generate Sanctum token
+            $token = $user->createToken('auth-token', [$userType])->plainTextToken;
 
             return response()->json([
                 'token' => $token,

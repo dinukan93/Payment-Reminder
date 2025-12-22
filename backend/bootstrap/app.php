@@ -12,11 +12,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias([
-            'jwt.auth' => \App\Http\Middleware\JwtMiddleware::class,
-            'superadmin' => \App\Http\Middleware\SuperAdminMiddleware::class,
-        ]);
-        
         // Enable CORS for React frontend
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,

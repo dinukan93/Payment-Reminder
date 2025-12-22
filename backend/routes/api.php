@@ -14,7 +14,7 @@ Route::post('/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 
 // Protected routes
-Route::middleware('jwt.auth')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -53,7 +53,7 @@ Route::middleware('jwt.auth')->group(function () {
     Route::post('/upload/mark-paid', [UploadController::class, 'markPaid']);
     
     // Superadmin routes
-    Route::middleware('superadmin')->group(function () {
+    Route::middleware('can:superadmin')->group(function () {
         Route::get('/superadmin/admins', [AdminController::class, 'getAllAdmins']);
         Route::post('/superadmin/admins', [AdminController::class, 'createAdmin']);
         Route::put('/superadmin/admins/{id}', [AdminController::class, 'updateAdmin']);

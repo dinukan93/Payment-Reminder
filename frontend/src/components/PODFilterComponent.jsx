@@ -12,8 +12,8 @@ function PODFilterComponent({ isOpen, onClose }) {
   
   // Configurable thresholds
   const [config, setConfig] = useState({
-    arrearsMin: 3000,
-    arrearsMax: 10000,
+    billMin: 3000,
+    billMax: 10000,
     callCenterStaffLimit: 30000,
     ccLimit: 5000,
     staffLimit: 3000
@@ -21,8 +21,8 @@ function PODFilterComponent({ isOpen, onClose }) {
 
   const steps = [
     "Upload Main Excel",
-    "Initial Filtration",
-    "Credit Class Check",
+    "VIP Separation",
+    "Initial Filtration (Non-VIP)",
     "Apply Exclusions",
     "SLT Sub Segment Classification",
     "Bill Value Assignment"
@@ -79,25 +79,139 @@ function PODFilterComponent({ isOpen, onClose }) {
     });
   };
 
-  // Step 1: Initial Filtration - Customer Type: Medium – COPPER & FTTH, Product Status: OK (Voice), Total Outstanding > 2,400
-  const applyInitialFiltration = (data) => {
+  // Step 1: Separate VIP Records First (with VIP-specific criteria)
+  const separateVIPRecords = (data) => {
     setCurrentStep(1);
     
-    if (data.length > 0) {
-      console.log('Sample row columns:', Object.keys(data[0]));
-      console.log('Sample row data:', data[0]);
-    }
+    const vipRecords = [];
+    const nonVipRecords = [];
+    const excludedVIPs = [];
+    
+    data.forEach((row, index) => {
+      const creditClass = String(row['CREDIT_CLASS_NAME'] || row['credit_class_name'] || row['Credit Class'] || '');
+      const creditClassUpper = creditClass.toUpperCase().trim();
+      const productStatus = String(row['LATEST_PRODUCT_STATUS'] || '');
+      const productStatusUpper = productStatus.toUpperCase().trim();
+      const medium = String(row['MEDIUM'] || row['medium'] || '');
+      const mediumUpper = medium.toUpperCase().trim();
+      
+      // Find NEW_ARREARS column for VIP check
+      const arrearsKey = Object.keys(row).find(key => 
+        key.toUpperCase().includes('NEW_ARREARS')
+      );
+      const totalOutstanding = parseFloat(String(row[arrearsKey] || 0).replace(/,/g, ''));
+      
+      // Check if VIP (includes VIP, VIP - Low, VIP - Medium etc.)
+      const isVIP = creditClassUpper === 'VIP' || 
+                    creditClassUpper.includes('VIP');
+      
+      // VIP Criteria: Medium is COPPER or FTTH, Product Status OK, and Outstanding > 2400
+      const isMediumCopperOrFTTH = mediumUpper.includes('COPPER') || mediumUpper.includes('FTTH');
+      const isOK = productStatusUpper === 'OK';
+      const meetsOutstanding = totalOutstanding > 2400;
+      
+      if (isVIP && isMediumCopperOrFTTH && isOK && meetsOutstanding) {
+        vipRecords.push({ ...row, classification: 'VIP', path: 'VIP Path' });
+      } else if (isVIP && (!isMediumCopperOrFTTH || !isOK || !meetsOutstanding)) {
+        // VIP records that don't meet criteria
+        excludedVIPs.push({ 
+          ...row, 
+          exclusionReason: !isMediumCopperOrFTTH ? 'Medium not COPPER/FTTH' :
+                          !isOK ? 'Product Status not OK (SU)' : 
+                          'Outstanding <= 2400'
+        });
+      } else if (!isVIP) {
+        // Non-VIP records pass through for standard filtration
+        nonVipRecords.push(row);
+      }
+    });
+    
+    // Comprehensive status breakdown for all VIP records found
+    let totalVIPsFound = 0;
+    let vipWithOKStatus = 0;
+    let vipWithSUStatus = 0;
+    let vipWithOtherStatus = 0;
+    let vipCopperFTTH = 0;
+    let vipNotCopperFTTH = 0;
+    let vipOver2400 = 0;
+    let vipUnder2400 = 0;
+    
+    // VIPs meeting medium + outstanding criteria (regardless of status)
+    let vipMeetingMediumAndOutstanding = 0;
+    let vipMeetingMediumAndOutstanding_OK = 0;
+    let vipMeetingMediumAndOutstanding_SU = 0;
+    let vipMeetingMediumAndOutstanding_Other = 0;
+    
+    data.forEach(row => {
+      const creditClass = String(row['CREDIT_CLASS_NAME'] || row['credit_class_name'] || row['Credit Class'] || '');
+      const creditClassUpper = creditClass.toUpperCase().trim();
+      const productStatus = String(row['LATEST_PRODUCT_STATUS'] || '');
+      const productStatusUpper = productStatus.toUpperCase().trim();
+      const medium = String(row['MEDIUM'] || row['medium'] || '');
+      const mediumUpper = medium.toUpperCase().trim();
+      
+      const arrearsKey = Object.keys(row).find(key => 
+        key.toUpperCase().includes('NEW_ARREARS')
+      );
+      const totalOutstanding = parseFloat(String(row[arrearsKey] || 0).replace(/,/g, ''));
+      
+      const isVIP = creditClassUpper === 'VIP' || 
+                    creditClassUpper.includes('VIP')
+                 ;
+      
+      if (isVIP) {
+        totalVIPsFound++;
+        
+        if (productStatusUpper === 'OK') vipWithOKStatus++;
+        else if (productStatusUpper === 'SU') vipWithSUStatus++;
+        else vipWithOtherStatus++;
+        
+        const isCopperFTTH = mediumUpper.includes('COPPER') || mediumUpper.includes('FTTH');
+        const isOver2400 = totalOutstanding > 2400;
+        
+        if (isCopperFTTH) vipCopperFTTH++;
+        else vipNotCopperFTTH++;
+        
+        if (isOver2400) vipOver2400++;
+        else vipUnder2400++;
+        
+        // Check if VIP meets medium + outstanding criteria
+        if (isCopperFTTH && isOver2400) {
+          vipMeetingMediumAndOutstanding++;
+          if (productStatusUpper === 'OK') vipMeetingMediumAndOutstanding_OK++;
+          else if (productStatusUpper === 'SU') vipMeetingMediumAndOutstanding_SU++;
+          else vipMeetingMediumAndOutstanding_Other++;
+        }
+      }
+    });
+    
+    // Count VIP records by status for debugging
+    const vipOKCount = vipRecords.filter(r => {
+      const status = String(r['LATEST_PRODUCT_STATUS'] || '').toUpperCase().trim();
+      return status === 'OK';
+    }).length;
+    const vipSUCount = vipRecords.filter(r => {
+      const status = String(r['LATEST_PRODUCT_STATUS'] || '').toUpperCase().trim();
+      return status === 'SU';
+    }).length;
+    
+    return { vipRecords, nonVipRecords };
+  };
+
+  // Step 2: Initial Filtration - Customer Type: Medium – COPPER & FTTH, Product Status: OK (Voice), Total Outstanding > 2,400
+  const applyInitialFiltration = (data) => {
+    setCurrentStep(2);
     
     const filtered = [];
     const excludedRecords = [];
     
     data.forEach(row => {
       const medium = String(row['MEDIUM'] || row['medium'] || '');
-      const productStatus = String(row['LATEST_PRODUCT_STATUS'] || row['PRODUCT_STATUS'] || row['product_status'] || row['Product Status'] || '');
+      const productStatus = String(row['LATEST_PRODUCT_STATUS'] || '');
       
-      // Find arrears column (handles date suffix like W_ARREARS_20251022)
+      // Find NEW_ARREARS column (handles date suffix like NEW_ARREARS_20251022)
       const arrearsKey = Object.keys(row).find(key => 
-        key.toUpperCase().includes('ARREARS')
+        key.toUpperCase().includes('NEW_ARREARS')
       );
       const totalOutstanding = parseFloat(String(row[arrearsKey] || 0).replace(/,/g, ''));
       
@@ -113,18 +227,6 @@ function PODFilterComponent({ isOpen, onClose }) {
       // Total Outstanding > 2,400
       const meetsOutstanding = totalOutstanding > 2400;
       
-      if (data.indexOf(row) < 5) {
-        console.log(`\n=== Row ${data.indexOf(row)} Details ===`);
-        console.log('Raw values:', { medium, productStatus, arrearsKey, totalOutstanding });
-        console.log('Uppercase:', { mediumUpper, productStatusUpper });
-        console.log('Checks:', {
-          'Medium is COPPER/FTTH': isMediumCopperOrFTTH,
-          'isOK': isOK,
-          'meetsOutstanding': meetsOutstanding,
-          'PASSES': isMediumCopperOrFTTH && isOK && meetsOutstanding
-        });
-      }
-      
       if (isMediumCopperOrFTTH && isOK && meetsOutstanding) {
         filtered.push(row);
       } else {
@@ -137,35 +239,7 @@ function PODFilterComponent({ isOpen, onClose }) {
       }
     });
     
-    console.log(`Initial Filtration: ${data.length} → ${filtered.length} records (${excludedRecords.length} excluded)`);
     return { filtered, excludedRecords };
-  };
-
-  // Step 2: Credit Class Check - Separate VIP from others
-  const applyCreditClassCheck = (data) => {
-    setCurrentStep(2);
-    
-    const vipRecords = [];
-    const nonVipRecords = [];
-    
-    data.forEach(row => {
-      const creditClass = String(row['CREDIT_CLASS_NAME'] || row['credit_class_name'] || row['Credit Class'] || '');
-      const creditClassUpper = creditClass.toUpperCase();
-      
-      // Check if VIP (includes VIP, VIP - Low, VIP - Medium, Domestic Interconnect, etc.)
-      const isVIP = creditClassUpper === 'VIP' || 
-                    creditClassUpper.includes('VIP') || 
-                    creditClassUpper.includes('DOMESTIC INTERCONNECT');
-      
-      if (isVIP) {
-        vipRecords.push({ ...row, classification: 'VIP', path: 'VIP Path' });
-      } else {
-        nonVipRecords.push({ ...row, classification: 'Other Credit Classes', path: 'Non-VIP Path' });
-      }
-    });
-    
-    console.log(`Credit Class Check: ${vipRecords.length} VIP, ${nonVipRecords.length} Non-VIP`);
-    return { vipRecords, nonVipRecords };
   };
 
   // Step 3: Apply Exclusions
@@ -183,32 +257,24 @@ function PODFilterComponent({ isOpen, onClose }) {
       try {
         const excludeData = await readExcelFile(file);
         excludeData.forEach(row => {
-          const accountNumber = row['ACCOUNT_NUM'] ||
-                               row['Account Number'] || 
-                               row['account_number'] || 
-                               row['AccountNumber'] || 
-                               row['Account_Number'];
+          const accountNumber = row['ACCOUNT_NUM'] ;
           if (accountNumber) {
             excludedAccounts.add(accountNumber.toString());
           }
         });
       } catch (error) {
-        console.error(`Error reading exclusion file ${file.name}:`, error);
+        // Error reading exclusion file
       }
     }
 
     // Filter out excluded accounts
     return data.filter(row => {
-      const accountNumber = (row['ACCOUNT_NUM'] ||
-                            row['Account Number'] || 
-                            row['account_number'] || 
-                            row['AccountNumber'] || 
-                            row['Account_Number'] || '').toString();
+      const accountNumber = (row['ACCOUNT_NUM']  || '').toString();
       return !excludedAccounts.has(accountNumber);
     });
   };
 
-  // Step 4: Enterprise Path - Last Bill > 5,000 with specific segments
+  // Step 4: Enterprise Path & Retail/Micro FTTH Classification
   const applyEnterprisePath = (data) => {
     setCurrentStep(4);
     
@@ -217,6 +283,7 @@ function PODFilterComponent({ isOpen, onClose }) {
     const enterpriseMediumRecords = [];
     const smeRecords = [];
     const wholesalesRecords = [];
+    const retailMicroRecords = [];
     const remainingRecords = [];
     
     data.forEach((row, index) => {
@@ -225,29 +292,37 @@ function PODFilterComponent({ isOpen, onClose }) {
         key.trim().toUpperCase().includes('BILL') && key.trim().toUpperCase().includes('MNY')
       );
       
-      if (index === 0) {
-        console.log('Found bill column:', billKey);
-        console.log('Bill value:', row[billKey]);
-      }
-      
       const lastBillValue = parseFloat(String(row[billKey] || 0).replace(/,/g, ''));
       const subSegment = String(row['SLT_GL_SUB_SEGMENT']  || '');
       const subSegmentUpper = subSegment.toUpperCase();
+      const medium = String(row['MEDIUM'] || row['medium'] || '');
+      const mediumUpper = medium.toUpperCase();
+      const region = String(row['REGION'] || row['region'] || 'Unknown');
       
-      // Log first few records to debug
-      if (index < 5) {
-        console.log(`\n=== Enterprise Check Row ${index} ===`);
-        console.log('Raw Bill Value from row:', row['LATEST_BILL_MNY']);
-        console.log('Parsed Bill Value:', lastBillValue);
-        console.log('Sub Segment:', subSegment);
-        console.log('Bill > 5000:', lastBillValue > 5000);
-      }
+      // Check if FTTH Medium with Retail or Micro Business Segment
+      // Criteria: Medium must be FTTH AND Sub-Segment must be Retail or Micro Business
+      const isFTTH = mediumUpper.includes('FTTH');
+      const isRetailOrMicro = subSegment.includes('Retail') || subSegment.includes('Micro Business');
       
-      // Check bill value first
-      if (lastBillValue > 5000) {
+      if (isFTTH && isRetailOrMicro) {
+        // FTTH + Retail/Micro Business: Check bill value
+        if (lastBillValue > 5000) {
+          // Bill Value Over 5,000 → Billing Center (Region)
+          retailMicroRecords.push({ 
+            ...row, 
+            lastBillValue,
+            assignedTo: `Region - ${region} (Billing Center)`,
+            path: 'Retail/Micro FTTH - High Bill Value',
+            directToBillingCenter: true
+          });
+        } else {
+          // Bill Value <= 5,000 → Goes through Call Center distribution
+          retailMicroRecords.push({ ...row, lastBillValue });
+        }
+      } else if (lastBillValue > 5000) {
+        // Check bill value for enterprise categorization
         // Categorize by segment type
         if (subSegmentUpper.includes('GOVERNMENT') || subSegmentUpper.includes('INST')) {
-          console.log(`→ Categorized as Enterprise Gov: ${subSegment}`);
           enterpriseGovRecords.push({ 
             ...row, 
             path: 'Enterprise - Government Institutions',
@@ -256,7 +331,6 @@ function PODFilterComponent({ isOpen, onClose }) {
             lastBillValue 
           });
         } else if (subSegmentUpper.includes('LARGE')) {
-          console.log(`→ Categorized as Enterprise Large: ${subSegment}`);
           enterpriseLargeRecords.push({ 
             ...row, 
             path: 'Enterprise - Large',
@@ -265,7 +339,6 @@ function PODFilterComponent({ isOpen, onClose }) {
             lastBillValue 
           });
         } else if (subSegmentUpper.includes('MEDIUM')) {
-          console.log(`→ Categorized as Enterprise Medium: ${subSegment}`);
           enterpriseMediumRecords.push({ 
             ...row, 
             path: 'Enterprise - Medium',
@@ -274,7 +347,6 @@ function PODFilterComponent({ isOpen, onClose }) {
             lastBillValue 
           });
         } else if (subSegmentUpper.includes('SME')) {
-          console.log(`→ Categorized as SME: ${subSegment}`);
           smeRecords.push({ 
             ...row, 
             path: 'SME',
@@ -283,8 +355,7 @@ function PODFilterComponent({ isOpen, onClose }) {
             lastBillValue 
           });
         } else if (subSegmentUpper.includes('WHOLESALE')) {
-          console.log(`→ Categorized as Wholesales: ${subSegment}`);
-          wholesalesRecords.push({ 
+          wholesalesRecords.push({
             ...row, 
             path: 'Wholesales',
             assignedTo: 'Wholesales',
@@ -292,7 +363,6 @@ function PODFilterComponent({ isOpen, onClose }) {
             lastBillValue 
           });
         } else {
-          console.log(`→ Not categorized (remaining): ${subSegment}`);
           remainingRecords.push({ ...row, lastBillValue });
         }
       } else {
@@ -302,7 +372,6 @@ function PODFilterComponent({ isOpen, onClose }) {
     
     const totalEnterprise = enterpriseGovRecords.length + enterpriseLargeRecords.length + 
                            enterpriseMediumRecords.length + wholesalesRecords.length;
-    console.log(`Enterprise Path: ${totalEnterprise} enterprise (Gov: ${enterpriseGovRecords.length}, Large: ${enterpriseLargeRecords.length}, Medium: ${enterpriseMediumRecords.length}, Wholesales: ${wholesalesRecords.length}), ${smeRecords.length} SME, ${remainingRecords.length} remaining`);
     
     return { 
       enterpriseGovRecords, 
@@ -310,19 +379,25 @@ function PODFilterComponent({ isOpen, onClose }) {
       enterpriseMediumRecords,
       smeRecords, 
       wholesalesRecords,
+      retailMicroRecords,
       remainingRecords 
     };
   };
 
-  // Step 5: Retail/Micro FTTH Path - Assignment based on bill value and arrears
-  const applyRetailMicroPath = (data) => {
+  // Step 5: Retail/Micro FTTH Path - Assignment based on bill value (Sequential Assignment)
+  const applyRetailMicroPath = (data, configLimits) => {
     setCurrentStep(5);
     
-    console.log(`Using configuration: Arrears Range ${config.arrearsMin}-${config.arrearsMax}, Limits: Staff=${config.callCenterStaffLimit}, CC=${config.ccLimit}, Staff=${config.staffLimit}`);
+    // Counters for sequential assignment
+    let callCenterStaffCount = 0;
+    let ccCount = 0;
+    let staffCount = 0;
     
     return data.map(row => {
-      const medium = String(row['MEDIUM'] || row['medium'] || '');
-      const subSegment = String(row['SLT_GL_SUB_SEGMENT'] || row['slt_gl_sub_segment'] || '');
+      // If already assigned to billing center (bill > 5000), skip further processing
+      if (row.directToBillingCenter) {
+        return row;
+      }
       
       // Use lastBillValue if available, otherwise find bill column dynamically
       let billValue = row.lastBillValue;
@@ -333,76 +408,79 @@ function PODFilterComponent({ isOpen, onClose }) {
         billValue = parseFloat(String(row[billKey] || 0).replace(/,/g, ''));
       }
       
-      // Find arrears column (handles date suffix)
-      const arrearsKey = Object.keys(row).find(key => 
-        key.toUpperCase().startsWith('NEW_ARREARS')  
-        
+      // Find LATEST_BILL_MNY column
+      const billKey = Object.keys(row).find(key => 
+        key.toUpperCase() === 'LATEST_BILL_MNY'
       );
-      const arrears = parseFloat(String(row[arrearsKey] || 0).replace(/,/g, ''));
+      const latestBill = parseFloat(String(row[billKey] || 0).replace(/,/g, ''));
       
       const region = String(row['REGION'] || row['region'] || 'Unknown');
       
-      // Only process FTTH with Retail or Micro Business
-      const isFTTH = medium.toUpperCase().includes('FTTH');
-      const isRetailOrMicro = subSegment.includes('Retail') || subSegment.includes('Micro Business');
+      // Find NEW_ARREARS column for checking arrears range
+      const arrearsKey = Object.keys(row).find(key => 
+        key.toUpperCase().includes('NEW_ARREARS')
+      );
+      const newArrears = parseFloat(String(row[arrearsKey] || 0).replace(/,/g, ''));
       
-      if (!isFTTH || !isRetailOrMicro) {
-        return { ...row, assignedTo: 'Not Processed', path: 'Excluded' };
-      }
-      
-      // Bill Value Over 5,000 → Region (Billing Center)
-      if (billValue > 5000) {
-        return { 
-          ...row, 
-          assignedTo: `Region - ${region} (Billing Center)`,
-          path: 'Retail/Micro - High Bill Value',
-          billValue,
-          arrears
-        };
-      }
-      
-      // Bill Value < 5,000: Check arrears
-      if (arrears > config.arrearsMin && arrears < config.arrearsMax) {
-        // Distribute based on configured limits
-        const totalAccounts = config.callCenterStaffLimit + config.ccLimit + config.staffLimit;
-        const rand = Math.random();
-        
-        if (rand < config.callCenterStaffLimit / totalAccounts) {
+      // Bill Value <= 5,000: Check NEW_ARREARS (3000 < NEW_ARREARS < 10000)
+      if (newArrears > 3000 && newArrears < 10000) {
+        // Sequential assignment: First fill Call Center Staff, then CC, then Staff, then Billing Center
+        if (callCenterStaffCount < configLimits.callCenterStaffLimit) {
+          callCenterStaffCount++;
           return { 
             ...row, 
             assignedTo: 'Call Center Staff',
-            accountLimit: `${config.callCenterStaffLimit} Accounts`,
-            path: 'Retail/Micro - Call Center',
+            accountLimit: `${configLimits.callCenterStaffLimit} Accounts`,
+            assignedNumber: callCenterStaffCount,
+            path: 'Retail/Micro FTTH - Call Center',
             billValue,
-            arrears
+            latestBill,
+            newArrears
           };
-        } else if (rand < (config.callCenterStaffLimit + config.ccLimit) / totalAccounts) {
+        } else if (ccCount < configLimits.ccLimit) {
+          ccCount++;
           return { 
             ...row, 
             assignedTo: 'CC',
-            accountLimit: `${config.ccLimit} Accounts`,
-            path: 'Retail/Micro - Call Center',
+            accountLimit: `${configLimits.ccLimit} Accounts`,
+            assignedNumber: ccCount,
+            path: 'Retail/Micro FTTH - Call Center',
             billValue,
-            arrears
+            latestBill,
+            newArrears
           };
-        } else {
+        } else if (staffCount < configLimits.staffLimit) {
+          staffCount++;
           return { 
             ...row, 
             assignedTo: 'Staff',
-            accountLimit: `${config.staffLimit} Accounts`,
-            path: 'Retail/Micro - Call Center',
+            accountLimit: `${configLimits.staffLimit} Accounts`,
+            assignedNumber: staffCount,
+            path: 'Retail/Micro FTTH - Call Center',
             billValue,
-            arrears
+            latestBill,
+            newArrears
+          };
+        } else {
+          // All call center quotas filled → Billing Center
+          return { 
+            ...row, 
+            assignedTo: `Region - ${region} (Billing Center)`,
+            path: 'Retail/Micro FTTH - Call Center Quota Full',
+            billValue,
+            latestBill,
+            newArrears
           };
         }
       } else {
-        // Arrears outside range → Region (Billing Center)
+        // NEW_ARREARS outside range (<=3000 or >=10000) → Region (Billing Center)
         return { 
           ...row, 
           assignedTo: `Region - ${region} (Billing Center)`,
-          path: 'Retail/Micro - Out of Range',
+          path: 'Retail/Micro FTTH - Out of Arrears Range',
           billValue,
-          arrears
+          latestBill,
+          newArrears
         };
       }
     });
@@ -421,20 +499,20 @@ function PODFilterComponent({ isOpen, onClose }) {
     try {
       const mainData = await readExcelFile(mainExcel);
       
-      // Step 1: Initial Filtration
-      const { filtered: filteredData, excludedRecords } = applyInitialFiltration(mainData);
+      // Step 1: Separate VIP Records First (with VIP-specific criteria: not SU, >2400)
+      const { vipRecords, nonVipRecords } = separateVIPRecords(mainData);
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Step 2: Credit Class Check - Separate VIP from Non-VIP
-      const { vipRecords, nonVipRecords } = applyCreditClassCheck(filteredData);
+      // Step 2: Initial Filtration (for non-VIP records only)
+      const { filtered: filteredData, excludedRecords } = applyInitialFiltration(nonVipRecords);
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Step 3: Apply Exclusions (only to non-VIP)
-      let nonVipAfterExclusion = await applyExclusions(nonVipRecords);
+      // Step 3: Apply Exclusions (to non-VIP records)
+      let nonVipAfterExclusion = await applyExclusions(filteredData);
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Step 4: Enterprise Path (Bill > 5000 with specific segments)
-      const { enterpriseGovRecords, enterpriseLargeRecords, enterpriseMediumRecords, smeRecords, wholesalesRecords, remainingRecords } = applyEnterprisePath(nonVipAfterExclusion);
+      // Step 4: Enterprise Path & Retail/Micro FTTH Classification (Bill > 5000 with segments + ALL FTTH Retail/Micro)
+      const { enterpriseGovRecords, enterpriseLargeRecords, enterpriseMediumRecords, smeRecords, wholesalesRecords, retailMicroRecords: retailMicroFromStep4, remainingRecords } = applyEnterprisePath(nonVipAfterExclusion);
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Combine all enterprise records
@@ -445,23 +523,23 @@ function PODFilterComponent({ isOpen, onClose }) {
         ...wholesalesRecords
       ];
       
-      // Step 5: Retail/Micro FTTH Path (remaining records)
-      const retailMicroRecords = applyRetailMicroPath(remainingRecords);
+      // Step 5: Further process Retail/Micro FTTH records (bill value assignment with config)
+      const retailMicroProcessed = applyRetailMicroPath(retailMicroFromStep4, config);
       
       // Combine all processed data
       const allProcessedData = [
         ...vipRecords,
         ...allEnterpriseRecords,
-        ...retailMicroRecords
+        ...retailMicroProcessed
       ];
       
       // Calculate statistics
       const stats = {
         totalRecords: mainData.length,
-        excludedAtStart: excludedRecords.length,
-        afterInitialFiltration: filteredData.length,
         vipRecords: vipRecords.length,
         nonVipRecords: nonVipRecords.length,
+        excludedAtStart: excludedRecords.length,
+        afterInitialFiltration: filteredData.length,
         afterExclusion: nonVipAfterExclusion.length,
         enterpriseGov: enterpriseGovRecords.length,
         enterpriseLarge: enterpriseLargeRecords.length,
@@ -469,10 +547,11 @@ function PODFilterComponent({ isOpen, onClose }) {
         sme: smeRecords.length,
         wholesales: wholesalesRecords.length,
         totalEnterprise: allEnterpriseRecords.length,
-        callCenterStaff: retailMicroRecords.filter(r => r.assignedTo === 'Call Center Staff').length,
-        cc: retailMicroRecords.filter(r => r.assignedTo === 'CC').length,
-        staff: retailMicroRecords.filter(r => r.assignedTo === 'Staff').length,
-        regionAssigned: retailMicroRecords.filter(r => r.assignedTo?.includes('Region')).length
+        retailMicro: retailMicroProcessed.length,
+        callCenterStaff: retailMicroProcessed.filter(r => r.assignedTo === 'Call Center Staff').length,
+        cc: retailMicroProcessed.filter(r => r.assignedTo === 'CC').length,
+        staff: retailMicroProcessed.filter(r => r.assignedTo === 'Staff').length,
+        regionAssigned: retailMicroProcessed.filter(r => r.assignedTo?.includes('Region')).length
       };
       
       setResults({
@@ -483,7 +562,7 @@ function PODFilterComponent({ isOpen, onClose }) {
         enterpriseMediumData: enterpriseMediumRecords,
         smeData: smeRecords,
         wholesalesData: wholesalesRecords,
-        retailMicroData: retailMicroRecords,
+        retailMicroData: retailMicroProcessed,
         excludedData: excludedRecords,
         stats
       });
@@ -553,7 +632,7 @@ function PODFilterComponent({ isOpen, onClose }) {
     const fileName = `POD_Report_${type}_${date}.xlsx`;
     XLSX.writeFile(workbook, fileName);
     
-    showSuccess(`${type.toUpperCase()} results downloaded successfully`);
+    showSuccess(`${type.toUpperCase()} results downloaded successfully`)``;
   };
 
   const reset = () => {
@@ -674,37 +753,11 @@ function PODFilterComponent({ isOpen, onClose }) {
 
           {/* Configuration Section */}
           <div className="upload-section">
-            <h3>3. Configure Thresholds & Limits</h3>
+            <h3>3. Configure Account Distribution Limits</h3>
             <p className="config-description">
-              Configure arrears ranges and account distribution limits for call center assignments. 
-              Records with arrears between {config.arrearsMin} and {config.arrearsMax} will be distributed across call centers.
+              Configure account distribution limits for call center assignments. 
+              Retail/Micro FTTH records with NEW_ARREARS between 3,000 and 10,000 will be distributed across call centers.
             </p>
-            
-            <div className="config-section">
-              <h4>Arrears Range</h4>
-              <div className="config-grid">
-                <div className="config-item">
-                  <label>Minimum Arrears (Rs.):</label>
-                  <input 
-                    type="number" 
-                    value={config.arrearsMin}
-                    onChange={(e) => setConfig({...config, arrearsMin: parseFloat(e.target.value)})}
-                    placeholder="e.g., 3000"
-                  />
-                  <span className="config-hint">Lower threshold for call center assignment</span>
-                </div>
-                <div className="config-item">
-                  <label>Maximum Arrears (Rs.):</label>
-                  <input 
-                    type="number" 
-                    value={config.arrearsMax}
-                    onChange={(e) => setConfig({...config, arrearsMax: parseFloat(e.target.value)})}
-                    placeholder="e.g., 10000"
-                  />
-                  <span className="config-hint">Upper threshold for call center assignment</span>
-                </div>
-              </div>
-            </div>
 
             <div className="config-section">
               <h4>Account Distribution Limits</h4>
@@ -720,7 +773,7 @@ function PODFilterComponent({ isOpen, onClose }) {
                   <span className="config-hint">Maximum accounts for Call Center Staff</span>
                 </div>
                 <div className="config-item">
-                  <label>CC Limit:</label>
+                  <label>Call Center Limit:</label>
                   <input 
                     type="number" 
                     value={config.ccLimit}
@@ -786,11 +839,11 @@ function PODFilterComponent({ isOpen, onClose }) {
                 </button>
                 <button className="download-btn" onClick={() => downloadResults('retail')}>
                   <i className="fas fa-store"></i>
-                  Retail/Micro Only
+                  Retail/Micro (FTTH Only)
                 </button>
                 <button className="download-btn" onClick={() => downloadResults('excluded')}>
                   <i className="fas fa-ban"></i>
-                  Excluded (SU) Only
+                  Excluded (SU)
                 </button>
               </>
             )}
@@ -832,6 +885,10 @@ function PODFilterComponent({ isOpen, onClose }) {
                   <div className="stat-label">After Exclusions</div>
                   <div className="stat-value">{results.stats.afterExclusion}</div>
                 </div>
+                <div className="stat-card">
+                  <div className="stat-label">Retail/Micro (FTTH Only)</div>
+                  <div className="stat-value info">{results.stats.retailMicro}</div>
+                </div>
               </div>
 
               <div className="assignment-summary">
@@ -865,14 +922,14 @@ function PODFilterComponent({ isOpen, onClose }) {
               </div>
 
               <div className="assignment-summary">
-                <h4>Assignment Distribution (Retail/Micro FTTH)</h4>
+                <h4>Assignment Distribution (FTTH - Retail/Micro Business Only)</h4>
                 <div className="assignment-grid">
                   <div className="assignment-item">
                     <span>Call Center Staff:</span>
                     <strong>{results.stats.callCenterStaff}</strong>
                   </div>
                   <div className="assignment-item">
-                    <span>CC:</span>
+                    <span>Call Center:</span>
                     <strong>{results.stats.cc}</strong>
                   </div>
                   <div className="assignment-item">
@@ -892,7 +949,7 @@ function PODFilterComponent({ isOpen, onClose }) {
                   <li><strong>Enterprise (Gov + Large + Medium + Wholesales):</strong> One Excel with 4 sheets - Government Institutions, Large Enterprise, Medium Enterprise, and Wholesales (all with Bill Value &gt; 5,000)</li>
                   <li><strong>SME:</strong> Separate Excel for Small & Medium Enterprises with Bill Value &gt; 5,000</li>
                   <li><strong>VIP Only:</strong> All VIP credit class records</li>
-                  <li><strong>Retail/Micro Only:</strong> FTTH Retail/Micro Business assignments</li>
+                  <li><strong>Retail/Micro (FTTH Only):</strong> Only FTTH medium with Retail or Micro Business sub-segment (all bill values)</li>
                   <li><strong>Excluded (SU) Only:</strong> Records filtered out in initial filtration (likely Suspended status)</li>
                   <li><strong>Download All:</strong> Complete processed dataset with all categories in separate sheets</li>
                 </ul>

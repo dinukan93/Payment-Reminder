@@ -9,22 +9,9 @@ export const isAuthenticated = () => {
     return false;
   }
 
-  // Check if token is expired (if it's a JWT)
-  try {
-    const tokenData = JSON.parse(atob(token.split('.')[1]));
-    const expirationTime = tokenData.exp * 1000; // Convert to milliseconds
-    
-    if (Date.now() >= expirationTime) {
-      // Token expired, clear session
-      clearSession();
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    // If token parsing fails, assume it's valid for now
-    return true;
-  }
+  // Sanctum tokens don't expire on the client side
+  // Token validity is checked by the backend on each request
+  return true;
 };
 
 // Clear all session data

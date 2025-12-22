@@ -9,17 +9,13 @@ function PODFilterPage() {
     <div className="pod-filter-page">
       <div className="page-header">
         <h1>POD Lapsed Report Processing</h1>
-        <p>Manual Process for POD Lapsed Report - 2025</p>
+
       </div>
 
       <div className="page-content">
         <div className="info-card">
-          <h2>About This Tool</h2>
-          <p>
-            This tool processes the Payment on Demand (POD) Lapsed Report according to the 
-            manual process guidelines for 2025. It automates the following steps:
-          </p>
-          
+
+
           <div className="steps-info">
             <div className="step-info">
               <div className="step-icon">1</div>
@@ -63,27 +59,27 @@ function PODFilterPage() {
           </div>
 
           <div className="requirements-section">
-            <h3>File Requirements</h3>
+
             <ul>
-              <li><strong>Main Excel File:</strong> Must contain columns for Customer Type, Product Status, Total Outstanding, Credit Class, Last Bill Value, SLT SUB SEGMENT, Product Label, Arrears, Region, and Account Number</li>
-              <li><strong>Exclusion Files (Optional):</strong> Should contain Account Number column to identify accounts to exclude</li>
+
               <li><strong>Format:</strong> .xlsx or .xls files only</li>
             </ul>
           </div>
+          
         </div>
 
-        <div className="action-card">
-          <button 
-            className="start-filter-btn"
-            onClick={() => setIsFilterOpen(true)}
-          >
-            <i className="fas fa-filter"></i>
-            Start Filtering Process
-          </button>
-        </div>
+
       </div>
-
-      <PODFilterComponent 
+      <div className="action-card">
+        <button
+          className="start-filter-btn"
+          onClick={() => setIsFilterOpen(true)}
+        >
+          <i className="fas fa-filter"></i>
+          Start Filtering Process
+        </button>
+      </div>
+      <PODFilterComponent
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
       />
