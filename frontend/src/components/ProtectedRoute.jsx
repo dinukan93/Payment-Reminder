@@ -33,17 +33,39 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     return <Navigate to="/login" replace />;
   }
 
+  // Define admin roles hierarchy
+  const adminRoles = ['superadmin', 'region_admin', 'rtom_admin', 'supervisor', 'admin', 'uploader'];
+  const isAdminRole = adminRoles.includes(userRole);
+
   // Check if user has required role
-  if (requiredRole && userRole !== requiredRole) {
-    // Redirect to appropriate dashboard based on role
-    if (userRole === 'superadmin') {
-      return <Navigate to="/superadmin" replace />;
-    } else if (userRole === 'admin') {
-      return <Navigate to="/admin" replace />;
-    } else if (userRole === 'uploader') {
-      return <Navigate to="/upload" replace />;
+  if (requiredRole) {
+    let hasAccess = false;
+
+    if (requiredRole === 'admin') {
+      // Allow all admin types to access admin routes
+      hasAccess = isAdminRole;
+    } else if (requiredRole === 'superadmin') {
+      // Only superadmin can access superadmin routes
+      hasAccess = userRole === 'superadmin';
+    } else if (requiredRole === 'caller') {
+      // Only callers can access caller routes
+      hasAccess = userRole === 'caller';
     } else {
-      return <Navigate to="/dashboard" replace />;
+      // Exact role match for other cases
+      hasAccess = userRole === requiredRole;
+    }
+
+    if (!hasAccess) {
+      // Redirect to appropriate dashboard based on role
+      if (userRole === 'superadmin') {
+        return <Navigate to="/superadmin" replace />;
+      } else if (isAdminRole) {
+        return <Navigate to="/admin" replace />;
+      } else if (userRole === 'uploader') {
+        return <Navigate to="/upload" replace />;
+      } else {
+        return <Navigate to="/dashboard" replace />;
+      }
     }
   }
 

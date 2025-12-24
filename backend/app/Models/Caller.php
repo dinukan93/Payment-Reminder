@@ -22,7 +22,13 @@ class Caller extends Authenticatable
         'taskStatus',
         'region',
         'rtom',
-        'created_by'
+        'created_by',
+        'avatar',
+        'email_notifications',
+        'payment_reminder',
+        'call_notifications',
+        'language',
+        'timezone'
     ];
 
     protected $hidden = [

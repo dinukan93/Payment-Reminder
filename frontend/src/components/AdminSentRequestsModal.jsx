@@ -1,14 +1,53 @@
 import React, { useState } from "react";
 import "./AdminSentRequestsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import API_BASE_URL from "../config/api";
+import { showSuccess, showError } from "./Notifications";
 
-function AdminSentRequestsModal({ isOpen, onClose, sentRequests = [] }) {
+function AdminSentRequestsModal({ isOpen, onClose, sentRequests = [], onRequestCancelled }) {
   const [expandedRequestId, setExpandedRequestId] = useState(null);
+  const [cancellingRequestId, setCancellingRequestId] = useState(null);
 
   if (!isOpen) return null;
 
   const toggleExpand = (requestId) => {
     setExpandedRequestId(expandedRequestId === requestId ? null : requestId);
+  };
+
+  const handleCancelRequest = async (requestId) => {
+    if (cancellingRequestId) return; // Prevent multiple clicks
+    
+    if (!window.confirm("Are you sure you want to cancel this request? The customers will be unassigned from the caller.")) {
+      return;
+    }
+    
+    setCancellingRequestId(requestId);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/requests/${requestId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        showSuccess("Request cancelled successfully");
+        if (onRequestCancelled) {
+          onRequestCancelled(requestId);
+        }
+      } else {
+        showError(result.message || "Failed to cancel request");
+      }
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      showError("Error cancelling request");
+    } finally {
+      setCancellingRequestId(null);
+    }
   };
 
   return (
@@ -54,12 +93,31 @@ function AdminSentRequestsModal({ isOpen, onClose, sentRequests = [] }) {
                             {request.status === "PENDING" && (
                               <><i className="bi bi-hourglass-split"></i> PENDING</>
                             )}
+                            {request.status === "CANCELLED" && (
+                              <><i className="bi bi-ban"></i> CANCELLED</>
+                            )}
                           </span>
                         </div>
                       </div>
-                      <button className="admin-sent-expand-btn">
-                        <i className={`bi bi-chevron-${expandedRequestId === request.id ? 'up' : 'down'}`}></i>
-                      </button>
+                      <div className="admin-sent-request-actions">
+                        {request.status === "PENDING" && (
+                          <button 
+                            className="admin-cancel-request-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelRequest(request.id);
+                            }}
+                            disabled={cancellingRequestId === request.id}
+                            title="Cancel this request"
+                          >
+                            <i className="bi bi-x-circle"></i>
+                            {cancellingRequestId === request.id ? 'Cancelling...' : 'Cancel'}
+                          </button>
+                        )}
+                        <button className="admin-sent-expand-btn">
+                          <i className={`bi bi-chevron-${expandedRequestId === request.id ? 'up' : 'down'}`}></i>
+                        </button>
+                      </div>
                     </div>
 
                     {expandedRequestId === request.id && (
@@ -142,6 +200,10 @@ function AdminSentRequestsModal({ isOpen, onClose, sentRequests = [] }) {
             <span className="admin-sent-summary-item">
               <i className="bi bi-x-circle-fill"></i>
               Declined: {sentRequests.filter(r => r.status === "DECLINED").length}
+            </span>
+            <span className="admin-sent-summary-item">
+              <i className="bi bi-ban"></i>
+              Cancelled: {sentRequests.filter(r => r.status === "CANCELLED").length}
             </span>
           </div>
           <button className="admin-close-modal-btn" onClick={onClose}>

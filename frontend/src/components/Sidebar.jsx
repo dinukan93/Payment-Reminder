@@ -17,6 +17,10 @@ export default function Sidebar() {
   // Get user role from localStorage
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const userRole = userData.role || 'caller';
+  
+  // Define admin roles
+  const adminRoles = ['superadmin', 'region_admin', 'rtom_admin', 'supervisor', 'admin', 'uploader'];
+  const isAdminRole = adminRoles.includes(userRole);
 
   // For uploaders, show upload, POD filter, and customers
   if (userRole === 'uploader') {
@@ -117,7 +121,7 @@ export default function Sidebar() {
               <>
                 <li>
                   <NavLink
-                    to={userRole === 'admin' ? '/admin' : '/dashboard'}
+                    to={isAdminRole && userRole !== 'uploader' ? '/admin' : '/dashboard'}
                     className={({ isActive }) =>
                       `menu-item${isActive ? " active" : ""}`
                     }
@@ -128,7 +132,7 @@ export default function Sidebar() {
                 </li>
                 <li>
                   <NavLink
-                    to={userRole === 'admin' ? '/admin/tasks' : '/tasks'}
+                    to={isAdminRole && userRole !== 'uploader' ? '/admin/tasks' : '/tasks'}
                     className={({ isActive }) =>
                       `menu-item${isActive ? " active" : ""}`
                     }

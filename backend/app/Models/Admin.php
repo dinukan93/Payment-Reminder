@@ -19,7 +19,13 @@ class Admin extends Authenticatable
         'role',
         'region',
         'rtom',
-        'status'
+        'status',
+        'avatar',
+        'email_notifications',
+        'payment_reminder',
+        'call_notifications',
+        'language',
+        'timezone'
     ];
 
     protected $hidden = [

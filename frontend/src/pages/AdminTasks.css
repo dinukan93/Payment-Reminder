@@ -49,6 +49,30 @@
   font-size: 18px;
 }
 
+.automate-button {
+  padding: 14px 28px;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.automate-button:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+}
+
+.automate-button i {
+  font-size: 18px;
+}
+
 /* Stats */
 .admin-tasks-stats {
   display: grid;

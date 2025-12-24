@@ -96,4 +96,39 @@ option {
   border-radius: 5px;
   padding: 5px 10px;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.automate-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.automate-button:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+.automate-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.automate-button i {
+  font-size: 16px;
 }

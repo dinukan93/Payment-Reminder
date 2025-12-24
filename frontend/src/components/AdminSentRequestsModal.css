@@ -126,6 +126,11 @@
   background: #fffafa;
 }
 
+.admin-sent-request-card.cancelled {
+  border-color: #9e9e9e;
+  background: #fafafa;
+}
+
 /* Request Header */
 .admin-sent-request-header {
   display: flex;
@@ -195,6 +200,42 @@
 
 .admin-sent-date i {
   color: #666;
+  font-size: 14px;
+}
+
+/* Request Actions */
+.admin-sent-request-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-cancel-request-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.admin-cancel-request-btn:hover:not(:disabled) {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+.admin-cancel-request-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-cancel-request-btn i {
   font-size: 14px;
 }
 
@@ -397,6 +438,11 @@
 .admin-sent-status-badge.declined {
   background: #ffe0e0;
   color: #d32f2f;
+}
+
+.admin-sent-status-badge.cancelled {
+  background: #e0e0e0;
+  color: #666;
 }
 
 

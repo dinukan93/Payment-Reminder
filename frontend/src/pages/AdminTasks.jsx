@@ -3,7 +3,8 @@ import { toast } from 'react-toastify';
 import "./AdminTasks.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import API_BASE_URL from "../config/api";
-import { showError } from "../components/Notifications";
+import { showError, showSuccess, showInfo } from "../components/Notifications";
+import AutomateConfigModal from "../components/AutomateConfigModal";
 
 function AdminTasks() {
   const [allCustomers, setAllCustomers] = useState([]);
@@ -13,8 +14,10 @@ function AdminTasks() {
   const [availableCallers, setAvailableCallers] = useState([]);
   const [selectedCaller, setSelectedCaller] = useState("");
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showAutomateModal, setShowAutomateModal] = useState(false);
   const [selectCount, setSelectCount] = useState(10);
   const [loading, setLoading] = useState(true);
+  const [isAutomating, setIsAutomating] = useState(false);
 
   // Load customers and callers on mount
   useEffect(() => {
@@ -238,6 +241,54 @@ function AdminTasks() {
     }
   };
 
+  const handleAutomateClick = () => {
+    setShowAutomateModal(true);
+  };
+
+  const handleAutomateConfirm = async (selectedCallerIds) => {
+    if (isAutomating) return;
+    
+    setShowAutomateModal(false);
+    setIsAutomating(true);
+    showInfo("Starting automated customer assignment...");
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/auto-assign`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          caller_ids: selectedCallerIds
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        const { assigned_count, remaining_count, assignments } = result.data;
+        
+        // Build detailed message
+        let message = `✅ Successfully assigned ${assigned_count} customer(s) to ${assignments.length} caller(s)`;
+        
+        if (remaining_count > 0) {
+          message += `\n⚠️ ${remaining_count} customer(s) could not be assigned (no available capacity)`;
+        }
+        
+        showSuccess(message);
+        loadCustomers(); // Refresh the customer list
+      } else {
+        showError(result.message || "Failed to auto-assign customers");
+      }
+    } catch (error) {
+      console.error('Error during auto-assignment:', error);
+      showError("Error during automated assignment");
+    } finally {
+      setIsAutomating(false);
+    }
+  };
+
   const getSelectedCustomersData = () => {
     return allCustomers.filter(c => selectedCustomers.includes(c.id));
   };
@@ -255,6 +306,10 @@ function AdminTasks() {
             Assign {selectedCustomers.length} Customer{selectedCustomers.length > 1 ? 's' : ''}
           </button>
         )}
+        <button className="automate-button" onClick={handleAutomateClick} title="Auto-assign customers to callers based on capacity">
+          <i className="bi bi-magic"></i>
+          Automate
+        </button>
       </div>
 
       {/* Stats */}
@@ -456,6 +511,12 @@ function AdminTasks() {
           </div>
         </div>
       )}
+
+      <AutomateConfigModal
+        isOpen={showAutomateModal}
+        onClose={() => setShowAutomateModal(false)}
+        onConfirm={handleAutomateConfirm}
+      />
     </div>
   );
 }

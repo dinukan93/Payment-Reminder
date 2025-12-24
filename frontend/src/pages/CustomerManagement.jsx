@@ -6,6 +6,7 @@ import SearchBar from "../components/SearchBar";
 import "../components/SearchBar.css";
 import AddCustomerModal from "../components/AddCustomerModal";
 import { showSuccess } from "../components/Notifications";
+import API_BASE_URL from "../config/api";
 
 function CustomerManagement() {
   const [showAddModal, setShowAddModal] = useState(false);

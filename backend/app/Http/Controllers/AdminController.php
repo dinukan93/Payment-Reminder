@@ -13,15 +13,13 @@ class AdminController extends Controller
 {
     public function getDashboardStats(Request $request)
     {
-        $user = $request->attributes->get('user');
-        $tokenData = $request->attributes->get('token_data');
+        $user = $request->user();
         
-        $query = Customer::query();
-        
-        // RTOM filtering
-        if ($tokenData->role !== 'superadmin') {
-            $query->where('rtom', $user->rtom);
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
+        
+        $query = $user->getAccessibleCustomers();
         
         $totalCustomers = (clone $query)->count();
         $overdueCustomers = (clone $query)->where('status', 'overdue')->count();
@@ -38,13 +36,24 @@ class AdminController extends Controller
 
     public function getAssignedCallers(Request $request)
     {
-        $user = $request->attributes->get('user');
-        $tokenData = $request->attributes->get('token_data');
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
         
         $query = Caller::with('customers');
         
-        if ($tokenData->role !== 'superadmin') {
+        // Apply filtering based on user role
+        if ($user->isRegionAdmin() && $user->region) {
+            $query->where('region', $user->region);
+        } elseif ($user->isRtomAdmin() && $user->rtom) {
             $query->where('rtom', $user->rtom);
+        } elseif ($user->isSupervisor() && $user->rtom) {
+            $query->where('rtom', $user->rtom);
+        } elseif (!$user->isSuperAdmin()) {
+            // Regular admin with no region/rtom access all callers they created
+            $query->where('created_by', $user->id);
         }
         
         return response()->json($query->get());
@@ -52,15 +61,23 @@ class AdminController extends Controller
 
     public function getWeeklyCalls(Request $request)
     {
-        $user = $request->attributes->get('user');
-        $tokenData = $request->attributes->get('token_data');
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
         
         $query = ContactHistory::whereBetween('contact_date', [
             now()->subWeek(),
             now()
         ]);
         
-        if ($tokenData->role !== 'superadmin') {
+        // Apply filtering based on user role
+        if ($user->isRegionAdmin() && $user->region) {
+            $query->whereHas('customer', function ($q) use ($user) {
+                $q->where('region', $user->region);
+            });
+        } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $user->rtom) {
             $query->whereHas('customer', function ($q) use ($user) {
                 $q->where('rtom', $user->rtom);
             });

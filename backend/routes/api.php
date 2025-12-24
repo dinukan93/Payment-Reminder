@@ -8,6 +8,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\DataDistributionController;
+use App\Http\Controllers\AutoAssignmentController;
+use App\Http\Controllers\SettingsController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -42,11 +44,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/requests/{id}', [RequestController::class, 'update']);
     Route::post('/requests/{id}/accept', [RequestController::class, 'accept']);
     Route::post('/requests/{id}/decline', [RequestController::class, 'decline']);
+    Route::post('/requests/{id}/cancel', [RequestController::class, 'cancel']);
+    
+    // Auto Assignment
+    Route::post('/auto-assign', [AutoAssignmentController::class, 'autoAssign']);
     
     // Admin
     Route::get('/admin/dashboard-stats', [AdminController::class, 'getDashboardStats']);
     Route::get('/admin/assigned-callers', [AdminController::class, 'getAssignedCallers']);
     Route::get('/admin/weekly-calls', [AdminController::class, 'getWeeklyCalls']);
+    
+    // Settings
+    Route::get('/settings', [SettingsController::class, 'getSettings']);
+    Route::put('/settings/profile', [SettingsController::class, 'updateProfile']);
+    Route::put('/settings/password', [SettingsController::class, 'updatePassword']);
+    Route::put('/settings/preferences', [SettingsController::class, 'updatePreferences']);
     
     // Upload
     Route::post('/upload/parse', [UploadController::class, 'parse']);

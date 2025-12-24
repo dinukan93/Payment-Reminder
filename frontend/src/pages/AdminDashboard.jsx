@@ -131,6 +131,15 @@ function AdminDashboard() {
     setIsRequestsModalOpen(false);
   };
 
+  const handleRequestCancelled = (requestId) => {
+    // Update the request status locally
+    setSentRequests(prev => 
+      prev.map(req => 
+        req.id === requestId ? { ...req, status: 'CANCELLED' } : req
+      )
+    );
+  };
+
   const handleShowCallerDetails = async (caller) => {
     try {
       setSelectedCaller(caller);
@@ -535,6 +544,7 @@ function AdminDashboard() {
       isOpen={isRequestsModalOpen}
       onClose={handleCloseRequests}
       sentRequests={sentRequests}
+      onRequestCancelled={handleRequestCancelled}
     />
 
     <CallerDetailsModal

@@ -7,15 +7,11 @@ function PODFilterPage() {
 
   return (
     <div className="pod-filter-page">
-      <div className="page-header">
-        <h1>POD Lapsed Report Processing</h1>
-
-      </div>
+      <div className="title">POD Lapsed Report Processing</div>
+      <hr />
 
       <div className="page-content">
         <div className="info-card">
-
-
           <div className="steps-info">
             <div className="step-info">
               <div className="step-icon">1</div>
@@ -59,26 +55,23 @@ function PODFilterPage() {
           </div>
 
           <div className="requirements-section">
-
             <ul>
-
               <li><strong>Format:</strong> .xlsx or .xls files only</li>
             </ul>
           </div>
-          
         </div>
-
-
       </div>
+
       <div className="action-card">
         <button
           className="start-filter-btn"
           onClick={() => setIsFilterOpen(true)}
         >
-          <i className="fas fa-filter"></i>
+          <i className="bi bi-funnel-fill"></i>
           Start Filtering Process
         </button>
       </div>
+
       <PODFilterComponent
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}

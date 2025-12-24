@@ -4,6 +4,7 @@ import "./UploadPage.css";
 import { MdOutlineFileUpload } from "react-icons/md";
 import API_BASE_URL from "../config/api";
 import { toast } from "react-toastify";
+import PODFilterComponent from "../components/PODFilterComponent";
 
 const humanFileSize = (size) => {
   if (size === 0) return "0 B";
@@ -41,6 +42,7 @@ const UploadPage = () => {
   // Modal states
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showPaidPreviewModal, setShowPaidPreviewModal] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   const navigate = useNavigate();
   const rowsPerPage = 20;
@@ -701,7 +703,46 @@ const UploadPage = () => {
 
       </div>
 
-      {/* Preview Modal for Overdue Customers */}
+      {/* POD Filter Section */}
+      <div style={{ marginTop: '40px', padding: '30px', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '20px', marginBottom: '10px', color: '#333' }}>POD Lapsed Report Processing</h2>
+        <p style={{ color: '#666', marginBottom: '20px' }}>Filter and process POD lapsed customers for targeted collection efforts</p>
+        <button
+          onClick={() => setIsFilterOpen(true)}
+          style={{
+            padding: '14px 28px',
+            backgroundColor: '#667eea',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            fontSize: '16px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '10px',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#5568d3';
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = '#667eea';
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = 'none';
+          }}
+        >
+          <i className="bi bi-funnel-fill" style={{ fontSize: '18px' }}></i>
+          Start Filtering Process
+        </button>
+      </div>
+
+      <PODFilterComponent
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+      />
       {showPreviewModal && excelData && (
         <div 
           className="modal-overlay" 
