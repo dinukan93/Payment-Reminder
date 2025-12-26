@@ -4,7 +4,8 @@
   background: #ffffff;
   border: 1px solid #d9d9d9;
   border-radius: 20px;
-  overflow: hidden; /* clip inner content to rounded corners */
+  overflow: hidden;
+  /* clip inner content to rounded corners */
   padding: 5px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -12,7 +13,7 @@
 
 
 /* table without its own border; use separate mode so radius works */
-.employee-table {
+.caller-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -21,18 +22,18 @@
 }
 
 /* keep your row styles */
-.employee-table th,
-.employee-table td {
+.caller-table th,
+.caller-table td {
   padding: 15px;
   text-align: left;
   border-bottom: 1px solid #d9d9d9;
 }
 
-.employee-table th {
+.caller-table th {
   color: #000000;
 }
 
-.employee-table tbody tr:last-child td {
+.caller-table tbody tr:last-child td {
   border-bottom: none;
 }
 
@@ -41,12 +42,14 @@
   font-size: smaller;
 }
 
-td > i {
-  margin-right: 20px; /* space after each icon */
+td>i {
+  margin-right: 20px;
+  /* space after each icon */
 }
 
-td > i:last-child {
-  margin-right: 0; /* remove margin from last icon */
+td>i:last-child {
+  margin-right: 0;
+  /* remove margin from last icon */
 }
 
 /* delete button */
@@ -57,5 +60,6 @@ td > i:last-child {
 
 /* edit button */
 .bi-pencil-square {
-  color: #838383; /* orange for pending */
+  color: #838383;
+  /* orange for pending */
 }

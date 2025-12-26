@@ -164,19 +164,7 @@ function AdminDashboard() {
     setCallerDetailsData(null);
   };
 
-  /**
-   * TESTING FLOW:
-   * 1. In Admin Dashboard: Click "Send Test Request" button
-   * 2. Request is stored in localStorage with status "PENDING"
-   * 3. Switch to Caller Dashboard (CallerDashboard)
-   * 4. Envelope icon will show badge with "1" notification
-   * 5. Click envelope icon to open AdminRequestsModal
-   * 6. Click "Accept" or "Decline" button
-   * 7. Response is stored in localStorage
-   * 8. Switch back to Admin Dashboard
-   * 9. Within 5 seconds, status will auto-update to "ACCEPTED" or "DECLINED"
-   * 10. Click envelope icon in Admin Dashboard to see updated status
-   */
+  
   
   // Function to send request to caller (for testing)
   const handleSendRequestToCaller = (callerName, callerId, customers) => {
@@ -230,7 +218,7 @@ function AdminDashboard() {
     <>
     <div className="admin-dashboard">
       <div className="admin-dashboard-header">
-        <h1>Admin Dashboard</h1>
+        <h1>Supervisor Dashboard</h1>
       </div>
 
       {loading ? (

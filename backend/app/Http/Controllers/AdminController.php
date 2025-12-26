@@ -4,6 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Admin;
+
+// ...existing code...
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Admin;
 use App\Models\Caller;
 use App\Models\Customer;
 use App\Models\Request as TaskRequest;
@@ -14,18 +21,18 @@ class AdminController extends Controller
     public function getDashboardStats(Request $request)
     {
         $user = $request->user();
-        
+
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-        
+
         $query = $user->getAccessibleCustomers();
-        
+
         $totalCustomers = (clone $query)->count();
         $overdueCustomers = (clone $query)->where('status', 'overdue')->count();
         $contactedCustomers = (clone $query)->where('status', 'contacted')->count();
         $paidCustomers = (clone $query)->where('status', 'paid')->count();
-        
+
         return response()->json([
             'totalCustomers' => $totalCustomers,
             'overdueCustomers' => $overdueCustomers,
@@ -37,13 +44,13 @@ class AdminController extends Controller
     public function getAssignedCallers(Request $request)
     {
         $user = $request->user();
-        
+
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-        
+
         $query = Caller::with('customers');
-        
+
         // Apply filtering based on user role
         if ($user->isRegionAdmin() && $user->region) {
             $query->where('region', $user->region);
@@ -55,23 +62,23 @@ class AdminController extends Controller
             // Regular admin with no region/rtom access all callers they created
             $query->where('created_by', $user->id);
         }
-        
+
         return response()->json($query->get());
     }
 
     public function getWeeklyCalls(Request $request)
     {
         $user = $request->user();
-        
+
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-        
+
         $query = ContactHistory::whereBetween('contact_date', [
             now()->subWeek(),
             now()
         ]);
-        
+
         // Apply filtering based on user role
         if ($user->isRegionAdmin() && $user->region) {
             $query->whereHas('customer', function ($q) use ($user) {
@@ -82,7 +89,7 @@ class AdminController extends Controller
                 $q->where('rtom', $user->rtom);
             });
         }
-        
+
         return response()->json(['count' => $query->count()]);
     }
 
@@ -93,7 +100,7 @@ class AdminController extends Controller
         $admins = Admin::whereIn('role', ['admin', 'region_admin', 'rtom_admin', 'supervisor', 'uploader'])
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         return response()->json([
             'success' => true,
             'data' => $admins,
@@ -144,9 +151,9 @@ class AdminController extends Controller
 
         // Admins created by superadmin are auto-verified
         $validated['status'] = 'active';
-        
+
         $admin = Admin::create($validated);
-        
+
         return response()->json([
             'success' => true,
             'message' => ucfirst($validated['role']) . ' created successfully',
@@ -157,7 +164,7 @@ class AdminController extends Controller
     public function updateAdmin(Request $request, $id)
     {
         $admin = Admin::findOrFail($id);
-        
+
         // Prevent updating superadmin
         if ($admin->role === 'superadmin') {
             return response()->json([
@@ -183,7 +190,7 @@ class AdminController extends Controller
 
         // Don't allow password updates through this endpoint
         $admin->update($request->except(['password', 'adminId']));
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Admin updated successfully',
@@ -194,7 +201,7 @@ class AdminController extends Controller
     public function deleteAdmin($id)
     {
         $admin = Admin::findOrFail($id);
-        
+
         // Prevent deleting superadmin
         if ($admin->role === 'superadmin') {
             return response()->json([
@@ -202,9 +209,9 @@ class AdminController extends Controller
                 'message' => 'Cannot delete superadmin account'
             ], 403);
         }
-        
+
         $admin->delete();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Admin deleted successfully'
@@ -220,32 +227,356 @@ class AdminController extends Controller
     }
 
     /**
+     * Get RTOM admins for the logged-in region admin
+     */
+    public function getRtomAdminsForRegion(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user || !$user->isRegionAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only region admins can access this.'
+            ], 403);
+        }
+
+        if (!$user->region) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Region not assigned to your account'
+            ], 400);
+        }
+
+        // Get all RTOM admins in the same region
+        $rtomAdmins = Admin::where('role', 'rtom_admin')
+            ->where('region', $user->region)
+            ->get()
+            ->map(function ($admin) {
+                // Count callers for this RTOM admin
+                $callersCount = Caller::where('rtom', $admin->rtom)->count();
+
+                // Count customers contacted in this RTOM (using RTOM column directly)
+                $customersContacted = ContactHistory::whereHas('customer', function ($q) use ($admin) {
+                    $q->where('RTOM', $admin->rtom);
+                })->distinct('customer_id')->count();
+
+                return [
+                    'id' => $admin->id,
+                    'adminId' => $admin->adminId,
+                    'name' => $admin->name,
+                    'email' => $admin->email,
+                    'phone' => $admin->phone,
+                    'rtom' => $admin->rtom,
+                    'region' => $admin->region,
+                    'status' => $admin->status,
+                    'created_at' => $admin->created_at,
+                    'callers_count' => $callersCount,
+                    'customers_contacted' => $customersContacted
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $rtomAdmins
+        ]);
+    }
+
+    /**
+     * Create RTOM admin (Region Admin only)
+     */
+    public function createRtomAdmin(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user || !$user->isRegionAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only region admins can create RTOM admins.'
+            ], 403);
+        }
+
+        if (!$user->region) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Region not assigned to your account'
+            ], 400);
+        }
+
+        // Validate inputs
+        $validated = $request->validate([
+            'adminId' => 'required|unique:admins',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:admins',
+            'phone' => 'nullable|string|max:20',
+            'password' => 'required|min:6',
+            'rtom' => 'required|string'
+        ]);
+
+        // Auto-assign region based on RTOM
+        $rtomRegion = $this->getRegionForRtom($validated['rtom']);
+
+        if (!$rtomRegion) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid RTOM code'
+            ], 400);
+        }
+
+        // Ensure RTOM belongs to region admin's region
+        if ($rtomRegion !== $user->region) {
+            return response()->json([
+                'success' => false,
+                'message' => 'RTOM does not belong to your region'
+            ], 403);
+        }
+
+        // Create RTOM admin
+        $validated['role'] = 'rtom_admin';
+        $validated['region'] = $rtomRegion;
+        $validated['status'] = 'active';
+
+        $admin = Admin::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'RTOM admin created successfully',
+            'data' => $admin
+        ], 201);
+    }
+
+    /**
+     * Update RTOM admin (Region Admin only)
+     */
+    public function updateRtomAdmin(Request $request, $id)
+    {
+        $user = $request->user();
+
+        if (!$user || !$user->isRegionAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only region admins can update RTOM admins.'
+            ], 403);
+        }
+
+        if (!$user->region) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Region not assigned to your account'
+            ], 400);
+        }
+
+        $admin = Admin::findOrFail($id);
+
+        // Ensure admin is RTOM admin
+        if ($admin->role !== 'rtom_admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Can only update RTOM admins'
+            ], 403);
+        }
+
+        // Ensure RTOM admin belongs to region admin's region
+        if ($admin->region !== $user->region) {
+            return response()->json([
+                'success' => false,
+                'message' => 'RTOM admin does not belong to your region'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:admins,email,' . $id,
+            'phone' => 'nullable|string|max:20',
+            'rtom' => 'nullable|string',
+            'status' => 'nullable|in:active,inactive'
+        ]);
+
+        // If RTOM is being updated, verify it belongs to the same region
+        if (isset($validated['rtom'])) {
+            $rtomRegion = $this->getRegionForRtom($validated['rtom']);
+
+            if (!$rtomRegion) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid RTOM code'
+                ], 400);
+            }
+
+            if ($rtomRegion !== $user->region) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'RTOM does not belong to your region'
+                ], 403);
+            }
+
+            $validated['region'] = $rtomRegion;
+        }
+
+        // Don't allow password or role updates through this endpoint
+        $admin->update($request->except(['password', 'adminId', 'role']));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'RTOM admin updated successfully',
+            'data' => $admin
+        ]);
+    }
+
+    /**
+     * Delete RTOM admin (Region Admin only)
+     */
+    public function deleteRtomAdmin($id)
+    {
+        $user = request()->user();
+
+        if (!$user || !$user->isRegionAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only region admins can delete RTOM admins.'
+            ], 403);
+        }
+
+        if (!$user->region) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Region not assigned to your account'
+            ], 400);
+        }
+
+        $admin = Admin::findOrFail($id);
+
+        // Ensure admin is RTOM admin
+        if ($admin->role !== 'rtom_admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Can only delete RTOM admins'
+            ], 403);
+        }
+
+        // Ensure RTOM admin belongs to region admin's region
+        if ($admin->region !== $user->region) {
+            return response()->json([
+                'success' => false,
+                'message' => 'RTOM admin does not belong to your region'
+            ], 403);
+        }
+
+        $admin->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'RTOM admin deleted successfully'
+        ]);
+    }
+
+    /**
+     * Get available RTOMs for the logged-in region admin's region
+     */
+    public function getAvailableRtomsForRegion(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user || !$user->isRegionAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        if (!$user->region) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Region not assigned'
+            ], 400);
+        }
+
+        // Get all RTOMs for this region
+        $rtomData = $this->getRtomData();
+        $availableRtoms = [];
+
+        foreach ($rtomData as $code => $data) {
+            if ($data['region'] === $user->region) {
+                $availableRtoms[] = [
+                    'code' => $code,
+                    'name' => $data['name']
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $availableRtoms
+        ]);
+    }
+
+    /**
+     * Get RTOM data with codes, names, and regions
+     */
+    private function getRtomData()
+    {
+        return [
+            // Metro Region
+            'CO' => ['name' => 'Colombo Central (General)', 'region' => 'Metro Region'],
+            'MA' => ['name' => 'Maradana', 'region' => 'Metro Region'],
+            'ND' => ['name' => 'Nugegoda', 'region' => 'Metro Region'],
+            'HK' => ['name' => 'Havelock Town', 'region' => 'Metro Region'],
+            'KX' => ['name' => 'Kotte', 'region' => 'Metro Region'],
+            'WT' => ['name' => 'Wattala', 'region' => 'Metro Region'],
+            'RM' => ['name' => 'Ratmalana', 'region' => 'Metro Region'],
+
+            // Region 1
+            'AN' => ['name' => 'Anuradhapura', 'region' => 'Region 1'],
+            'CW' => ['name' => 'Chilaw', 'region' => 'Region 1'],
+            'GP' => ['name' => 'Gampola', 'region' => 'Region 1'],
+            'KA' => ['name' => 'Kandy', 'region' => 'Region 1'],
+            'KU' => ['name' => 'Kurunegala', 'region' => 'Region 1'],
+            'MT' => ['name' => 'Matale', 'region' => 'Region 1'],
+            'NE' => ['name' => 'Negombo', 'region' => 'Region 1'],
+            'PO' => ['name' => 'Polonnaruwa', 'region' => 'Region 1'],
+            'KI' => ['name' => 'Identifier currently unknown', 'region' => 'Region 1'],
+
+            // Region 2
+            'AV' => ['name' => 'Avissawella', 'region' => 'Region 2'],
+            'BA' => ['name' => 'Badulla', 'region' => 'Region 2'],
+            'BW' => ['name' => 'Bandarawela', 'region' => 'Region 2'],
+            'GA' => ['name' => 'Galle', 'region' => 'Region 2'],
+            'HB' => ['name' => 'Hambantota', 'region' => 'Region 2'],
+            'HA' => ['name' => 'Hatton', 'region' => 'Region 2'],
+            'KL' => ['name' => 'Kalutara', 'region' => 'Region 2'],
+            'KG' => ['name' => 'Kegalle', 'region' => 'Region 2'],
+            'NW' => ['name' => 'Nuwara Eliya', 'region' => 'Region 2'],
+            'RA' => ['name' => 'Ratnapura', 'region' => 'Region 2'],
+
+            // Region 3
+            'AM' => ['name' => 'Ampara', 'region' => 'Region 3'],
+            'BT' => ['name' => 'Batticaloa', 'region' => 'Region 3'],
+            'JA' => ['name' => 'Jaffna', 'region' => 'Region 3'],
+            'KM' => ['name' => 'Kalmunai', 'region' => 'Region 3'],
+            'KO' => ['name' => 'Mannar', 'region' => 'Region 3'],
+            'TR' => ['name' => 'Trincomalee', 'region' => 'Region 3'],
+            'VU' => ['name' => 'Vavuniya', 'region' => 'Region 3'],
+        ];
+    }
+
+    /**
+     * Get RTOM to region mapping (legacy support)
+     */
+    private function getRtomToRegionMap()
+    {
+        $rtomData = $this->getRtomData();
+        $map = [];
+        foreach ($rtomData as $code => $data) {
+            $map[$code] = $data['region'];
+        }
+        return $map;
+    }
+
+    /**
      * Get region for a given RTOM code
      */
     private function getRegionForRtom($rtomCode)
     {
-        $rtomToRegionMap = [
-            // Metro Region
-            'CO' => 'Metro Region', 'MA' => 'Metro Region', 'ND' => 'Metro Region',
-            'HK' => 'Metro Region', 'KX' => 'Metro Region', 'WT' => 'Metro Region',
-            'RM' => 'Metro Region',
-            
-            // Region 1
-            'AN' => 'Region 1', 'CW' => 'Region 1', 'GP' => 'Region 1',
-            'KA' => 'Region 1', 'KU' => 'Region 1', 'MT' => 'Region 1',
-            'NE' => 'Region 1', 'PO' => 'Region 1', 'KI' => 'Region 1',
-            
-            // Region 2
-            'AV' => 'Region 2', 'BA' => 'Region 2', 'BW' => 'Region 2',
-            'GA' => 'Region 2', 'HB' => 'Region 2', 'HA' => 'Region 2',
-            'KL' => 'Region 2', 'KG' => 'Region 2', 'RA' => 'Region 2',
-            
-            // Region 3
-            'AM' => 'Region 3', 'BT' => 'Region 3', 'JA' => 'Region 3',
-            'KM' => 'Region 3', 'KO' => 'Region 3', 'TR' => 'Region 3',
-            'VU' => 'Region 3',
-        ];
-        
+        $rtomToRegionMap = $this->getRtomToRegionMap();
         return $rtomToRegionMap[$rtomCode] ?? null;
     }
 }

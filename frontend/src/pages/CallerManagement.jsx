@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import "./EmployeeManagement.css";
+import "./CallerManagement.css";
 import SearchBar from "../components/SearchBar";
 import "../components/SearchBar.css";
-import EmployeeTable from "../components/EmployeeTable";
-import "../components/EmployeeTable.css";
-import AddEmployeeModal from "../components/AddEmployeeModal";
+import CallerTable from "../components/CallerTable";
+import "../components/CallerTable.css";
+import AddCallerModal from "../components/AddCallerModal";
 
-function EmployeeManagement() {
+function CallerManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [searchFilter, setSearchFilter] = useState({ searchTerm: "", filterType: "All" });
@@ -31,19 +31,19 @@ function EmployeeManagement() {
     <>
       <div className="title">Caller Management</div>
       <hr />
-      <SearchBar 
+      <SearchBar
         onAddClick={handleAddClick}
         onSearch={handleSearch}
         onFilterChange={handleFilterChange}
         searchPlaceholder="Search by name, caller ID, or email..."
       />
-      <AddEmployeeModal 
+      <AddCallerModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSuccess={handleAddSuccess}
       />
-      <div className="employee-container">
-        <EmployeeTable 
+      <div className="caller-container">
+        <CallerTable
           refreshTrigger={refreshTrigger}
           searchFilter={searchFilter}
         />
@@ -52,4 +52,5 @@ function EmployeeManagement() {
   );
 }
 
-export default EmployeeManagement;
+export default CallerManagement;
+

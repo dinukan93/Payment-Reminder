@@ -41,7 +41,10 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   if (requiredRole) {
     let hasAccess = false;
 
-    if (requiredRole === 'admin') {
+    // Handle array of roles
+    if (Array.isArray(requiredRole)) {
+      hasAccess = requiredRole.includes(userRole);
+    } else if (requiredRole === 'admin') {
       // Allow all admin types to access admin routes
       hasAccess = isAdminRole;
     } else if (requiredRole === 'superadmin') {

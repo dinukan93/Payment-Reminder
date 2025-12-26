@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import "./EmployeeTable.css";
+import "./CallerTable.css";
 import API_BASE_URL from "../config/api";
-import EditEmployeeModal from "./EditEmployeeModal";
+import EditCallerModal from "./EditCallerModal";
 import TaskHistoryModal from "./TaskHistoryModal";
 import { showSuccess, showError, showWarning } from "./Notifications";
 
-function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
+function CallerTable({ refreshTrigger, searchFilter = {} }) {
   const [callers, setCallers] = useState([]);
   const [filteredCallers, setFilteredCallers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,12 +26,26 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
 
   const fetchCallers = async () => {
     try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/callers`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/callers`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
       const result = await response.json();
-      
-      if (result.success && result.data) {
+
+      console.log('API Response:', result);
+      console.log('Is Array?', Array.isArray(result));
+      console.log('Callers count:', Array.isArray(result) ? result.length : 'N/A');
+
+      // API returns array directly (backend filters by RTOM for supervisors)
+      if (Array.isArray(result)) {
+        setCallers(result);
+      } else if (result && result.data) {
         setCallers(result.data);
+      } else {
+        setCallers([]);
       }
       setLoading(false);
     } catch (error) {
@@ -80,7 +94,7 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
 
   const handleEditSave = (updatedCaller) => {
     setCallers(callers.map(c => c._id === updatedCaller._id ? updatedCaller : c));
-    showSuccess('Employee updated successfully');
+    showSuccess('Caller updated successfully');
   };
 
   const handleHistoryClose = () => {
@@ -94,7 +108,7 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
         const response = await fetch(`${API_BASE_URL}/callers/${caller._id}`, {
           method: 'DELETE'
         });
-        
+
         const data = await response.json();
 
         if (response.ok) {
@@ -131,8 +145,8 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
 
   return (
     <>
-      <div className="table-card" style={{border: 'none'}}>
-        <table className="employee-table">
+      <div className="table-card" style={{ border: 'none' }}>
+        <table className="caller-table">
           <thead>
             <tr>
               <th>Caller</th>
@@ -163,11 +177,11 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
                     </span>
                   </td>
                   <td>
-                    <button 
+                    <button
                       onClick={() => handleShowHistory(caller)}
-                      style={{ 
-                        background: 'none', 
-                        border: 'none', 
+                      style={{
+                        background: 'none',
+                        border: 'none',
                         cursor: 'pointer',
                         marginRight: '10px',
                         color: '#1488ee',
@@ -177,11 +191,11 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
                     >
                       <i className="bi bi-clock-history"></i>
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleEdit(caller)}
-                      style={{ 
-                        background: 'none', 
-                        border: 'none', 
+                      style={{
+                        background: 'none',
+                        border: 'none',
                         cursor: 'pointer',
                         marginRight: '10px',
                         color: '#4CAF50',
@@ -193,11 +207,11 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
                     </button>
                     {/* Delete button - Only visible to rtom_admin */}
                     {userRole === 'rtom_admin' && (
-                      <button 
+                      <button
                         onClick={() => handleDelete(caller)}
-                        style={{ 
-                          background: 'none', 
-                          border: 'none', 
+                        style={{
+                          background: 'none',
+                          border: 'none',
                           cursor: 'pointer',
                           color: '#f44336',
                           fontSize: '18px'
@@ -222,14 +236,14 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
         </table>
       </div>
 
-      <EditEmployeeModal 
+      <EditCallerModal
         show={showEditModal}
         caller={selectedCaller}
         onClose={handleEditClose}
         onSave={handleEditSave}
       />
 
-      <TaskHistoryModal 
+      <TaskHistoryModal
         show={showHistoryModal}
         caller={selectedCaller}
         onClose={handleHistoryClose}
@@ -238,4 +252,5 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
   );
 }
 
-export default EmployeeTable;
+export default CallerTable;
+

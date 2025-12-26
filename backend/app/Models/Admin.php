@@ -95,9 +95,10 @@ class Admin extends Authenticatable
         if ($this->isSuperAdmin()) {
             // Superadmin can see all customers
             return $query;
-        } elseif ($this->isRegionAdmin() && $this->region) {
-            // Region admin can see all customers in their region
-            return $query->where('region', $this->region);
+        } elseif ($this->isRegionAdmin()) {
+            // Region admin can see all customers (no region column in customers table)
+            // Could filter by RTOM if needed in the future
+            return $query;
         } elseif ($this->isRtomAdmin() && $this->rtom) {
             // RTOM admin can see only customers in their RTOM
             return $query->where('rtom', $this->rtom);

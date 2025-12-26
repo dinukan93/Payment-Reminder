@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import './EditEmployeeModal.css';
+import './EditCallerModal.css';
 import API_BASE_URL from '../config/api';
 
-function EditEmployeeModal({ show, caller, onClose, onSave }) {
+function EditCallerModal({ show, caller, onClose, onSave }) {
   const [formData, setFormData] = useState({
     name: '',
     callerId: '',
@@ -42,7 +42,7 @@ function EditEmployeeModal({ show, caller, onClose, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim() || !formData.callerId.trim()) {
       setError('Name and Caller ID are required');
       return;
@@ -84,13 +84,13 @@ function EditEmployeeModal({ show, caller, onClose, onSave }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content edit-employee-modal" onClick={e => e.stopPropagation()}>
+      <div className="modal-content edit-caller-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{isSupervisor ? 'Enable/Disable Caller' : 'Edit Caller'}</h2>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
 
-        <form onSubmit={handleSubmit} className="edit-employee-form">
+        <form onSubmit={handleSubmit} className="edit-caller-form">
           {error && <div className="error-message">{error}</div>}
 
           {/* Supervisors only see status field */}
@@ -99,7 +99,7 @@ function EditEmployeeModal({ show, caller, onClose, onSave }) {
               <p style={{ marginBottom: '20px', color: '#666' }}>
                 Caller: <strong>{formData.name}</strong> ({formData.callerId})
               </p>
-              
+
               <div className="form-group">
                 <label>Status</label>
                 <select
@@ -211,4 +211,4 @@ function EditEmployeeModal({ show, caller, onClose, onSave }) {
   );
 }
 
-export default EditEmployeeModal;
+export default EditCallerModal;

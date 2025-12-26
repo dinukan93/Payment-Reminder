@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import "./AddEmployeeModal.css";
+import React, { useState, useEffect } from "react";
+import "./AddCallerModal.css";
 import API_BASE_URL from "../config/api";
 import { showSuccess } from "./Notifications";
 
-function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
+function AddCallerModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -14,6 +14,26 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
     maxLoad: 20,
     status: "AVAILABLE"
   });
+
+  // Fetch next available callerId when modal opens
+  useEffect(() => {
+    const fetchNextCallerId = async () => {
+      if (!isOpen) return;
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_BASE_URL}/callers/next-id`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.nextCallerId) {
+          setFormData(prev => ({ ...prev, callerId: data.nextCallerId }));
+        }
+      } catch (err) {
+        // fallback: leave blank
+      }
+    };
+    fetchNextCallerId();
+  }, [isOpen]);
   const [error, setError] = useState("");
 
   const handleInputChange = (e) => {
@@ -122,8 +142,8 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
               id="callerId"
               name="callerId"
               value={formData.callerId}
-              onChange={handleInputChange}
-              placeholder="Enter caller ID"
+              readOnly
+              placeholder="Auto-generated Caller ID"
               required
             />
           </div>
@@ -210,4 +230,4 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
   );
 }
 
-export default AddEmployeeModal;
+export default AddCallerModal;

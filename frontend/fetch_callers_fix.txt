@@ -1,0 +1,28 @@
+  const fetchCallers = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/callers`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      const result = await response.json();
+      
+      // API returns array directly
+      if (Array.isArray(result)) {
+        setCallers(result);
+      } else if (result && result.data) {
+        setCallers(result.data);
+      } else {
+        console.log('Unexpected response format:', result);
+        setCallers([]);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching callers:', error);
+      setCallers([]);
+      setLoading(false);
+    }
+  };

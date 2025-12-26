@@ -1,0 +1,12 @@
+.edit-caller-modal {
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.edit-caller-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}

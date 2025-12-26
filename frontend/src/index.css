@@ -93,7 +93,7 @@ body.dark-mode {
 .dark-mode .admin-dashboard,
 .dark-mode .admin-tasks,
 .dark-mode .customer-management,
-.dark-mode .employee-management,
+.dark-mode .caller-management,
 .dark-mode .main-content {
   background-color: var(--bg-primary) !important;
   color: var(--text-primary) !important;
@@ -126,11 +126,12 @@ body.dark-mode {
   color: var(--text-primary) !important;
 }
 
-.dark-mode .admin-stats-grid{
-    background-color: transparent !important;
+.dark-mode .admin-stats-grid {
+  background-color: transparent !important;
 
   color: var(--text-primary) !important;
 }
+
 .dark-mode .stat-card,
 .dark-mode .admin-stat-card {
   box-shadow: 0 2px 8px var(--shadow) !important;
