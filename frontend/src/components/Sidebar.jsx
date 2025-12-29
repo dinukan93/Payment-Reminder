@@ -10,6 +10,8 @@ import { RiSettings4Line } from "react-icons/ri";
 import { TbLogout2 } from "react-icons/tb";
 import { NavLink } from "react-router-dom";
 import { MdOutlineFileUpload } from "react-icons/md";
+import { RiAdminLine } from "react-icons/ri";
+import { FaFilter } from "react-icons/fa";
 
 export default function Sidebar() {
   // Get user role from localStorage
