@@ -112,7 +112,7 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
         <div className="profile-card">
           <div className="profile-avatar">
             <img
-              src={user.avatar || "https://via.placeholder.com/80"}
+              src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=random&color=fff&size=80`}
               alt={user.name}
               onError={(e) => {
                 console.log('Avatar failed to load, using fallback');

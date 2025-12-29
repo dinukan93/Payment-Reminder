@@ -201,7 +201,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
           ) : requests.length > 0 ? (
             <div className="requests-list">
               {requests.map((request, index) => (
-                <div key={request.id} className="requests-summary-card">
+                <div key={request.id || index} className="requests-summary-card">
                   <div
                     className="summary-header clickable"
                     onClick={() => toggleRequest(request.id)}
