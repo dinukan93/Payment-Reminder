@@ -93,7 +93,7 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
   };
 
   const handleEditSave = (updatedCaller) => {
-    setCallers(callers.map(c => c._id === updatedCaller._id ? updatedCaller : c));
+    setCallers(callers.map(c => c.id === updatedCaller.id ? updatedCaller : c));
     showSuccess('Caller updated successfully');
   };
 
@@ -105,7 +105,7 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
   const handleDelete = async (caller) => {
     if (window.confirm(`Are you sure you want to delete ${caller.name}?`)) {
       try {
-        const response = await fetch(`${API_BASE_URL}/callers/${caller._id}`, {
+        const response = await fetch(`${API_BASE_URL}/callers/${caller.id}`, {
           method: 'DELETE'
         });
 
@@ -161,7 +161,7 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
           <tbody>
             {filteredCallers.length > 0 ? (
               filteredCallers.map((caller) => (
-                <tr key={caller._id}>
+                <tr key={caller.id || caller.callerId}>
                   <td>{caller.name}</td>
                   <td>{caller.callerId}</td>
                   <td>{caller.rtom || '-'}</td>

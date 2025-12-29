@@ -42,14 +42,14 @@ function AdminTasks() {
 
         // Show all unassigned customers (not already assigned to a caller and not completed)
         const unassignedCustomers = customersData
-          .filter(c => !c.assignedTo && c.status !== 'COMPLETED')
+          .filter(c => !c.assigned_to && c.status !== 'COMPLETED')
           .map(customer => ({
-            id: customer._id,
-            accountNumber: customer.accountNumber,
-            name: customer.name,
-            contactNumber: customer.contactNumber || "N/A",
-            amountOverdue: customer.amountOverdue || 0,
-            daysOverdue: customer.daysOverdue || 0,
+            id: customer.id,
+            accountNumber: customer.ACCOUNT_NUM,
+            name: customer.CUSTOMER_NAME,
+            contactNumber: customer.MOBILE_CONTACT_TEL || "N/A",
+            amountOverdue: customer.NEW_ARREARS || 0,
+            daysOverdue: customer.AGE_MONTHS || 0,
             status: customer.status || "UNASSIGNED"
           }));
 

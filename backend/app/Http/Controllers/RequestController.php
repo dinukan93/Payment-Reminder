@@ -7,25 +7,98 @@ use App\Models\Request as TaskRequest;
 use App\Models\Caller;
 use App\Models\Customer;
 use App\Models\FilteredCustomer;
+use App\Models\Admin;
+use Illuminate\Support\Facades\Log;
 
 class RequestController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->attributes->get('user');
-        $tokenData = $request->attributes->get('token_data');
-        
-        $query = TaskRequest::with('caller');
-        
-        if ($tokenData->userType === 'caller') {
-            $query->where('caller_id', $user->id);
-        } elseif ($tokenData->userType === 'admin' && $tokenData->role !== 'superadmin') {
-            $query->whereHas('caller', function ($q) use ($user) {
-                $q->where('rtom', $user->rtom);
+        try {
+            $user = $request->user();
+
+            Log::info('RequestController index called', [
+                'user' => $user ? get_class($user) : 'null',
+                'user_id' => $user ? $user->id : 'null',
+                'query_params' => $request->all()
+            ]);
+
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $query = TaskRequest::query();
+
+            // Check if user is a Caller or Admin
+            if ($user instanceof Caller) {
+                Log::info('User is a Caller', ['caller_id' => $user->id]);
+                // Callers see only their own requests (ignore query parameters)
+                $query->where('caller_id', $user->id);
+
+                // Callers can filter by status
+                if ($request->has('status')) {
+                    $query->where('status', $request->status);
+                }
+            } elseif ($user instanceof Admin) {
+                Log::info('User is an Admin', ['admin_id' => $user->id]);
+                // Handle query parameters from frontend (for admins only)
+                if ($request->has('callerId')) {
+                    $query->where('caller_id', $request->callerId);
+                }
+
+                if ($request->has('status')) {
+                    $query->where('status', $request->status);
+                }
+
+                // Admins see requests based on their role
+                if (!$user->isSuperAdmin()) {
+                    // Get accessible caller IDs based on admin role
+                    $callerQuery = Caller::query();
+
+                    if ($user->isRegionAdmin() && $user->region) {
+                        $callerQuery->where('region', $user->region);
+                    } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $user->rtom) {
+                        $callerQuery->where('rtom', $user->rtom);
+                    }
+
+                    $callerIds = $callerQuery->pluck('id')->toArray();
+
+                    if (!empty($callerIds)) {
+                        $query->whereIn('caller_id', $callerIds);
+                    } else {
+                        // No accessible callers, return empty result
+                        $query->whereRaw('1 = 0');
+                    }
+                }
+                // Superadmin sees all requests (no filter)
+            } else {
+                Log::warning('User is neither Caller nor Admin', ['user_class' => get_class($user)]);
+            }
+
+            $results = $query->orderBy('sent_date', 'desc')->get();
+
+            // Attach customer details to each request
+            $results->transform(function ($req) {
+                if (!empty($req->customer_ids)) {
+                    $req->customers = FilteredCustomer::whereIn('id', $req->customer_ids)->get();
+                } else {
+                    $req->customers = [];
+                }
+                return $req;
             });
+
+            Log::info('Returning results', ['count' => $results->count()]);
+
+            return response()->json($results);
+        } catch (\Exception $e) {
+            Log::error('Request index error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'error' => 'Failed to fetch requests',
+                'message' => $e->getMessage()
+            ], 500);
         }
-        
-        return response()->json($query->orderBy('sent_date', 'desc')->get());
     }
 
     public function store(Request $request)
@@ -34,9 +107,9 @@ class RequestController extends Controller
             'caller_id' => 'required|exists:callers,id',
             'customer_ids' => 'required|array'
         ]);
-        
+
         $caller = Caller::findOrFail($validated['caller_id']);
-        
+
         $taskRequest = TaskRequest::create([
             'task_id' => 'TASK-' . time() . '-' . rand(1000, 9999),
             'caller_id' => $caller->id,
@@ -46,11 +119,11 @@ class RequestController extends Controller
             'status' => 'PENDING',
             'customer_ids' => $validated['customer_ids']
         ]);
-        
-        // Assign customers to caller
-        Customer::whereIn('id', $validated['customer_ids'])
-            ->update(['assigned_to' => $caller->id]);
-        
+
+        // DO NOT assign customers to caller yet - wait for acceptance
+        // FilteredCustomer::whereIn('id', $validated['customer_ids'])
+        //    ->update(['assigned_to' => $caller->id]);
+
         return response()->json($taskRequest, 201);
     }
 
@@ -62,18 +135,39 @@ class RequestController extends Controller
     public function accept(Request $request, $id)
     {
         $taskRequest = TaskRequest::findOrFail($id);
+
+        // Check if already accepted
+        if ($taskRequest->status === 'ACCEPTED') {
+            return response()->json($taskRequest);
+        }
+
         $taskRequest->update(['status' => 'ACCEPTED']);
-        
+
+        // Assign customers to caller in the database
+        // This is crucial now that we don't assign them during creation
+        if ($taskRequest->customer_ids) {
+            FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
+                ->update(['assigned_to' => $taskRequest->caller_id]);
+        }
+
         // Update caller's currentLoad
         $caller = $taskRequest->caller;
-        $activeRequests = TaskRequest::where('caller_id', $caller->id)
-            ->where('status', 'ACCEPTED')
-            ->get();
-        
-        $caller->currentLoad = $activeRequests->sum('customers_sent');
-        $caller->taskStatus = 'busy';
+
+        // Recalculate load based on assigned customers in the database
+        // This is more accurate than summing requests
+        $assignedCount = FilteredCustomer::where('assigned_to', $caller->id)
+            ->where('status', '!=', 'COMPLETED')
+            ->count();
+
+        $caller->currentLoad = $assignedCount;
+
+        // Update task status if needed
+        if ($caller->currentLoad > 0) {
+            $caller->taskStatus = 'busy';
+        }
+
         $caller->save();
-        
+
         return response()->json($taskRequest);
     }
 
@@ -81,29 +175,28 @@ class RequestController extends Controller
     {
         $taskRequest = TaskRequest::findOrFail($id);
         $taskRequest->update(['status' => 'DECLINED']);
-        
+
         // Unassign customers from working table
         FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
             ->update(['assigned_to' => null]);
-        
+
         return response()->json($taskRequest);
     }
 
     public function cancel(Request $request, $id)
     {
-        $user = $request->attributes->get('user');
-        $tokenData = $request->attributes->get('token_data');
-        
+        $user = $request->user();
+
         // Only admins can cancel requests
-        if ($tokenData->userType !== 'admin') {
+        if (!($user instanceof Admin)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized. Only admins can cancel requests.'
             ], 403);
         }
-        
+
         $taskRequest = TaskRequest::findOrFail($id);
-        
+
         // Check if request is already accepted or declined
         if (in_array($taskRequest->status, ['ACCEPTED', 'DECLINED', 'CANCELLED'])) {
             return response()->json([
@@ -111,9 +204,9 @@ class RequestController extends Controller
                 'message' => 'Cannot cancel a request that has already been ' . strtolower($taskRequest->status) . '.'
             ], 400);
         }
-        
+
         // Verify admin has permission (RTOM-based for supervisors)
-        if ($tokenData->role === 'supervisor' || $tokenData->role === 'rtom_admin') {
+        if ($user->role === 'supervisor' || $user->role === 'rtom_admin') {
             $caller = Caller::find($taskRequest->caller_id);
             if ($caller && $caller->rtom !== $user->rtom) {
                 return response()->json([
@@ -121,7 +214,7 @@ class RequestController extends Controller
                     'message' => 'You can only cancel requests in your RTOM.'
                 ], 403);
             }
-        } elseif ($tokenData->role === 'region_admin') {
+        } elseif ($user->role === 'region_admin') {
             $caller = Caller::find($taskRequest->caller_id);
             if ($caller && $caller->region !== $user->region) {
                 return response()->json([
@@ -130,14 +223,16 @@ class RequestController extends Controller
                 ], 403);
             }
         }
-        
+
         // Cancel the request
         $taskRequest->update(['status' => 'CANCELLED']);
-        
-        // Unassign customers from working table
-        FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
-            ->update(['assigned_to' => null]);
-        
+
+        // Unassign customers from working table if they were somehow assigned (though they shouldn't be now)
+        if ($taskRequest->customer_ids) {
+            FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
+                ->update(['assigned_to' => null]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Request cancelled successfully.',

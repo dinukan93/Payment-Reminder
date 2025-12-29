@@ -14,7 +14,7 @@ class CustomerController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -23,8 +23,8 @@ class CustomerController extends Controller
             }
 
             // Start with base query - use FilteredCustomer (working table)
-            $query = FilteredCustomer::with(['assignedCaller']);
-            
+            $query = FilteredCustomer::query();
+
             // Apply role-based filtering
             if ($user instanceof Admin) {
                 // If user is an admin, apply region/RTOM filtering based on role
@@ -45,32 +45,32 @@ class CustomerController extends Controller
                 // Caller sees only assigned customers
                 $query->where('assigned_to', $user->id);
             }
-            
+
             // Additional filters from request
             if ($request->has('status')) {
                 $query->where('status', $request->status);
             }
-            
+
             if ($request->has('region')) {
                 $query->where('REGION', $request->region);
             }
-            
+
             if ($request->has('rtom')) {
                 $query->where('RTOM', $request->rtom);
             }
-            
+
             if ($request->has('callerId')) {
                 $query->where('assigned_to', $request->callerId);
             }
-            
+
             $customers = $query->orderBy('created_at', 'desc')->get();
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $customers,
                 'count' => $customers->count()
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Customer index error', ['error' => $e->getMessage()]);
             return response()->json([
@@ -94,15 +94,15 @@ class CustomerController extends Controller
                 'NEW_ARREARS' => 'nullable|numeric',
                 'status' => 'nullable|string'
             ]);
-            
+
             $customer = FilteredCustomer::create($validated);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $customer,
                 'message' => 'Customer created successfully'
             ], 201);
-            
+
         } catch (\Exception $e) {
             Log::error('Customer store error', ['error' => $e->getMessage()]);
             return response()->json([
@@ -117,8 +117,8 @@ class CustomerController extends Controller
     {
         try {
             $user = $request->user();
-            $customer = FilteredCustomer::with(['assignedCaller'])->findOrFail($id);
-            
+            $customer = FilteredCustomer::findOrFail($id);
+
             // Check if user has access to this customer
             if ($user instanceof Admin && !$user->isSuperAdmin()) {
                 if ($user->isRegionAdmin() && $customer->REGION !== $user->region) {
@@ -133,12 +133,12 @@ class CustomerController extends Controller
                     ], 403);
                 }
             }
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $customer
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Customer show error', ['error' => $e->getMessage()]);
             return response()->json([
@@ -154,7 +154,7 @@ class CustomerController extends Controller
         try {
             $user = $request->user();
             $customer = FilteredCustomer::findOrFail($id);
-            
+
             // Check if user has access to update this customer
             if ($user instanceof Admin && !$user->isSuperAdmin()) {
                 if ($user->isRegionAdmin() && $customer->REGION !== $user->region) {
@@ -169,15 +169,15 @@ class CustomerController extends Controller
                     ], 403);
                 }
             }
-            
+
             $customer->update($request->all());
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $customer,
                 'message' => 'Customer updated successfully'
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Customer update error', ['error' => $e->getMessage()]);
             return response()->json([
@@ -193,7 +193,7 @@ class CustomerController extends Controller
         try {
             $user = $request->user();
             $customer = FilteredCustomer::findOrFail($id);
-            
+
             // Only superadmin can delete customers
             if ($user instanceof Admin && !$user->isSuperAdmin()) {
                 return response()->json([
@@ -201,14 +201,14 @@ class CustomerController extends Controller
                     'message' => 'Only superadmin can delete customers'
                 ], 403);
             }
-            
+
             $customer->delete();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Customer deleted successfully'
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Customer destroy error', ['error' => $e->getMessage()]);
             return response()->json([
@@ -228,12 +228,12 @@ class CustomerController extends Controller
             'promised_date' => 'nullable|date',
             'payment_made' => 'boolean'
         ]);
-        
+
         $validated['customer_id'] = $id;
         $contactHistory = ContactHistory::create($validated);
-        
+
         FilteredCustomer::findOrFail($id)->update(['status' => 'contacted']);
-        
+
         return response()->json($contactHistory, 201);
     }
 

@@ -90,21 +90,20 @@ class Admin extends Authenticatable
     // Get customers based on admin's role and region/rtom
     public function getAccessibleCustomers()
     {
-        $query = \App\Models\Customer::query();
+        $query = \App\Models\FilteredCustomer::query();
 
         if ($this->isSuperAdmin()) {
             // Superadmin can see all customers
             return $query;
-        } elseif ($this->isRegionAdmin()) {
-            // Region admin can see all customers (no region column in customers table)
-            // Could filter by RTOM if needed in the future
-            return $query;
+        } elseif ($this->isRegionAdmin() && $this->region) {
+            // Region admin can see all customers in their region
+            return $query->where('REGION', $this->region);
         } elseif ($this->isRtomAdmin() && $this->rtom) {
             // RTOM admin can see only customers in their RTOM
-            return $query->where('rtom', $this->rtom);
+            return $query->where('RTOM', $this->rtom);
         } elseif ($this->isSupervisor() && $this->rtom) {
             // Supervisor can see customers in their RTOM
-            return $query->where('rtom', $this->rtom);
+            return $query->where('RTOM', $this->rtom);
         }
 
         // Default: no access

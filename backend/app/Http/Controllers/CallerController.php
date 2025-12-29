@@ -12,7 +12,7 @@ class CallerController extends Controller
     public function nextCallerId(Request $request)
     {
         // Get the highest numeric part of callerId (format: callerXXX)
-        $max = \App\Models\Caller::selectRaw("MAX(CAST(SUBSTRING(callerId, 7) AS UNSIGNED)) as max_num")
+        $max = Caller::selectRaw("MAX(CAST(SUBSTRING(callerId, 7) AS UNSIGNED)) as max_num")
             ->whereRaw("callerId REGEXP '^caller[0-9]+$'")
             ->first();
         $nextNum = ($max && $max->max_num) ? ((int) $max->max_num + 1) : 1;

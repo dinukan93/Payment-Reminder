@@ -17,18 +17,23 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
       try {
         const userData = JSON.parse(localStorage.getItem('userData') || '{}');
         const callerId = userData.id;
-        
+
         console.log('UserProfile - Logged in user data:', userData);
         console.log('UserProfile - Fetching requests for callerId:', callerId);
-        
+
         if (!callerId) return;
-        
-        const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`);
-        
+
+        const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
         if (response.ok) {
           const data = await response.json();
           const count = data.data?.length || 0;
-          console.log('Checking pending requests from MongoDB... Found:', count);
+          console.log('Checking pending requests from MySQL... Found:', count);
           setPendingRequestsCount(count);
         }
       } catch (error) {
@@ -37,10 +42,10 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
     };
 
     checkPendingRequests();
-    
+
     // Check every 10 seconds for new requests
     const interval = setInterval(checkPendingRequests, 10000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -103,11 +108,11 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
           <span>Your Profile</span>
           <i className="bi bi-three-dots-vertical"></i>
         </div>
-        
+
         <div className="profile-card">
           <div className="profile-avatar">
-            <img 
-              src={user.avatar || "https://via.placeholder.com/80"} 
+            <img
+              src={user.avatar || "https://via.placeholder.com/80"}
               alt={user.name}
               onError={(e) => {
                 console.log('Avatar failed to load, using fallback');
@@ -116,13 +121,13 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
             />
           </div>
           <p className="profile-greeting">Good Morning, ({user.name})</p>
-          
+
           <div className="profile-actions">
             <button className="profile-action-btn">
               <i className="bi bi-bell"></i>
             </button>
-            <button 
-              className="profile-action-btn requests-btn" 
+            <button
+              className="profile-action-btn requests-btn"
               onClick={handleRequestsClick}
             >
               <i className="bi bi-envelope"></i>
@@ -130,8 +135,8 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
                 <span className="notification-badge">{pendingRequestsCount}</span>
               )}
             </button>
-            <button 
-              className="profile-action-btn calendar-btn" 
+            <button
+              className="profile-action-btn calendar-btn"
               onClick={handleCalendarClick}
             >
               <i className="bi bi-calendar"></i>
@@ -151,8 +156,8 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
               const heightPercentage = maxCalls > 0 ? (call / maxCalls) * 100 : 0;
               return (
                 <div key={index} className="call-bar" title={`${days[index]}: ${call} call${call !== 1 ? 's' : ''}`}>
-                  <div 
-                    className="bar" 
+                  <div
+                    className="bar"
                     style={{ height: `${heightPercentage}%` }}
                   ></div>
                   <span className="day-label">{days[index]}</span>
@@ -169,7 +174,7 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
               <i className="bi bi-plus-circle"></i>
             </button>
           </div>
-          
+
           <div className="payments-list">
             {user.completedPayments && user.completedPayments.length > 0 ? (
               user.completedPayments.map((payment, index) => (
@@ -188,7 +193,7 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
               </div>
             )}
           </div>
-          
+
           <button className="see-all-btn">See All</button>
         </div>
       </div>

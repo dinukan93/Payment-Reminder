@@ -42,7 +42,8 @@ class AdminController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $query = Caller::with('customers');
+
+        $query = Caller::query();
 
         // Apply filtering based on user role
         if ($user->isRegionAdmin() && $user->region) {

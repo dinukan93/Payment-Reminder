@@ -38,17 +38,22 @@ function CallerDashboard() {
         console.error('No caller ID found in localStorage');
         return;
       }
-      const response = await fetch(`${API_BASE_URL}/customers?callerId=${callerId}`);
+      const response = await fetch(`${API_BASE_URL}/customers?callerId=${callerId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
       const data = await response.json();
       if (data.success && data.data) {
         // Separate customers by status
-        const contacted = data.data.filter(c => 
-          c.status === 'PENDING' && 
-          c.contactHistory && 
+        const contacted = data.data.filter(c =>
+          c.status === 'PENDING' &&
+          c.contactHistory &&
           c.contactHistory.length > 0
         );
-        const overdue = data.data.filter(c => 
-          c.status === 'OVERDUE' || 
+        const overdue = data.data.filter(c =>
+          c.status === 'OVERDUE' ||
           (c.status === 'PENDING' && (!c.contactHistory || c.contactHistory.length === 0))
         );
         const completed = data.data.filter(c => c.status === 'COMPLETED');
@@ -78,10 +83,10 @@ function CallerDashboard() {
   const updateStats = (contacted, overdue, completedCount = 0) => {
     // Get all assigned customers (excluding COMPLETED)
     const allActiveCustomers = contacted.length + overdue.length;
-    
+
     // Only count customers with contact history as "contacted"
     const contactedCount = contacted.length;
-    
+
     const pendingCount = contacted.length + overdue.length;
 
     setStats([
@@ -102,23 +107,23 @@ function CallerDashboard() {
   // Handle saving customer details from modal
   const handleSaveCustomerDetails = async (accountNumber, data) => {
     const { callOutcome, customerResponse, paymentMade, promisedDate } = data;
-    
+
     console.log('=== SAVING CUSTOMER DETAILS (CallerDashboard) ===');
     console.log('Account/ID:', accountNumber);
     console.log('Data:', data);
-    
+
     // Check if customer is in overdue list
     const overdueCustomer = overduePayments.find(p => p.id === accountNumber);
     const existingCustomer = overdueCustomer || contactedCustomers.find(c => c.id === accountNumber);
-    
+
     if (!existingCustomer) {
       console.error('Customer not found');
       toast.error('Customer not found');
       return;
     }
-    
+
     console.log('Found customer:', existingCustomer.name, 'ID:', existingCustomer._id);
-    
+
     try {
       const requestBody = {
         callOutcome,
@@ -126,12 +131,12 @@ function CallerDashboard() {
         paymentMade,
         promisedDate
       };
-      
+
       console.log('Sending request to backend:', {
         url: `${API_BASE_URL}/customers/${existingCustomer._id}/contact`,
         body: requestBody
       });
-      
+
       // Save to backend API using the contact endpoint
       const response = await fetch(`${API_BASE_URL}/customers/${existingCustomer._id}/contact`, {
         method: 'PUT',
@@ -140,13 +145,13 @@ function CallerDashboard() {
         },
         body: JSON.stringify(requestBody)
       });
-      
+
       const result = await response.json();
       console.log('Backend response:', result);
-      
+
       if (result.success) {
         console.log(' Customer updated successfully in database');
-        
+
         // Refetch all customers from backend to get the latest data
         await fetchCustomers();
         console.log(' Customers refreshed from database');
@@ -181,7 +186,7 @@ function CallerDashboard() {
     const today = new Date();
     today.setHours(23, 59, 59, 999); // Set to end of today
     const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 6); 
+    sevenDaysAgo.setDate(today.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
     // Get all assigned customers from backend data (contacted, overdue, and completed)
@@ -216,7 +221,7 @@ function CallerDashboard() {
 
   // Get user data from localStorage
   const storedUserData = JSON.parse(localStorage.getItem('userData') || '{}');
-  
+
   const userData = {
     name: storedUserData.name || "Caller",
     avatar: storedUserData.avatar,
@@ -228,7 +233,7 @@ function CallerDashboard() {
   // Using useMemo to ensure it recalculates when contactedCustomers changes
   const promisedPayments = useMemo(() => {
     const paymentsWithDates = [];
-    
+
     contactedCustomers.forEach(customer => {
       // Only include customers with PENDING status (not COMPLETED)
       if (customer.status === "PENDING" && customer.contactHistory && customer.contactHistory.length > 0) {
@@ -244,7 +249,7 @@ function CallerDashboard() {
         }
       }
     });
-    
+
     return paymentsWithDates;
   }, [contactedCustomers]);
 
@@ -252,25 +257,25 @@ function CallerDashboard() {
     <div className="caller-dashboard">
       <div className="dashboard-header">
         <h1>Caller Dashboard</h1>
-         <p className="tasks-subtitle">Overview</p>
+        <p className="tasks-subtitle">Overview</p>
       </div>
 
       <div className="dashboard-layout">
         <div className="dashboard-main">
           <DashboardStats stats={stats} />
-          <ContactedCustomersTable 
-            customers={contactedCustomers} 
+          <ContactedCustomersTable
+            customers={contactedCustomers}
             onSaveDetails={handleSaveCustomerDetails}
           />
-          <OverduePaymentsTable 
-            payments={overduePayments} 
+          <OverduePaymentsTable
+            payments={overduePayments}
             onSaveDetails={handleSaveCustomerDetails}
           />
         </div>
-        
+
         <div className="dashboard-sidebar">
-          <UserProfile 
-            user={userData} 
+          <UserProfile
+            user={userData}
             promisedPayments={promisedPayments}
             onAcceptRequest={handleAcceptRequest}
           />

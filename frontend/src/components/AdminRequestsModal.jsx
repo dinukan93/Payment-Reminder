@@ -20,23 +20,28 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
   const fetchPendingRequests = async () => {
     setLoading(true);
     setError(null);
-    
+
     console.log('AdminRequestsModal - Fetching requests for callerId:', callerId);
-    
+
     try {
-      const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`);
-      
+      const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
       if (response.ok) {
         const result = await response.json();
         const data = result.data || result; // Handle both nested and flat response
-        
+
         console.log('AdminRequestsModal - Received requests:', data);
-        
+
         if (data && data.length > 0) {
           setRequests(data.map(req => ({
             id: req.requestId || req._id,
-            customers: req.customers,
-            customerCount: req.customers.length,
+            customers: req.customers || [],
+            customerCount: (req.customers || []).length,
             sentDate: req.sentDate,
             callerName: req.callerName,
             callerId: req.callerId,
@@ -70,7 +75,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
   const handleAcceptRequest = async (requestId) => {
     const request = requests.find(r => r.id === requestId);
     if (!request) return;
-    
+
     try {
       // Update request status in backend
       const response = await fetch(`${API_BASE_URL}/requests/${request.id}`, {
@@ -98,16 +103,16 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
           previousResponse: "No previous contact",
           contactHistory: []
         }));
-        
+
         // Call parent handler with all customers at once
         onAccept(allCustomersData);
-        
+
         // Remove this request from the list
         setRequests(requests.filter(r => r.id !== requestId));
-        
+
         // Notify parent that request is processed
         if (onRequestProcessed) onRequestProcessed();
-        
+
         showSuccess('Request accepted successfully!');
       } else {
         showError('Failed to accept request. Please try again.');
@@ -121,11 +126,11 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
   const handleDeclineRequest = async (requestId) => {
     const request = requests.find(r => r.id === requestId);
     if (!request) return;
-    
+
     const reason = prompt("Please provide a reason for declining:");
-    
+
     if (!reason) return;
-    
+
     try {
       // Update request status in backend
       const response = await fetch(`${API_BASE_URL}/requests/${request.id}`, {
@@ -143,13 +148,13 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
       if (response.ok) {
         // Decline the request
         onDecline(request.id);
-        
+
         // Remove this request from the list
         setRequests(requests.filter(r => r.id !== requestId));
-        
+
         // Notify parent that request is processed
         if (onRequestProcessed) onRequestProcessed();
-        
+
         showSuccess('Request declined successfully!');
       } else {
         showError('Failed to decline request. Please try again.');
@@ -197,8 +202,8 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
             <div className="requests-list">
               {requests.map((request, index) => (
                 <div key={request.id} className="requests-summary-card">
-                  <div 
-                    className="summary-header clickable" 
+                  <div
+                    className="summary-header clickable"
                     onClick={() => toggleRequest(request.id)}
                     style={{ cursor: 'pointer' }}
                   >
@@ -209,7 +214,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
                     </div>
                     <i className={`bi bi-chevron-${expandedRequests[request.id] ? 'up' : 'down'}`}></i>
                   </div>
-                  
+
                   {expandedRequests[request.id] && (
                     <>
                       <div className="summary-details">
@@ -244,7 +249,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
                       </div>
 
                       <div className="summary-actions">
-                        <button 
+                        <button
                           className="decline-all-btn"
                           onClick={() => handleDeclineRequest(request.id)}
                           disabled={loading}
@@ -252,7 +257,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
                           <i className="bi bi-x-circle"></i>
                           Decline
                         </button>
-                        <button 
+                        <button
                           className="accept-all-btn"
                           onClick={() => handleAcceptRequest(request.id)}
                           disabled={loading}
