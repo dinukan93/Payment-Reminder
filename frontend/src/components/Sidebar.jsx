@@ -10,90 +10,11 @@ import { RiSettings4Line } from "react-icons/ri";
 import { TbLogout2 } from "react-icons/tb";
 import { NavLink } from "react-router-dom";
 import { MdOutlineFileUpload } from "react-icons/md";
-import { RiAdminLine } from "react-icons/ri";
-import { FaFilter } from "react-icons/fa";
 
 export default function Sidebar() {
   // Get user role from localStorage
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const userRole = userData.role || 'caller';
-  
-  // Define admin roles
-  const adminRoles = ['superadmin', 'region_admin', 'rtom_admin', 'supervisor', 'admin', 'uploader'];
-  const isAdminRole = adminRoles.includes(userRole);
-
-  // For uploaders, show upload, POD filter, and customers
-  if (userRole === 'uploader') {
-    return (
-      <>
-        <div className="sidebar">
-          <div className="sidebar-logo">
-            <img src={Logo} alt="App Logo" />
-          </div>
-
-          <nav className="sidebar-menu">
-            <h4>Overview</h4>
-            <ul>
-              <li>
-                <NavLink
-                  to="/upload"
-                  className={({ isActive }) =>
-                    `menu-item${isActive ? " active" : ""}`
-                  }
-                >
-                  <MdOutlineFileUpload />
-                  <span>Upload</span>
-                </NavLink>
-              </li>
-              <li>
-                <NavLink
-                  to="/pod-filter"
-                  className={({ isActive }) =>
-                    `menu-item${isActive ? " active" : ""}`
-                  }
-                >
-                  <FaFilter />
-                  <span>POD Filter</span>
-                </NavLink>
-              </li>
-              <li>
-                <NavLink
-                  to="/customers"
-                  className={({ isActive }) =>
-                    `menu-item${isActive ? " active" : ""}`
-                  }
-                >
-                  <GoPeople />
-                  <span>Customers</span>
-                </NavLink>
-              </li>
-            </ul>
-          </nav>
-          <div className="sidebar-end">
-            <ul>
-              <li>
-                <NavLink
-                  to="/settings"
-                  className={({ isActive }) =>
-                    `menu-item${isActive ? " active" : ""}`
-                  }
-                >
-                  <RiSettings4Line />
-                  <span>Settings</span>
-                </NavLink>
-              </li>
-              <li className="logout">
-                <NavLink to="/logout" className="menu-item">
-                  <TbLogout2 />
-                  <span>Logout</span>
-                </NavLink>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </>
-    );
-  }
 
   return (
     <>
@@ -105,114 +26,77 @@ export default function Sidebar() {
         <nav className="sidebar-menu">
           <h4>Overview</h4>
           <ul>
-            {userRole === 'superadmin' ? (
+            <li>
+              <NavLink
+                to={userRole === 'admin' ? '/admin' : '/dashboard'}
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <BiHomeAlt2 />
+                <span>Dashboard</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to={userRole === 'admin' ? '/admin/tasks' : '/tasks'}
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <FaTasks />
+                <span>Task</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/customers"
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <GoPeople />
+                <span>Customers</span>
+              </NavLink>
+            </li>
+            {userRole === 'admin' && (
               <li>
                 <NavLink
-                  to="/superadmin"
+                  to="/employees"
                   className={({ isActive }) =>
                     `menu-item${isActive ? " active" : ""}`
                   }
                 >
-                  <RiAdminLine />
-                  <span>Admin Management</span>
+                  <TbPhoneCall />
+                  <span>Callers</span>
                 </NavLink>
               </li>
-            ) : userRole === 'region_admin' ? (
-              <li>
-                <NavLink
-                  to="/region-admin-dashboard"
-                  className={({ isActive }) =>
-                    `menu-item${isActive ? " active" : ""}`
-                  }
-                >
-                  <RiAdminLine />
-                  <span>RTOM Admins</span>
-                </NavLink>
-              </li>
-            ) : userRole === 'rtom_admin' ? (
-              <li>
-                <NavLink
-                  to="/rtom-admin-dashboard"
-                  className={({ isActive }) =>
-                    `menu-item${isActive ? " active" : ""}`
-                  }
-                >
-                  <RiAdminLine />
-                  <span>Supervisors</span>
-                </NavLink>
-              </li>
-            ) : userRole === 'supervisor' ? (
-              <li>
-                <NavLink
-                  to="/admin"
-                  className={({ isActive }) =>
-                    `menu-item${isActive ? " active" : ""}`
-                  }
-                >
-                  <RiAdminLine />
-                  <span>Admin Dashboard</span>
-                </NavLink>
-              </li>
-            ) : (
-              <>
-                <li>
-                  <NavLink
-                    to={isAdminRole && userRole !== 'uploader' ? '/admin' : '/dashboard'}
-                    className={({ isActive }) =>
-                      `menu-item${isActive ? " active" : ""}`
-                    }
-                  >
-                    <BiHomeAlt2 />
-                    <span>Dashboard</span>
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink
-                    to={isAdminRole && userRole !== 'uploader' ? '/admin/tasks' : '/tasks'}
-                    className={({ isActive }) =>
-                      `menu-item${isActive ? " active" : ""}`
-                    }
-                  >
-                    <FaTasks />
-                    <span>Task</span>
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink
-                    to="/customers"
-                    className={({ isActive }) =>
-                      `menu-item${isActive ? " active" : ""}`
-                    }
-                  >
-                    <GoPeople />
-                    <span>Customers</span>
-                  </NavLink>
-                </li>
-                {(userRole === 'admin' || userRole === 'rtom_admin') && (
-                  <li>
-                    <NavLink
-                      to="/employees"
-                      className={({ isActive }) =>
-                        `menu-item${isActive ? " active" : ""}`
-                      }
-                    >
-                      <TbPhoneCall />
-                      <span>Callers</span>
-                    </NavLink>
-                  </li>
-                )}
-                <li>
-                  <NavLink
-                    to={userRole === 'admin' ? '/admin/reports' : '/reports'}
-                    className={({ isActive }) =>
-                      `menu-item${isActive ? " active" : ""}`
-                    }
-                  >
-                    <IoFileTrayFullOutline />
-                    <span>Report</span>
-                  </NavLink>
-                </li>
-              </>
+            )}
+            
+            <li>
+              <NavLink
+                to={userRole === 'admin' ? '/admin/reports' : '/reports'}
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <IoFileTrayFullOutline />
+                <span>Report</span>
+              </NavLink>
+            </li>
+            {userRole === 'admin' && (
+            <li>
+              
+              <NavLink
+                to="/upload"
+                className={({ isActive }) =>
+                  `menu-item${isActive ? " active" : ""}`
+                }
+              >
+                <MdOutlineFileUpload />
+                <span>Upload</span>
+              </NavLink>
+            </li>
             )}
           </ul>
         </nav>

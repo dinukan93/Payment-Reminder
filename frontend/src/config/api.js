@@ -1,7 +1,6 @@
 // API Configuration
-// Points to Laravel backend
-const API_BASE_URL = 'http://localhost:4000/api';
+// Development: Uses localhost:5176 with Vite proxy routing /api to backend:4000
+// Production: Uses same port for frontend and backend with /api prefix
+const API_BASE_URL = (import.meta.env.VITE_API_URL ) ;
 
-export { API_BASE_URL };
 export default API_BASE_URL;
-
