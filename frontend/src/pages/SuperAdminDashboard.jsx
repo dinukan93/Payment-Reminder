@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import './SuperAdminDashboard.css';
 import { API_BASE_URL } from '../config/api';
+import { secureFetch } from '../utils/api';
 import { ALL_REGIONS, getRtomsForRegion, ALL_RTOMS, getRegionForRtom } from '../config/regionConfig';
 
 function SuperAdminDashboard() {
@@ -27,7 +28,7 @@ function SuperAdminDashboard() {
 
   const fetchAdmins = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/superadmin/admins`, {
+      const response = await secureFetch(`/superadmin/admins`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -80,13 +81,13 @@ function SuperAdminDashboard() {
     }
 
     try {
-      const url = editingAdmin 
-        ? `${API_BASE_URL}/superadmin/admins/${editingAdmin._id}`
-        : `${API_BASE_URL}/superadmin/admins`;
-      
+      const url = editingAdmin
+        ? `/superadmin/admins/${editingAdmin._id}`
+        : `/superadmin/admins`;
+
       const method = editingAdmin ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
+
+      const response = await secureFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -123,12 +124,12 @@ function SuperAdminDashboard() {
       region: admin.region || '',
       rtom: admin.rtom || ''
     });
-    
+
     // Set available RTOMs if region is selected
     if (admin.region) {
       setAvailableRtoms(getRtomsForRegion(admin.region));
     }
-    
+
     setShowModal(true);
   };
 
@@ -138,7 +139,7 @@ function SuperAdminDashboard() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/superadmin/admins/${adminId}`, {
+      const response = await secureFetch(`/superadmin/admins/${adminId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -187,7 +188,7 @@ function SuperAdminDashboard() {
     <div className="superadmin-dashboard">
       <div className="dashboard-header">
         <h1>Admin Management</h1>
-        <button 
+        <button
           className="btn-primary"
           onClick={() => {
             resetForm();
@@ -239,12 +240,12 @@ function SuperAdminDashboard() {
                   </td>
                   <td>
                     <div className="action-buttons">
-                      <button 
+                      <button
                         className="btn-edit"
                         onClick={() => handleEdit(admin)}
-                        style={{ 
-                          background: 'none', 
-                          border: 'none', 
+                        style={{
+                          background: 'none',
+                          border: 'none',
                           cursor: 'pointer',
                           marginRight: '10px',
                           color: '#4CAF50',
@@ -254,12 +255,12 @@ function SuperAdminDashboard() {
                       >
                         <i className="bi bi-pencil-square"></i>
                       </button>
-                      <button 
+                      <button
                         className="btn-delete"
                         onClick={() => handleDelete(admin._id)}
-                        style={{ 
-                          background: 'none', 
-                          border: 'none', 
+                        style={{
+                          background: 'none',
+                          border: 'none',
                           cursor: 'pointer',
                           color: '#f44336',
                           fontSize: '18px'
@@ -284,7 +285,7 @@ function SuperAdminDashboard() {
               <h2>{editingAdmin ? 'Edit Admin' : 'Add New Admin'}</h2>
               <button className="close-btn" onClick={handleCloseModal}>×</button>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Admin ID *</label>
@@ -413,7 +414,7 @@ function SuperAdminDashboard() {
                       ))}
                     </select>
                   </div>
-                  
+
                   {formData.rtom && formData.region && (
                     <div className="form-group">
                       <label>Region (Auto-assigned)</label>

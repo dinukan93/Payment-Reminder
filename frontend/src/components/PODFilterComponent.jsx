@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import "./PODFilterComponent.css";
 import { showSuccess, showError } from "./Notifications";
-import * as XLSX from 'xlsx';
+import { readExcelFile as readExcel, jsonToExcelBuffer } from '../utils/excelUtils';
 import JSZip from 'jszip';
 import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 import { getRegionForRtom } from "../config/regionConfig";
 
 function PODFilterComponent({ isOpen, onClose }) {
@@ -14,7 +15,7 @@ function PODFilterComponent({ isOpen, onClose }) {
   const [results, setResults] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [showResultsModal, setShowResultsModal] = useState(false);
-  
+
   // Configurable thresholds
   const [config, setConfig] = useState({
     billMin: 3000,
@@ -48,14 +49,14 @@ function PODFilterComponent({ isOpen, onClose }) {
 
   const handleExcludeFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    const validFiles = files.filter(file => 
+    const validFiles = files.filter(file =>
       file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
     );
-    
+
     if (validFiles.length !== files.length) {
       showError("Some files were not Excel files and were skipped");
     }
-    
+
     setExcludeFiles(prev => [...prev, ...validFiles]);
     showSuccess(`${validFiles.length} exclusion file(s) added`);
     e.target.value = null; // Clear the input to allow re-uploading
@@ -68,74 +69,58 @@ function PODFilterComponent({ isOpen, onClose }) {
   // Convert Excel date serial number to YYYY-MM-DD format
   const convertExcelDate = (excelDate) => {
     if (!excelDate) return null;
-    
+
     // If it's already a string date, return it
     if (typeof excelDate === 'string') return excelDate;
-    
+
     // If it's a number (Excel serial date)
     if (typeof excelDate === 'number') {
       // Excel dates are days since 1900-01-01 (with leap year bug)
       const excelEpoch = new Date(1899, 11, 30); // Dec 30, 1899
       const days = Math.floor(excelDate);
       const date = new Date(excelEpoch.getTime() + days * 24 * 60 * 60 * 1000);
-      
+
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
-      
+
       return `${year}-${month}-${day}`;
     }
-    
+
     return null;
   };
 
-  const readExcelFile = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array', cellDates: false });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { raw: false });
-          
-          // Convert date fields and trim all field names
-          const processedData = jsonData.map(row => {
-            const processed = {};
-            
-            // Trim all field names and copy values
-            Object.keys(row).forEach(key => {
-              const trimmedKey = key.trim();
-              processed[trimmedKey] = row[key];
-            });
-            
-            // Convert RUN_DATE if it exists
-            if (processed['RUN_DATE']) {
-              const converted = convertExcelDate(processed['RUN_DATE']);
-              if (converted) processed['RUN_DATE'] = converted;
-            }
-            
-            return processed;
-          });
-          
-          resolve(processedData);
-        } catch (error) {
-          reject(error);
+  const readExcelFile = async (file) => {
+    try {
+      const jsonData = await readExcel(file);
+
+      // Convert date fields if needed
+      const processedData = jsonData.map(row => {
+        const processed = { ...row };
+
+        // Convert RUN_DATE if it exists and is in Excel date format
+        if (processed['RUN_DATE']) {
+          const converted = convertExcelDate(processed['RUN_DATE']);
+          if (converted) processed['RUN_DATE'] = converted;
         }
-      };
-      reader.onerror = reject;
-      reader.readAsArrayBuffer(file);
-    });
+
+        return processed;
+      });
+
+      return processedData;
+    } catch (error) {
+      throw error;
+    }
   };
 
   // Step 1: Separate VIP Records First (with VIP-specific criteria)
   const separateVIPRecords = (data) => {
     setCurrentStep(1);
-    
+
     const vipRecords = [];
     const nonVipRecords = [];
     const excludedVIPs = [];
-    
+
     data.forEach((row, index) => {
       const creditClass = String(row['CREDIT_CLASS_NAME'] || row['credit_class_name'] || row['Credit Class'] || '');
       const creditClassUpper = creditClass.toUpperCase().trim();
@@ -143,38 +128,38 @@ function PODFilterComponent({ isOpen, onClose }) {
       const productStatusUpper = productStatus.toUpperCase().trim();
       const medium = String(row['MEDIUM'] || row['medium'] || '');
       const mediumUpper = medium.toUpperCase().trim();
-      
+
       // Find NEW_ARREARS column for VIP check
-      const arrearsKey = Object.keys(row).find(key => 
+      const arrearsKey = Object.keys(row).find(key =>
         key.toUpperCase().includes('NEW_ARREARS')
       );
       const totalOutstanding = parseFloat(String(row[arrearsKey] || 0).replace(/,/g, ''));
-      
+
       // Check if VIP (includes VIP, VIP - Low, VIP - Medium etc.)
-      const isVIP = creditClassUpper === 'VIP' || 
-                    creditClassUpper.includes('VIP');
-      
+      const isVIP = creditClassUpper === 'VIP' ||
+        creditClassUpper.includes('VIP');
+
       // VIP Criteria: Medium is COPPER or FTTH, Product Status OK, and Outstanding > 2400
       const isMediumCopperOrFTTH = mediumUpper.includes('COPPER') || mediumUpper.includes('FTTH');
       const isOK = productStatusUpper === 'OK';
       const meetsOutstanding = totalOutstanding > 2400;
-      
+
       if (isVIP && isMediumCopperOrFTTH && isOK && meetsOutstanding) {
         vipRecords.push({ ...row, classification: 'VIP', path: 'VIP Path' });
       } else if (isVIP && (!isMediumCopperOrFTTH || !isOK || !meetsOutstanding)) {
         // VIP records that don't meet criteria
-        excludedVIPs.push({ 
-          ...row, 
+        excludedVIPs.push({
+          ...row,
           exclusionReason: !isMediumCopperOrFTTH ? 'Medium not COPPER/FTTH' :
-                          !isOK ? 'Product Status not OK (SU)' : 
-                          'Outstanding <= 2400'
+            !isOK ? 'Product Status not OK (SU)' :
+              'Outstanding <= 2400'
         });
       } else if (!isVIP) {
         // Non-VIP records pass through for standard filtration
         nonVipRecords.push(row);
       }
     });
-    
+
     // Comprehensive status breakdown for all VIP records found
     let totalVIPsFound = 0;
     let vipWithOKStatus = 0;
@@ -184,13 +169,13 @@ function PODFilterComponent({ isOpen, onClose }) {
     let vipNotCopperFTTH = 0;
     let vipOver2400 = 0;
     let vipUnder2400 = 0;
-    
+
     // VIPs meeting medium + outstanding criteria (regardless of status)
     let vipMeetingMediumAndOutstanding = 0;
     let vipMeetingMediumAndOutstanding_OK = 0;
     let vipMeetingMediumAndOutstanding_SU = 0;
     let vipMeetingMediumAndOutstanding_Other = 0;
-    
+
     data.forEach(row => {
       const creditClass = String(row['CREDIT_CLASS_NAME'] || row['credit_class_name'] || row['Credit Class'] || '');
       const creditClassUpper = creditClass.toUpperCase().trim();
@@ -198,32 +183,32 @@ function PODFilterComponent({ isOpen, onClose }) {
       const productStatusUpper = productStatus.toUpperCase().trim();
       const medium = String(row['MEDIUM'] || row['medium'] || '');
       const mediumUpper = medium.toUpperCase().trim();
-      
-      const arrearsKey = Object.keys(row).find(key => 
+
+      const arrearsKey = Object.keys(row).find(key =>
         key.toUpperCase().includes('NEW_ARREARS')
       );
       const totalOutstanding = parseFloat(String(row[arrearsKey] || 0).replace(/,/g, ''));
-      
-      const isVIP = creditClassUpper === 'VIP' || 
-                    creditClassUpper.includes('VIP')
-                 ;
-      
+
+      const isVIP = creditClassUpper === 'VIP' ||
+        creditClassUpper.includes('VIP')
+        ;
+
       if (isVIP) {
         totalVIPsFound++;
-        
+
         if (productStatusUpper === 'OK') vipWithOKStatus++;
         else if (productStatusUpper === 'SU') vipWithSUStatus++;
         else vipWithOtherStatus++;
-        
+
         const isCopperFTTH = mediumUpper.includes('COPPER') || mediumUpper.includes('FTTH');
         const isOver2400 = totalOutstanding > 2400;
-        
+
         if (isCopperFTTH) vipCopperFTTH++;
         else vipNotCopperFTTH++;
-        
+
         if (isOver2400) vipOver2400++;
         else vipUnder2400++;
-        
+
         // Check if VIP meets medium + outstanding criteria
         if (isCopperFTTH && isOver2400) {
           vipMeetingMediumAndOutstanding++;
@@ -233,7 +218,7 @@ function PODFilterComponent({ isOpen, onClose }) {
         }
       }
     });
-    
+
     // Count VIP records by status for debugging
     const vipOKCount = vipRecords.filter(r => {
       const status = String(r['LATEST_PRODUCT_STATUS'] || '').toUpperCase().trim();
@@ -243,58 +228,58 @@ function PODFilterComponent({ isOpen, onClose }) {
       const status = String(r['LATEST_PRODUCT_STATUS'] || '').toUpperCase().trim();
       return status === 'SU';
     }).length;
-    
+
     return { vipRecords, nonVipRecords };
   };
 
   // Step 2: Initial Filtration - Customer Type: Medium – COPPER & FTTH, Product Status: OK (Voice), Total Outstanding > 2,400
   const applyInitialFiltration = (data) => {
     setCurrentStep(2);
-    
+
     const filtered = [];
     const excludedRecords = [];
-    
+
     data.forEach(row => {
       const medium = String(row['MEDIUM'] || row['medium'] || '');
       const productStatus = String(row['LATEST_PRODUCT_STATUS'] || '');
-      
+
       // Find NEW_ARREARS column (handles date suffix like NEW_ARREARS_20251022)
-      const arrearsKey = Object.keys(row).find(key => 
+      const arrearsKey = Object.keys(row).find(key =>
         key.toUpperCase().includes('NEW_ARREARS')
       );
       const totalOutstanding = parseFloat(String(row[arrearsKey] || 0).replace(/,/g, ''));
-      
+
       const mediumUpper = medium.toUpperCase();
       const productStatusUpper = productStatus.toUpperCase();
-      
+
       // Check Medium is COPPER or FTTH
       const isMediumCopperOrFTTH = mediumUpper.includes('COPPER') || mediumUpper.includes('FTTH');
-      
+
       // Check Product Status: OK (not SU)
       const isOK = productStatusUpper === 'OK';
-      
+
       // Total Outstanding > 2,400
       const meetsOutstanding = totalOutstanding > 2400;
-      
+
       if (isMediumCopperOrFTTH && isOK && meetsOutstanding) {
         filtered.push(row);
       } else {
-        excludedRecords.push({ 
-          ...row, 
-          exclusionReason: !isMediumCopperOrFTTH ? 'Medium not COPPER/FTTH' : 
-                          !isOK ? 'Product Status not OK (likely SU)' : 
-                          'Arrears <= 2400'
+        excludedRecords.push({
+          ...row,
+          exclusionReason: !isMediumCopperOrFTTH ? 'Medium not COPPER/FTTH' :
+            !isOK ? 'Product Status not OK (likely SU)' :
+              'Arrears <= 2400'
         });
       }
     });
-    
+
     return { filtered, excludedRecords };
   };
 
   // Step 3: Apply Exclusions
   const applyExclusions = async (data) => {
     setCurrentStep(3);
-    
+
     if (excludeFiles.length === 0) {
       return data;
     }
@@ -306,7 +291,7 @@ function PODFilterComponent({ isOpen, onClose }) {
       try {
         const excludeData = await readExcelFile(file);
         excludeData.forEach(row => {
-          const accountNumber = row['ACCOUNT_NUM'] ;
+          const accountNumber = row['ACCOUNT_NUM'];
           if (accountNumber) {
             excludedAccounts.add(accountNumber.toString());
           }
@@ -318,7 +303,7 @@ function PODFilterComponent({ isOpen, onClose }) {
 
     // Filter out excluded accounts
     return data.filter(row => {
-      const accountNumber = (row['ACCOUNT_NUM']  || '').toString();
+      const accountNumber = (row['ACCOUNT_NUM'] || '').toString();
       return !excludedAccounts.has(accountNumber);
     });
   };
@@ -326,7 +311,7 @@ function PODFilterComponent({ isOpen, onClose }) {
   // Step 4: Enterprise Path & Retail/Micro FTTH Classification
   const applyEnterprisePath = (data) => {
     setCurrentStep(4);
-    
+
     const enterpriseGovRecords = [];
     const enterpriseLargeRecords = [];
     const enterpriseMediumRecords = [];
@@ -334,31 +319,31 @@ function PODFilterComponent({ isOpen, onClose }) {
     const wholesalesRecords = [];
     const retailMicroRecords = [];
     const remainingRecords = [];
-    
+
     data.forEach((row, index) => {
       // Find bill column (handles spaces in column names)
-      const billKey = Object.keys(row).find(key => 
+      const billKey = Object.keys(row).find(key =>
         key.trim().toUpperCase().includes('BILL') && key.trim().toUpperCase().includes('MNY')
       );
-      
+
       const lastBillValue = parseFloat(String(row[billKey] || 0).replace(/,/g, ''));
-      const subSegment = String(row['SLT_GL_SUB_SEGMENT']  || '');
+      const subSegment = String(row['SLT_GL_SUB_SEGMENT'] || '');
       const subSegmentUpper = subSegment.toUpperCase();
       const medium = String(row['MEDIUM'] || row['medium'] || '');
       const mediumUpper = medium.toUpperCase();
       const region = String(row['REGION'] || row['region'] || 'Unknown');
-      
+
       // Check if FTTH Medium with Retail or Micro Business Segment
       // Criteria: Medium must be FTTH AND Sub-Segment must be Retail or Micro Business
       const isFTTH = mediumUpper.includes('FTTH');
       const isRetailOrMicro = subSegment.includes('Retail') || subSegment.includes('Micro Business');
-      
+
       if (isFTTH && isRetailOrMicro) {
         // FTTH + Retail/Micro Business: Check bill value
         if (lastBillValue > 5000) {
           // Bill Value Over 5,000 → Billing Center (Region)
-          retailMicroRecords.push({ 
-            ...row, 
+          retailMicroRecords.push({
+            ...row,
             lastBillValue,
             assignedTo: `Region - ${region} (Billing Center)`,
             path: 'Retail/Micro FTTH - High Bill Value',
@@ -372,44 +357,44 @@ function PODFilterComponent({ isOpen, onClose }) {
         // Check bill value for enterprise categorization
         // Categorize by segment type
         if (subSegmentUpper.includes('GOVERNMENT') || subSegmentUpper.includes('INST')) {
-          enterpriseGovRecords.push({ 
-            ...row, 
+          enterpriseGovRecords.push({
+            ...row,
             path: 'Enterprise - Government Institutions',
             assignedTo: 'Enterprise Gov',
             enterpriseType: 'Government Institutions',
-            lastBillValue 
+            lastBillValue
           });
         } else if (subSegmentUpper.includes('LARGE')) {
-          enterpriseLargeRecords.push({ 
-            ...row, 
+          enterpriseLargeRecords.push({
+            ...row,
             path: 'Enterprise - Large',
             assignedTo: 'Enterprise Large',
             enterpriseType: 'Large',
-            lastBillValue 
+            lastBillValue
           });
         } else if (subSegmentUpper.includes('MEDIUM')) {
-          enterpriseMediumRecords.push({ 
-            ...row, 
+          enterpriseMediumRecords.push({
+            ...row,
             path: 'Enterprise - Medium',
             assignedTo: 'Enterprise Medium',
             enterpriseType: 'Medium',
-            lastBillValue 
+            lastBillValue
           });
         } else if (subSegmentUpper.includes('SME')) {
-          smeRecords.push({ 
-            ...row, 
+          smeRecords.push({
+            ...row,
             path: 'SME',
             assignedTo: 'SME',
             enterpriseType: 'SME',
-            lastBillValue 
+            lastBillValue
           });
         } else if (subSegmentUpper.includes('WHOLESALE')) {
           wholesalesRecords.push({
-            ...row, 
+            ...row,
             path: 'Wholesales',
             assignedTo: 'Wholesales',
             enterpriseType: 'Wholesales',
-            lastBillValue 
+            lastBillValue
           });
         } else {
           remainingRecords.push({ ...row, lastBillValue });
@@ -418,66 +403,66 @@ function PODFilterComponent({ isOpen, onClose }) {
         remainingRecords.push({ ...row, lastBillValue });
       }
     });
-    
-    const totalEnterprise = enterpriseGovRecords.length + enterpriseLargeRecords.length + 
-                           enterpriseMediumRecords.length + wholesalesRecords.length;
-    
-    return { 
-      enterpriseGovRecords, 
-      enterpriseLargeRecords, 
+
+    const totalEnterprise = enterpriseGovRecords.length + enterpriseLargeRecords.length +
+      enterpriseMediumRecords.length + wholesalesRecords.length;
+
+    return {
+      enterpriseGovRecords,
+      enterpriseLargeRecords,
       enterpriseMediumRecords,
-      smeRecords, 
+      smeRecords,
       wholesalesRecords,
       retailMicroRecords,
-      remainingRecords 
+      remainingRecords
     };
   };
 
   // Step 5: Retail/Micro FTTH Path - Assignment based on bill value (Sequential Assignment)
   const applyRetailMicroPath = (data, configLimits) => {
     setCurrentStep(5);
-    
+
     // Counters for sequential assignment
     let callCenterStaffCount = 0;
     let ccCount = 0;
     let staffCount = 0;
-    
+
     return data.map(row => {
       // If already assigned to billing center (bill > 5000), skip further processing
       if (row.directToBillingCenter) {
         return row;
       }
-      
+
       // Use lastBillValue if available, otherwise find bill column dynamically
       let billValue = row.lastBillValue;
       if (!billValue) {
-        const billKey = Object.keys(row).find(key => 
+        const billKey = Object.keys(row).find(key =>
           key.trim().toUpperCase().includes('BILL') && key.trim().toUpperCase().includes('MNY')
         );
         billValue = parseFloat(String(row[billKey] || 0).replace(/,/g, ''));
       }
-      
+
       // Find LATEST_BILL_MNY column
-      const billKey = Object.keys(row).find(key => 
+      const billKey = Object.keys(row).find(key =>
         key.toUpperCase() === 'LATEST_BILL_MNY'
       );
       const latestBill = parseFloat(String(row[billKey] || 0).replace(/,/g, ''));
-      
+
       const region = String(row['REGION'] || row['region'] || 'Unknown');
-      
+
       // Find NEW_ARREARS column for checking arrears range
-      const arrearsKey = Object.keys(row).find(key => 
+      const arrearsKey = Object.keys(row).find(key =>
         key.toUpperCase().includes('NEW_ARREARS')
       );
       const newArrears = parseFloat(String(row[arrearsKey] || 0).replace(/,/g, ''));
-      
+
       // Bill Value <= 5,000: Check NEW_ARREARS (3000 < NEW_ARREARS < 10000)
       if (newArrears > 3000 && newArrears < 10000) {
         // Sequential assignment: First fill Call Center Staff, then CC, then Staff, then Billing Center
         if (callCenterStaffCount < configLimits.callCenterStaffLimit) {
           callCenterStaffCount++;
-          return { 
-            ...row, 
+          return {
+            ...row,
             assignedTo: 'Call Center Staff',
             accountLimit: `${configLimits.callCenterStaffLimit} Accounts`,
             assignedNumber: callCenterStaffCount,
@@ -488,8 +473,8 @@ function PODFilterComponent({ isOpen, onClose }) {
           };
         } else if (ccCount < configLimits.ccLimit) {
           ccCount++;
-          return { 
-            ...row, 
+          return {
+            ...row,
             assignedTo: 'CC',
             accountLimit: `${configLimits.ccLimit} Accounts`,
             assignedNumber: ccCount,
@@ -500,8 +485,8 @@ function PODFilterComponent({ isOpen, onClose }) {
           };
         } else if (staffCount < configLimits.staffLimit) {
           staffCount++;
-          return { 
-            ...row, 
+          return {
+            ...row,
             assignedTo: 'Staff',
             accountLimit: `${configLimits.staffLimit} Accounts`,
             assignedNumber: staffCount,
@@ -512,8 +497,8 @@ function PODFilterComponent({ isOpen, onClose }) {
           };
         } else {
           // All call center quotas filled → Billing Center
-          return { 
-            ...row, 
+          return {
+            ...row,
             assignedTo: `Region - ${region} (Billing Center)`,
             path: 'Retail/Micro FTTH - Call Center Quota Full',
             billValue,
@@ -523,8 +508,8 @@ function PODFilterComponent({ isOpen, onClose }) {
         }
       } else {
         // NEW_ARREARS outside range (<=3000 or >=10000) → Region (Billing Center)
-        return { 
-          ...row, 
+        return {
+          ...row,
           assignedTo: `Region - ${region} (Billing Center)`,
           path: 'Retail/Micro FTTH - Out of Arrears Range',
           billValue,
@@ -547,23 +532,23 @@ function PODFilterComponent({ isOpen, onClose }) {
 
     try {
       const mainData = await readExcelFile(mainExcel);
-      
+
       // Step 1: Separate VIP Records First (with VIP-specific criteria: not SU, >2400)
       const { vipRecords, nonVipRecords } = separateVIPRecords(mainData);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Step 2: Initial Filtration (for non-VIP records only)
       const { filtered: filteredData, excludedRecords } = applyInitialFiltration(nonVipRecords);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Step 3: Apply Exclusions (to non-VIP records)
       let nonVipAfterExclusion = await applyExclusions(filteredData);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Step 4: Enterprise Path & Retail/Micro FTTH Classification (Bill > 5000 with segments + ALL FTTH Retail/Micro)
       const { enterpriseGovRecords, enterpriseLargeRecords, enterpriseMediumRecords, smeRecords, wholesalesRecords, retailMicroRecords: retailMicroFromStep4, remainingRecords } = applyEnterprisePath(nonVipAfterExclusion);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Combine all enterprise records
       const allEnterpriseRecords = [
         ...enterpriseGovRecords,
@@ -571,17 +556,17 @@ function PODFilterComponent({ isOpen, onClose }) {
         ...enterpriseMediumRecords,
         ...wholesalesRecords
       ];
-      
+
       // Step 5: Further process Retail/Micro FTTH records (bill value assignment with config)
       const retailMicroProcessed = applyRetailMicroPath(retailMicroFromStep4, config);
-      
+
       // Combine all processed data
       const allProcessedData = [
         ...vipRecords,
         ...allEnterpriseRecords,
         ...retailMicroProcessed
       ];
-      
+
       // Calculate statistics
       const stats = {
         totalRecords: mainData.length,
@@ -602,7 +587,7 @@ function PODFilterComponent({ isOpen, onClose }) {
         staff: retailMicroProcessed.filter(r => r.assignedTo === 'Staff').length,
         regionAssigned: retailMicroProcessed.filter(r => r.assignedTo?.includes('Region')).length
       };
-      
+
       setResults({
         allData: allProcessedData,
         vipData: vipRecords,
@@ -615,10 +600,10 @@ function PODFilterComponent({ isOpen, onClose }) {
         excludedData: excludedRecords,
         stats
       });
-      
+
       setCurrentStep(6);
       setShowResultsModal(true);
-      
+
       if (allProcessedData.length === 0) {
         showError("All records were filtered out. Check console for details.");
       } else {
@@ -637,12 +622,12 @@ function PODFilterComponent({ isOpen, onClose }) {
     if (!results) return;
 
     const date = new Date().toISOString().split('T')[0];
-    
+
     try {
       if (type === 'all') {
         // Download all files as separate Excel files in a ZIP
         const zip = new JSZip();
-        
+
         if (results.vipData.length > 0) {
           const vipSheet = XLSX.utils.json_to_sheet(results.vipData);
           const vipWorkbook = XLSX.utils.book_new();
@@ -650,7 +635,7 @@ function PODFilterComponent({ isOpen, onClose }) {
           const vipBuffer = XLSX.write(vipWorkbook, { bookType: 'xlsx', type: 'array' });
           zip.file(`VIP_Records_${date}.xlsx`, vipBuffer);
         }
-        
+
         if (results.enterpriseGovData.length > 0) {
           const govSheet = XLSX.utils.json_to_sheet(results.enterpriseGovData);
           const govWorkbook = XLSX.utils.book_new();
@@ -658,7 +643,7 @@ function PODFilterComponent({ isOpen, onClose }) {
           const govBuffer = XLSX.write(govWorkbook, { bookType: 'xlsx', type: 'array' });
           zip.file(`Enterprise_Gov_${date}.xlsx`, govBuffer);
         }
-        
+
         if (results.enterpriseLargeData.length > 0) {
           const largeSheet = XLSX.utils.json_to_sheet(results.enterpriseLargeData);
           const largeWorkbook = XLSX.utils.book_new();
@@ -666,7 +651,7 @@ function PODFilterComponent({ isOpen, onClose }) {
           const largeBuffer = XLSX.write(largeWorkbook, { bookType: 'xlsx', type: 'array' });
           zip.file(`Enterprise_Large_${date}.xlsx`, largeBuffer);
         }
-        
+
         if (results.enterpriseMediumData.length > 0) {
           const mediumSheet = XLSX.utils.json_to_sheet(results.enterpriseMediumData);
           const mediumWorkbook = XLSX.utils.book_new();
@@ -674,7 +659,7 @@ function PODFilterComponent({ isOpen, onClose }) {
           const mediumBuffer = XLSX.write(mediumWorkbook, { bookType: 'xlsx', type: 'array' });
           zip.file(`Enterprise_Medium_${date}.xlsx`, mediumBuffer);
         }
-        
+
         if (results.wholesalesData.length > 0) {
           const wholesalesSheet = XLSX.utils.json_to_sheet(results.wholesalesData);
           const wholesalesWorkbook = XLSX.utils.book_new();
@@ -682,7 +667,7 @@ function PODFilterComponent({ isOpen, onClose }) {
           const wholesalesBuffer = XLSX.write(wholesalesWorkbook, { bookType: 'xlsx', type: 'array' });
           zip.file(`Wholesales_${date}.xlsx`, wholesalesBuffer);
         }
-        
+
         if (results.smeData.length > 0) {
           const smeSheet = XLSX.utils.json_to_sheet(results.smeData);
           const smeWorkbook = XLSX.utils.book_new();
@@ -690,7 +675,7 @@ function PODFilterComponent({ isOpen, onClose }) {
           const smeBuffer = XLSX.write(smeWorkbook, { bookType: 'xlsx', type: 'array' });
           zip.file(`SME_${date}.xlsx`, smeBuffer);
         }
-        
+
         if (results.retailMicroData.length > 0) {
           const retailSheet = XLSX.utils.json_to_sheet(results.retailMicroData);
           const retailWorkbook = XLSX.utils.book_new();
@@ -698,7 +683,7 @@ function PODFilterComponent({ isOpen, onClose }) {
           const retailBuffer = XLSX.write(retailWorkbook, { bookType: 'xlsx', type: 'array' });
           zip.file(`Retail_Micro_${date}.xlsx`, retailBuffer);
         }
-        
+
         if (results.excludedData.length > 0) {
           const excludedSheet = XLSX.utils.json_to_sheet(results.excludedData);
           const excludedWorkbook = XLSX.utils.book_new();
@@ -706,7 +691,7 @@ function PODFilterComponent({ isOpen, onClose }) {
           const excludedBuffer = XLSX.write(excludedWorkbook, { bookType: 'xlsx', type: 'array' });
           zip.file(`Excluded_SU_${date}.xlsx`, excludedBuffer);
         }
-        
+
         if (results.allData.length > 0) {
           const allSheet = XLSX.utils.json_to_sheet(results.allData);
           const allWorkbook = XLSX.utils.book_new();
@@ -714,7 +699,7 @@ function PODFilterComponent({ isOpen, onClose }) {
           const allBuffer = XLSX.write(allWorkbook, { bookType: 'xlsx', type: 'array' });
           zip.file(`All_Records_${date}.xlsx`, allBuffer);
         }
-        
+
         // Generate ZIP and download
         const zipContent = await zip.generateAsync({ type: 'blob' });
         const link = document.createElement('a');
@@ -724,12 +709,12 @@ function PODFilterComponent({ isOpen, onClose }) {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(link.href);
-        
+
         showSuccess('All results downloaded as ZIP file successfully');
       } else {
         // Download individual file type
         const workbook = XLSX.utils.book_new();
-        
+
         if (type === 'vip') {
           const vipSheet = XLSX.utils.json_to_sheet(results.vipData);
           XLSX.utils.book_append_sheet(workbook, vipSheet, "VIP Records");
@@ -752,10 +737,10 @@ function PODFilterComponent({ isOpen, onClose }) {
           const excludedSheet = XLSX.utils.json_to_sheet(results.excludedData);
           XLSX.utils.book_append_sheet(workbook, excludedSheet, "Excluded (SU)");
         }
-        
+
         const fileName = `POD_Report_${type}_${date}.xlsx`;
         XLSX.writeFile(workbook, fileName);
-        
+
         showSuccess(`${type.toUpperCase()} results downloaded successfully`);
       }
     } catch (error) {
@@ -767,7 +752,7 @@ function PODFilterComponent({ isOpen, onClose }) {
   // Distribute filtered data to regions and RTOMs
   const distributeToRegionsAndRtoms = async () => {
     console.log('Distribution triggered. Results:', results);
-    
+
     if (!results || !results.allData) {
       showError("No data available to distribute. Please run filtration first.");
       console.error('No results or allData:', { results, hasAllData: results?.allData });
@@ -798,7 +783,7 @@ function PODFilterComponent({ isOpen, onClose }) {
           // Add REGION from RTOM if not present
           const rtomCode = row['RTOM'] || null;
           const region = rtomCode ? getRegionForRtom(rtomCode) : (row['REGION'] || null);
-          
+
           // Ensure ACCOUNT_NUMBER field exists for backend
           return {
             ...row,
@@ -823,7 +808,7 @@ function PODFilterComponent({ isOpen, onClose }) {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/distribution/distribute`, {
+      const response = await secureFetch(`/distribution/distribute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -855,10 +840,10 @@ function PODFilterComponent({ isOpen, onClose }) {
 
       if (data.success) {
         showSuccess(`Successfully distributed ${data.summary.created + data.summary.updated} customers to regions and RTOMs`);
-        
+
         // Show distribution summary
         console.log('Distribution Summary:', data.summary);
-        
+
         if (data.summary.errors > 0) {
           showError(`${data.summary.errors} records failed to distribute. Check console for details.`);
           console.error('Distribution errors:', data.errors);
@@ -881,7 +866,7 @@ function PODFilterComponent({ isOpen, onClose }) {
     setResults(null);
     setCurrentStep(0);
     setShowResultsModal(false);
-    
+
     // Clear file input values
     const mainExcelInput = document.getElementById('mainExcel');
     const excludeFilesInput = document.getElementById('excludeFiles');
@@ -903,8 +888,8 @@ function PODFilterComponent({ isOpen, onClose }) {
           {/* Progress Steps */}
           <div className="progress-steps">
             {steps.map((step, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={`step ${currentStep === index ? 'active' : ''} ${currentStep > index ? 'completed' : ''}`}
               >
                 <div className="step-number">{index + 1}</div>
@@ -929,7 +914,7 @@ function PODFilterComponent({ isOpen, onClose }) {
                   <div className="file-info">
                     <i className="fas fa-file-excel"></i>
                     <span>{mainExcel.name}</span>
-                    <button 
+                    <button
                       className="remove-file-btn"
                       onClick={(e) => {
                         e.preventDefault();
@@ -979,7 +964,7 @@ function PODFilterComponent({ isOpen, onClose }) {
                     <li key={index}>
                       <i className="fas fa-file-excel"></i>
                       <span>{file.name}</span>
-                      <button 
+                      <button
                         className="remove-btn"
                         onClick={() => removeExcludeFile(index)}
                       >
@@ -996,7 +981,7 @@ function PODFilterComponent({ isOpen, onClose }) {
           <div className="upload-section">
             <h3>3. Configure Account Distribution Limits</h3>
             <p className="config-description">
-              Configure account distribution limits for call center assignments. 
+              Configure account distribution limits for call center assignments.
               Retail/Micro FTTH records with NEW_ARREARS between 3,000 and 10,000 will be distributed across call centers.
             </p>
 
@@ -1005,30 +990,30 @@ function PODFilterComponent({ isOpen, onClose }) {
               <div className="config-grid">
                 <div className="config-item">
                   <label>Call Center Staff Limit:</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={config.callCenterStaffLimit}
-                    onChange={(e) => setConfig({...config, callCenterStaffLimit: parseInt(e.target.value)})}
+                    onChange={(e) => setConfig({ ...config, callCenterStaffLimit: parseInt(e.target.value) })}
                     placeholder="e.g., 30000"
                   />
                   <span className="config-hint">Maximum accounts for Call Center Staff</span>
                 </div>
                 <div className="config-item">
                   <label>Call Center Limit:</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={config.ccLimit}
-                    onChange={(e) => setConfig({...config, ccLimit: parseInt(e.target.value)})}
+                    onChange={(e) => setConfig({ ...config, ccLimit: parseInt(e.target.value) })}
                     placeholder="e.g., 5000"
                   />
                   <span className="config-hint">Maximum accounts for CC</span>
                 </div>
                 <div className="config-item">
                   <label>Staff Limit:</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={config.staffLimit}
-                    onChange={(e) => setConfig({...config, staffLimit: parseInt(e.target.value)})}
+                    onChange={(e) => setConfig({ ...config, staffLimit: parseInt(e.target.value) })}
                     placeholder="e.g., 3000"
                   />
                   <span className="config-hint">Maximum accounts for Staff</span>

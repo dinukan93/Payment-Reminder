@@ -1,24 +1,24 @@
 <?php
 
-namespace App\Http\Controllers;
+    namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Caller;
-use App\Models\Request as TaskRequest;
+    use Illuminate\Http\Request;
+    use App\Models\Caller;
+    use App\Models\Request as TaskRequest;
 
-class CallerController extends Controller
-{
-    // Returns the next available callerId (e.g., caller002 if caller001 exists)
-    public function nextCallerId(Request $request)
+    class CallerController extends Controller
     {
-        // Get the highest numeric part of callerId (format: callerXXX)
-        $max = Caller::selectRaw("MAX(CAST(SUBSTRING(callerId, 7) AS UNSIGNED)) as max_num")
-            ->whereRaw("callerId REGEXP '^caller[0-9]+$'")
-            ->first();
-        $nextNum = ($max && $max->max_num) ? ((int) $max->max_num + 1) : 1;
-        $nextId = 'caller' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
-        return response()->json(['nextCallerId' => $nextId]);
-    }
+        // Returns the next available callerId (e.g., caller002 if caller001 exists)
+        public function nextCallerId(Request $request)
+        {
+            // Get the highest numeric part of callerId (format: callerXXX)
+            $max = \App\Models\Caller::selectRaw("MAX(CAST(SUBSTRING(callerId, 7) AS UNSIGNED)) as max_num")
+                ->whereRaw("callerId REGEXP '^caller[0-9]+$'")
+                ->first();
+            $nextNum = ($max && $max->max_num) ? ((int)$max->max_num + 1) : 1;
+            $nextId = 'caller' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+            return response()->json(['nextCallerId' => $nextId]);
+        }
     public function index(Request $request)
     {
         $user = $request->user();
@@ -27,7 +27,7 @@ class CallerController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $query = Caller::query();
+        $query = Caller::with(['creator', 'customers']);
 
         // Apply role-based filtering if user is admin
         if (get_class($user) === 'App\Models\Admin') {

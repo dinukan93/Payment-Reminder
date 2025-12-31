@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./AddCallerModal.css";
 import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 import { showSuccess } from "./Notifications";
 
 function AddCallerModal({ isOpen, onClose, onSuccess }) {
@@ -21,7 +22,7 @@ function AddCallerModal({ isOpen, onClose, onSuccess }) {
       if (!isOpen) return;
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/callers/next-id`, {
+        const res = await secureFetch(`/callers/next-id`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -72,7 +73,7 @@ function AddCallerModal({ isOpen, onClose, onSuccess }) {
       setLoading(true);
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`${API_BASE_URL}/callers`, {
+      const response = await secureFetch(`/callers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./UploadPage.css";
 import { MdOutlineFileUpload } from "react-icons/md";
 import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 import { toast } from "react-toastify";
 import PODFilterComponent from "../components/PODFilterComponent";
 
@@ -25,7 +26,7 @@ const UploadPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const inputRef = useRef(null);
-  
+
   // Paid customers upload state
   const [paidFiles, setPaidFiles] = useState([]);
   const [paidDragActive, setPaidDragActive] = useState(false);
@@ -38,12 +39,12 @@ const UploadPage = () => {
   const [paidCurrentPage, setPaidCurrentPage] = useState(1);
   const [paidSearchTerm, setPaidSearchTerm] = useState("");
   const paidInputRef = useRef(null);
-  
+
   // Modal states
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showPaidPreviewModal, setShowPaidPreviewModal] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
+
   const navigate = useNavigate();
   const rowsPerPage = 20;
 
@@ -169,7 +170,7 @@ const UploadPage = () => {
     try {
       setPaidUploading(true);
 
-      setPaidFiles(prev => prev.map(f => 
+      setPaidFiles(prev => prev.map(f =>
         f.id === fileItem.id ? { ...f, status: 'uploading', progress: 0 } : f
       ));
 
@@ -178,8 +179,8 @@ const UploadPage = () => {
 
       const token = localStorage.getItem('token');
       console.log('Uploading paid customers file to:', `${API_BASE_URL}/upload/parse`);
-      
-      const response = await fetch(`${API_BASE_URL}/upload/parse`, {
+
+      const response = await secureFetch(`/upload/parse`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -193,15 +194,15 @@ const UploadPage = () => {
 
       if (response.ok && result.success) {
         console.log('Paid data received:', result.data);
-        
-        setPaidFiles(prev => prev.map(f => 
+
+        setPaidFiles(prev => prev.map(f =>
           f.id === fileItem.id ? { ...f, status: 'completed', progress: 100 } : f
         ));
 
         setPaidData(result.data);
         setPaidCurrentPage(1);
         setPaidSearchTerm("");
-        
+
         console.log('Paid data state updated');
       } else {
         const errorMsg = result.error || result.message || 'Upload failed';
@@ -209,19 +210,19 @@ const UploadPage = () => {
       }
     } catch (error) {
       console.error('Paid upload error:', error);
-      const errorMessage = error.message.includes('zip file') 
+      const errorMessage = error.message.includes('zip file')
         ? 'Invalid Excel file format. Please ensure the file is a valid .xlsx or .xls file.'
         : error.message;
-      
-      setPaidFiles(prev => prev.map(f => 
-        f.id === fileItem.id ? { 
-          ...f, 
-          status: 'error', 
+
+      setPaidFiles(prev => prev.map(f =>
+        f.id === fileItem.id ? {
+          ...f,
+          status: 'error',
           error: errorMessage,
-          progress: 0 
+          progress: 0
         } : f
       ));
-      
+
       toast.error(`Upload failed: ${errorMessage}`);
     } finally {
       setPaidUploading(false);
@@ -245,8 +246,8 @@ const UploadPage = () => {
 
       const token = localStorage.getItem('token');
       console.log('Importing paid customers to database...');
-      
-      const response = await fetch(`${API_BASE_URL}/upload/mark-paid`, {
+
+      const response = await secureFetch(`/upload/mark-paid`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -259,9 +260,9 @@ const UploadPage = () => {
 
       if (response.ok && result.success) {
         toast.success(`Successfully marked ${result.data.marked} customers as paid! (${result.data.skipped || 0} records skipped)`);
-        
+
         deleteAllPaidFiles();
-        
+
         setTimeout(() => {
           navigate('/customers');
         }, 500);
@@ -305,8 +306,8 @@ const UploadPage = () => {
 
       const token = localStorage.getItem('token');
       console.log('Importing to database...');
-      
-      const response = await fetch(`${API_BASE_URL}/upload/import-customers`, {
+
+      const response = await secureFetch(`/upload/import-customers`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -319,10 +320,10 @@ const UploadPage = () => {
 
       if (response.ok && result.success) {
         toast.success(`Successfully imported ${result.data.imported} customers! (${result.data.duplicates || 0} duplicates skipped)`);
-        
+
         // Clear the upload data
         deleteAllFiles();
-        
+
         // Navigate to customers page
         setTimeout(() => {
           navigate('/customers');
@@ -343,9 +344,9 @@ const UploadPage = () => {
 
     try {
       setUploading(true);
-      
+
       // Update status to uploading
-      setFiles(prev => prev.map(f => 
+      setFiles(prev => prev.map(f =>
         f.id === fileItem.id ? { ...f, status: 'uploading', progress: 0 } : f
       ));
 
@@ -354,8 +355,8 @@ const UploadPage = () => {
 
       const token = localStorage.getItem('token');
       console.log('Uploading to:', `${API_BASE_URL}/upload/parse`);
-      
-      const response = await fetch(`${API_BASE_URL}/upload/parse`, {
+
+      const response = await secureFetch(`/upload/parse`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -369,9 +370,9 @@ const UploadPage = () => {
 
       if (response.ok && result.success) {
         console.log('Excel data received:', result.data);
-        
+
         // Update status to completed
-        setFiles(prev => prev.map(f => 
+        setFiles(prev => prev.map(f =>
           f.id === fileItem.id ? { ...f, status: 'completed', progress: 100 } : f
         ));
 
@@ -379,7 +380,7 @@ const UploadPage = () => {
         setExcelData(result.data);
         setCurrentPage(1);
         setSearchTerm("");
-        
+
         console.log('Excel data state updated');
       } else {
         const errorMsg = result.error || result.message || 'Upload failed';
@@ -387,19 +388,19 @@ const UploadPage = () => {
       }
     } catch (error) {
       console.error('Upload error:', error);
-      const errorMessage = error.message.includes('zip file') 
+      const errorMessage = error.message.includes('zip file')
         ? 'Invalid Excel file format. Please ensure the file is a valid .xlsx or .xls file.'
         : error.message;
-      
-      setFiles(prev => prev.map(f => 
-        f.id === fileItem.id ? { 
-          ...f, 
-          status: 'error', 
+
+      setFiles(prev => prev.map(f =>
+        f.id === fileItem.id ? {
+          ...f,
+          status: 'error',
           error: errorMessage,
-          progress: 0 
+          progress: 0
         } : f
       ));
-      
+
       toast.error(`Upload failed: ${errorMessage}`);
     } finally {
       setUploading(false);
@@ -410,7 +411,7 @@ const UploadPage = () => {
   let filteredRows = [];
   let totalPages = 0;
   let currentRows = [];
-  
+
   if (excelData) {
     const { headers, rows } = excelData;
     filteredRows = rows.filter(row => {
@@ -431,10 +432,10 @@ const UploadPage = () => {
         <div className="title">Upload Files</div>
       </div>
       <hr />
-      
+
       {/* Two-Column Container */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', padding: '20px 0' }}>
-        
+
         {/* LEFT COLUMN: NEW CUSTOMERS */}
         <div className="upload-section">
           <h2 style={{ fontSize: '18px', marginBottom: '20px', color: '#333' }}>Overdue Customers</h2>
@@ -445,7 +446,7 @@ const UploadPage = () => {
             onDragOver={onDragOver}
             onDragEnter={onDragEnter}
             onDragLeave={onDragLeave}
-             style={{ backgroundColor: '#ff025647' }}
+            style={{ backgroundColor: '#ff025647' }}
           >
             <input
               ref={inputRef}
@@ -474,8 +475,8 @@ const UploadPage = () => {
                 <div className="file-left">
                   <div className="file-icon" aria-hidden>
                     <svg width="36" height="44" viewBox="0 0 24 24" fill="none">
-                      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="#cfd8df" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M14 3v6h6" stroke="#cfd8df" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="#cfd8df" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M14 3v6h6" stroke="#cfd8df" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                   <div className="file-meta">
@@ -512,9 +513,9 @@ const UploadPage = () => {
                     disabled={f.status === "uploading"}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path d="M3 6h18" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M10 11v6M14 11v6" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M3 6h18" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M10 11v6M14 11v6" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
                 </div>
@@ -536,8 +537,8 @@ const UploadPage = () => {
                     </div>
                   </div>
                   <div className="data-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '15px' }}>
-                    <button 
-                      className="analyze-btn" 
+                    <button
+                      className="analyze-btn"
                       onClick={analyzeAndImport}
                       disabled={importing}
                       title="Import data to database and view in customers page"
@@ -545,16 +546,16 @@ const UploadPage = () => {
                     >
                       {importing ? '⟳ Importing...' : 'Import'}
                     </button>
-                    <button 
-                      className="analyze-btn" 
+                    <button
+                      className="analyze-btn"
                       onClick={() => setShowPreviewModal(true)}
                       title="View data in full screen"
                       style={{ backgroundColor: '#2196F3', minWidth: '130px', textAlign: 'center' }}
                     >
                       Preview Table
                     </button>
-                    <button 
-                      className="clear-data-btn" 
+                    <button
+                      className="clear-data-btn"
                       onClick={deleteAllFiles}
                       title="Clear all files and data"
                       style={{ minWidth: '100px', textAlign: 'center' }}
@@ -607,8 +608,8 @@ const UploadPage = () => {
                 <div className="file-left">
                   <div className="file-icon" aria-hidden>
                     <svg width="36" height="44" viewBox="0 0 24 24" fill="none">
-                      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="#cfd8df" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M14 3v6h6" stroke="#cfd8df" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="#cfd8df" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M14 3v6h6" stroke="#cfd8df" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                   <div className="file-meta">
@@ -645,9 +646,9 @@ const UploadPage = () => {
                     disabled={f.status === "uploading"}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path d="M3 6h18" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M10 11v6M14 11v6" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M3 6h18" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M10 11v6M14 11v6" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
                 </div>
@@ -669,8 +670,8 @@ const UploadPage = () => {
                     </div>
                   </div>
                   <div className="data-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '15px' }}>
-                    <button 
-                      className="analyze-btn" 
+                    <button
+                      className="analyze-btn"
                       onClick={importPaid}
                       disabled={paidImporting}
                       title="Mark customers as paid in database"
@@ -678,16 +679,16 @@ const UploadPage = () => {
                     >
                       {paidImporting ? '⟳ Processing...' : 'Mark Paid'}
                     </button>
-                    <button 
-                      className="analyze-btn" 
+                    <button
+                      className="analyze-btn"
                       onClick={() => setShowPaidPreviewModal(true)}
                       title="View data in full screen"
                       style={{ backgroundColor: '#2196F3', minWidth: '130px', textAlign: 'center' }}
                     >
                       Preview Table
                     </button>
-                    <button 
-                      className="clear-data-btn" 
+                    <button
+                      className="clear-data-btn"
                       onClick={deleteAllPaidFiles}
                       title="Clear all files and data"
                       style={{ minWidth: '100px', textAlign: 'center' }}
@@ -744,8 +745,8 @@ const UploadPage = () => {
         onClose={() => setIsFilterOpen(false)}
       />
       {showPreviewModal && excelData && (
-        <div 
-          className="modal-overlay" 
+        <div
+          className="modal-overlay"
           onClick={() => setShowPreviewModal(false)}
           style={{
             position: 'fixed',
@@ -761,7 +762,7 @@ const UploadPage = () => {
             padding: '20px'
           }}
         >
-          <div 
+          <div
             className="modal-content"
             onClick={(e) => e.stopPropagation()}
             style={{
@@ -785,9 +786,9 @@ const UploadPage = () => {
               <div>
                 <h2 style={{ margin: 0, fontSize: '22px', color: '#333' }}>Overdue Customers Preview</h2>
                 <div style={{ marginTop: '8px', fontSize: '14px', color: '#666' }}>
-                  <span style={{ 
-                    backgroundColor: '#f0f0f0', 
-                    padding: '4px 12px', 
+                  <span style={{
+                    backgroundColor: '#f0f0f0',
+                    padding: '4px 12px',
                     borderRadius: '4px',
                     marginRight: '10px',
                     fontWeight: '500'
@@ -818,8 +819,8 @@ const UploadPage = () => {
                 ×
               </button>
             </div>
-            
-            <div style={{ 
+
+            <div style={{
               padding: '20px 30px',
               overflowY: 'auto',
               flex: 1
@@ -833,7 +834,7 @@ const UploadPage = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              
+
               <div style={{ overflowX: 'auto' }}>
                 <table className="data-table" style={{ width: '100%' }}>
                   <thead>
@@ -868,8 +869,8 @@ const UploadPage = () => {
                             <td className="row-number">{rowIndex + 1}</td>
                             {headers.map((header, colIndex) => (
                               <td key={colIndex}>
-                                {row[header] !== null && row[header] !== undefined 
-                                  ? row[header].toString() 
+                                {row[header] !== null && row[header] !== undefined
+                                  ? row[header].toString()
                                   : "-"}
                               </td>
                             ))}
@@ -887,8 +888,8 @@ const UploadPage = () => {
 
       {/* Preview Modal for Paid Customers */}
       {showPaidPreviewModal && paidData && (
-        <div 
-          className="modal-overlay" 
+        <div
+          className="modal-overlay"
           onClick={() => setShowPaidPreviewModal(false)}
           style={{
             position: 'fixed',
@@ -904,7 +905,7 @@ const UploadPage = () => {
             padding: '20px'
           }}
         >
-          <div 
+          <div
             className="modal-content"
             onClick={(e) => e.stopPropagation()}
             style={{
@@ -928,9 +929,9 @@ const UploadPage = () => {
               <div>
                 <h2 style={{ margin: 0, fontSize: '22px', color: '#333' }}>Paid Customers Preview</h2>
                 <div style={{ marginTop: '8px', fontSize: '14px', color: '#666' }}>
-                  <span style={{ 
-                    backgroundColor: '#f0f0f0', 
-                    padding: '4px 12px', 
+                  <span style={{
+                    backgroundColor: '#f0f0f0',
+                    padding: '4px 12px',
                     borderRadius: '4px',
                     marginRight: '10px',
                     fontWeight: '500'
@@ -961,8 +962,8 @@ const UploadPage = () => {
                 ×
               </button>
             </div>
-            
-            <div style={{ 
+
+            <div style={{
               padding: '20px 30px',
               overflowY: 'auto',
               flex: 1
@@ -976,7 +977,7 @@ const UploadPage = () => {
                   onChange={(e) => setPaidSearchTerm(e.target.value)}
                 />
               </div>
-              
+
               <div style={{ overflowX: 'auto' }}>
                 <table className="data-table" style={{ width: '100%' }}>
                   <thead>
@@ -1011,8 +1012,8 @@ const UploadPage = () => {
                             <td className="row-number">{rowIndex + 1}</td>
                             {headers.map((header, colIndex) => (
                               <td key={colIndex}>
-                                {row[header] !== null && row[header] !== undefined 
-                                  ? row[header].toString() 
+                                {row[header] !== null && row[header] !== undefined
+                                  ? row[header].toString()
                                   : "-"}
                               </td>
                             ))}

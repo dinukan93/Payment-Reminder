@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Enable CORS for React frontend
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
+            \App\Http\Middleware\ValidateApiRequest::class,
         ]);
 
         // Override redirect for unauthenticated API requests

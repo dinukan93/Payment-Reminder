@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
 import { clearSession } from '../utils/auth';
 import API_BASE_URL from '../config/api';
+import { secureFetch } from '../utils/api';
 import { MdOutlineMailOutline } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
@@ -36,7 +37,7 @@ const Login = () => {
       const endpoint = '/login';
       const userType = isAdminLogin ? 'admin' : 'caller';
       console.log('Login attempt:', { email, userType }); // Debug log
-      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const res = await secureFetch(`${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, userType })
@@ -85,7 +86,7 @@ const Login = () => {
     setLoading(true);
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
-      const res = await fetch(`${API_BASE_URL}/send-otp`, {
+      const res = await secureFetch(`/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, userType })
@@ -114,7 +115,7 @@ const Login = () => {
     setLoading(true);
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
-      const res = await fetch(`${API_BASE_URL}/verify-otp`, {
+      const res = await secureFetch(`/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp, userType })

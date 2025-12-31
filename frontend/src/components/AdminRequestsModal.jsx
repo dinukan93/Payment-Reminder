@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./AdminRequestsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 import { showSuccess, showError } from "./Notifications";
 
 function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestProcessed, callerId }) {
@@ -24,7 +25,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     console.log('AdminRequestsModal - Fetching requests for callerId:', callerId);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`, {
+      const response = await secureFetch(`/requests?callerId=${callerId}&status=PENDING`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -38,15 +39,19 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         console.log('AdminRequestsModal - Received requests:', data);
 
         if (data && data.length > 0) {
-          setRequests(data.map(req => ({
-            id: req.requestId || req._id,
-            customers: req.customers || [],
-            customerCount: (req.customers || []).length,
-            sentDate: req.sentDate,
-            callerName: req.callerName,
-            callerId: req.callerId,
-            sentBy: req.sentBy
-          })));
+          setRequests(data.map(req => {
+            const requestId = req.id || req.requestId || req._id;
+            console.log('Mapping request:', { original: req, mappedId: requestId });
+            return {
+              id: requestId,
+              customers: req.customers || [],
+              customerCount: (req.customers || []).length,
+              sentDate: req.sentDate,
+              callerName: req.callerName,
+              callerId: req.callerId,
+              sentBy: req.sentBy
+            };
+          }));
           // All requests collapsed by default
           setExpandedRequests({});
         } else {
@@ -78,7 +83,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
 
     try {
       // Update request status in backend
-      const response = await fetch(`${API_BASE_URL}/requests/${request.id}`, {
+      const response = await secureFetch(`/requests/${request.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -125,15 +130,28 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
 
   const handleDeclineRequest = async (requestId) => {
     const request = requests.find(r => r.id === requestId);
-    if (!request) return;
+    if (!request) {
+      showError('Request not found');
+      return;
+    }
 
-    const reason = prompt("Please provide a reason for declining:");
+    if (!request.id) {
+      console.error('Request ID is undefined:', request);
+      showError('Invalid request ID. Please refresh and try again.');
+      return;
+    }
 
-    if (!reason) return;
+    const reason = window.prompt("Please provide a reason for declining:");
+
+    if (!reason || reason.trim() === '') {
+      showError('Decline reason is required');
+      return;
+    }
 
     try {
+      console.log('Declining request with ID:', request.id);
       // Update request status in backend
-      const response = await fetch(`${API_BASE_URL}/requests/${request.id}`, {
+      const response = await secureFetch(`/requests/${request.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -141,7 +159,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         body: JSON.stringify({
           status: 'DECLINED',
           respondedAt: new Date().toISOString(),
-          declineReason: reason
+          declineReason: reason.trim()
         })
       });
 
@@ -157,7 +175,8 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
 
         showSuccess('Request declined successfully!');
       } else {
-        showError('Failed to decline request. Please try again.');
+        const errorData = await response.json();
+        showError(errorData.message || 'Failed to decline request. Please try again.');
       }
     } catch (error) {
       console.error('Error declining request:', error);

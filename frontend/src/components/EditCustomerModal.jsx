@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './EditCustomerModal.css';
 import API_BASE_URL from '../config/api';
+import { secureFetch } from '../utils/api';
 import { ALL_REGIONS, getRtomsForRegion } from '../config/regionConfig';
 
 function EditCustomerModal({ show, customer, onClose, onSave }) {
@@ -81,7 +82,7 @@ function EditCustomerModal({ show, customer, onClose, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.accountNumber.trim() || !formData.name.trim()) {
       setError('Account Number and Name are required');
       return;
@@ -89,7 +90,7 @@ function EditCustomerModal({ show, customer, onClose, onSave }) {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/customers/${customer._id}`, {
+      const response = await secureFetch(`/customers/${customer._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

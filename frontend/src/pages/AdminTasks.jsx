@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import "./AdminTasks.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 import { showError, showSuccess, showInfo } from "../components/Notifications";
 import AutomateConfigModal from "../components/AutomateConfigModal";
 
@@ -29,7 +30,7 @@ function AdminTasks() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/customers`, {
+      const response = await secureFetch(`/customers`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -69,7 +70,7 @@ function AdminTasks() {
   const loadCallers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/callers`, {
+      const response = await secureFetch(`/callers`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -211,7 +212,7 @@ function AdminTasks() {
       console.log('Request payload:', requestData);
 
       // Save request to backend
-      const response = await fetch(`${API_BASE_URL}/requests`, {
+      const response = await secureFetch(`/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -243,7 +244,7 @@ function AdminTasks() {
     showInfo("Starting automated customer assignment...");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auto-assign`, {
+      const response = await secureFetch(`/auto-assign`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

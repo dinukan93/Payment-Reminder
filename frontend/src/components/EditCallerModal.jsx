@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './EditCallerModal.css';
 import API_BASE_URL from '../config/api';
+import { secureFetch } from '../utils/api';
 
 function EditCallerModal({ show, caller, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -55,7 +56,7 @@ function EditCallerModal({ show, caller, onClose, onSave }) {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/callers/${caller._id}`, {
+      const response = await secureFetch(`/callers/${caller._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

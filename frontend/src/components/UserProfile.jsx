@@ -4,6 +4,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import PaymentCalendar from "./PaymentCalendar";
 import AdminRequestsModal from "./AdminRequestsModal";
 import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 
 function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -23,7 +24,7 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
 
         if (!callerId) return;
 
-        const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`, {
+        const response = await secureFetch(`/requests?callerId=${callerId}&status=PENDING`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json'
