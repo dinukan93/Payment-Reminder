@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import './SuperAdminDashboard.css';
-import { API_BASE_URL } from '../config/api';
 import { secureFetch } from '../utils/api';
 import { ALL_REGIONS, getRtomsForRegion, ALL_RTOMS, getRegionForRtom } from '../config/regionConfig';
 
