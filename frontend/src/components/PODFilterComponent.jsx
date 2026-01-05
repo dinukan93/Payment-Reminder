@@ -135,28 +135,31 @@ function PODFilterComponent({ isOpen, onClose }) {
       );
       const totalOutstanding = parseFloat(String(row[arrearsKey] || 0).replace(/,/g, ''));
 
-      // Check if VIP (includes VIP, VIP - Low, VIP - Medium etc.)
-      const isVIP = creditClassUpper === 'VIP' ||
-        creditClassUpper.includes('VIP');
-
-      // VIP Criteria: Medium is COPPER or FTTH, Product Status OK, and Outstanding > 2400
+      // FIRST: Check if record meets base filtering criteria
       const isMediumCopperOrFTTH = mediumUpper.includes('COPPER') || mediumUpper.includes('FTTH');
       const isOK = productStatusUpper === 'OK';
       const meetsOutstanding = totalOutstanding > 2400;
+      const meetsBaseCriteria = isMediumCopperOrFTTH && isOK && meetsOutstanding;
 
-      if (isVIP && isMediumCopperOrFTTH && isOK && meetsOutstanding) {
+      // THEN: Check if VIP credit class
+      const isVIP = creditClassUpper === 'VIP' || creditClassUpper.includes('VIP');
+
+      // If meets base criteria AND is VIP → VIP assignment (no assignedTo)
+      if (meetsBaseCriteria && isVIP) {
         vipRecords.push({ ...row, classification: 'VIP', path: 'VIP Path' });
-      } else if (isVIP && (!isMediumCopperOrFTTH || !isOK || !meetsOutstanding)) {
-        // VIP records that don't meet criteria
+      }
+      // If meets base criteria but NOT VIP → goes through normal filtering
+      else if (meetsBaseCriteria && !isVIP) {
+        nonVipRecords.push(row);
+      }
+      // If doesn't meet base criteria → excluded (regardless of VIP status)
+      else {
         excludedVIPs.push({
           ...row,
           exclusionReason: !isMediumCopperOrFTTH ? 'Medium not COPPER/FTTH' :
             !isOK ? 'Product Status not OK (SU)' :
               'Outstanding <= 2400'
         });
-      } else if (!isVIP) {
-        // Non-VIP records pass through for standard filtration
-        nonVipRecords.push(row);
       }
     });
 
@@ -360,7 +363,6 @@ function PODFilterComponent({ isOpen, onClose }) {
           enterpriseGovRecords.push({
             ...row,
             path: 'Enterprise - Government Institutions',
-            assignedTo: 'Enterprise Gov',
             enterpriseType: 'Government Institutions',
             lastBillValue
           });
@@ -368,7 +370,6 @@ function PODFilterComponent({ isOpen, onClose }) {
           enterpriseLargeRecords.push({
             ...row,
             path: 'Enterprise - Large',
-            assignedTo: 'Enterprise Large',
             enterpriseType: 'Large',
             lastBillValue
           });
@@ -376,7 +377,6 @@ function PODFilterComponent({ isOpen, onClose }) {
           enterpriseMediumRecords.push({
             ...row,
             path: 'Enterprise - Medium',
-            assignedTo: 'Enterprise Medium',
             enterpriseType: 'Medium',
             lastBillValue
           });
@@ -384,7 +384,6 @@ function PODFilterComponent({ isOpen, onClose }) {
           smeRecords.push({
             ...row,
             path: 'SME',
-            assignedTo: 'SME',
             enterpriseType: 'SME',
             lastBillValue
           });
@@ -392,7 +391,6 @@ function PODFilterComponent({ isOpen, onClose }) {
           wholesalesRecords.push({
             ...row,
             path: 'Wholesales',
-            assignedTo: 'Wholesales',
             enterpriseType: 'Wholesales',
             lastBillValue
           });
@@ -554,17 +552,27 @@ function PODFilterComponent({ isOpen, onClose }) {
         ...enterpriseGovRecords,
         ...enterpriseLargeRecords,
         ...enterpriseMediumRecords,
+        ...smeRecords,
         ...wholesalesRecords
       ];
+
 
       // Step 5: Further process Retail/Micro FTTH records (bill value assignment with config)
       const retailMicroProcessed = applyRetailMicroPath(retailMicroFromStep4, config);
 
-      // Combine all processed data
+
+
+      // Remaining records don't get assignedTo - will be NULL in database
+      const remainingWithAssignment = remainingRecords.map(row => ({
+        ...row,
+        path: 'Unassigned'
+      }));
+
+      // Combine all processed data (EXCLUDING VIP - they're only for download, not for database)
       const allProcessedData = [
-        ...vipRecords,
         ...allEnterpriseRecords,
-        ...retailMicroProcessed
+        ...retailMicroProcessed,
+        ...remainingWithAssignment
       ];
 
       // Calculate statistics
@@ -585,7 +593,8 @@ function PODFilterComponent({ isOpen, onClose }) {
         callCenterStaff: retailMicroProcessed.filter(r => r.assignedTo === 'Call Center Staff').length,
         cc: retailMicroProcessed.filter(r => r.assignedTo === 'CC').length,
         staff: retailMicroProcessed.filter(r => r.assignedTo === 'Staff').length,
-        regionAssigned: retailMicroProcessed.filter(r => r.assignedTo?.includes('Region')).length
+        regionAssigned: retailMicroProcessed.filter(r => r.assignedTo?.includes('Region')).length,
+        remaining: remainingWithAssignment.length
       };
 
       setResults({
@@ -785,14 +794,22 @@ function PODFilterComponent({ isOpen, onClose }) {
           const region = rtomCode ? getRegionForRtom(rtomCode) : (row['REGION'] || null);
 
           // Ensure ACCOUNT_NUMBER field exists for backend
-          return {
+          const mappedRow = {
             ...row,
             REGION: region,
             ACCOUNT_NUMBER: row['ACCOUNT_NUM'] || row['ACCOUNT_NUMBER'] || row['Account Number'] || row['Account_num']
           };
+
+          return mappedRow;
         });
 
-      console.log('Customers to distribute:', customersToDistribute.length, 'Sample:', customersToDistribute.slice(0, 2));
+      console.log('Customers to distribute:', customersToDistribute.length);
+      console.log('Sample customer with assignedTo:', {
+        ACCOUNT_NUM: customersToDistribute[0]?.ACCOUNT_NUM,
+        assignedTo: customersToDistribute[0]?.assignedTo,
+        REGION: customersToDistribute[0]?.REGION,
+        RTOM: customersToDistribute[0]?.RTOM
+      });
 
       if (!customersToDistribute.length) {
         showError("No valid customers to distribute. All rows are missing account numbers.");

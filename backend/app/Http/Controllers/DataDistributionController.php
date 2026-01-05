@@ -95,10 +95,14 @@ class DataDistributionController extends Controller
                             'NEW_ARREARS_key' => $newArrearsKey,
                             'NEW_ARREARS_raw' => $newArrearsKey ? $customerData[$newArrearsKey] : 'NOT_FOUND',
                             'NEW_ARREARS_cleaned' => $newArrearsValue,
+                            'assignedTo' => $customerData['assignedTo'] ?? 'NOT_FOUND',
                             'all_keys' => array_keys($customerData)
                         ]);
                         $logged = true;
                     }
+
+                    // Extract assignment_type value
+                    $assignmentType = $customerData['assignedTo'] ?? null;
 
                     // Step 1: Save to filtered_customers with essential columns for caller work
                     $filteredCustomer = FilteredCustomer::updateOrCreate(
@@ -122,7 +126,7 @@ class DataDistributionController extends Controller
                             'CREDIT_CLASS_NAME' => $customerData['CREDIT_CLASS_NAME'] ?? null,
                             'REMARK' => $customerData['Remark'] ?? null,
                             'status' => 'pending',
-                            'assignment_type' => $customerData['assignedTo'] ?? null,
+                            'assignment_type' => $assignmentType,
                         ]
                     );
 
