@@ -32,8 +32,30 @@ export const secureFetch = async (url, options = {}) => {
 
     try {
         const response = await fetch(fullUrl, config);
+
+        // Handle 401 Unauthorized - automatically redirect to login
+        if (response.status === 401) {
+            console.warn('401 Unauthorized - clearing auth and redirecting to login');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userData');
+            window.location.href = '/login';
+            throw new Error('Unauthorized - Please login again');
+        }
+
+        // Handle 400 Bad Request - provide better error messages
+        if (response.status === 400) {
+            const errorData = await response.json().catch(() => ({ message: 'Bad Request' }));
+            console.error('400 Bad Request:', errorData);
+            throw new Error(errorData.message || 'Bad Request - Invalid data sent to server');
+        }
+
         return response;
     } catch (error) {
+        // If it's a network error or fetch failed
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            console.error('Network error - server may be down:', error);
+            throw new Error('Cannot connect to server. Please check if the backend is running.');
+        }
         console.error('API Request failed:', error);
         throw error;
     }
