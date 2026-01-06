@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Admin;
 use App\Models\Caller;
 use App\Services\OtpService;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -27,7 +28,7 @@ class AuthController extends Controller
 
         // Check the appropriate table based on userType
         $userType = $request->userType;
-        
+
         if ($userType === 'admin') {
             $user = Admin::where('email', $request->email)->first();
         } else {
@@ -35,6 +36,12 @@ class AuthController extends Controller
         }
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            // Log failed login attempt
+            AuditLogger::log(
+                action: 'login_failed',
+                description: "Failed login attempt for {$request->email}",
+                request: $request
+            );
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
@@ -79,9 +86,19 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Not authenticated'], 401);
             }
 
+            // Log logout
+            $user = $request->user();
+            AuditLogger::log(
+                action: 'logout',
+                description: "User {$user->email} logged out",
+                model: get_class($user),
+                modelId: $user->id,
+                request: $request
+            );
+
             // Delete the current access token
             $request->user()->currentAccessToken()->delete();
-            
+
             return response()->json(['message' => 'Logged out successfully']);
         } catch (\Exception $e) {
             \Log::error('Logout error: ' . $e->getMessage());
@@ -120,12 +137,21 @@ class AuthController extends Controller
 
         try {
             $result = $this->otpService->verifyOtp($request->email, $request->otp, $request->userType);
-            
+
             $user = $result['user'];
             $userType = $result['userType'];
-            
+
             // Generate Sanctum token
             $token = $user->createToken('auth-token', [$userType])->plainTextToken;
+
+            // Log successful login
+            AuditLogger::log(
+                action: 'login_success',
+                description: "User {$user->email} logged in successfully",
+                model: get_class($user),
+                modelId: $user->id,
+                request: $request
+            );
 
             return response()->json([
                 'token' => $token,
