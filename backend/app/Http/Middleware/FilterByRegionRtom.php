@@ -30,5 +30,6 @@ class FilterByRegionRtom
         }
 
         return $next($request);
+        
     }
 }
