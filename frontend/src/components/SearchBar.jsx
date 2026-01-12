@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import "./searchBar.css";
+import "./SearchBar.css";
 
 function SearchBar({ onAddClick, onSearch, onFilterChange, searchPlaceholder = "Search customer..." }) {
   const [searchTerm, setSearchTerm] = useState("");

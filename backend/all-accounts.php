@@ -205,7 +205,7 @@ $supervisors = [
         'phone' => '0771111001',
         'role' => 'supervisor',
         'region' => 'Western',
-        'rtom' => 'Gampaha',
+        'rtom' => 'GP',
         'status' => 'active'
     ],
     [
@@ -216,7 +216,7 @@ $supervisors = [
         'phone' => '0771111002',
         'role' => 'supervisor',
         'region' => 'Western',
-        'rtom' => 'Gampaha',
+        'rtom' => 'GP',
         'status' => 'active'
     ],
     // Matara (MD) Supervisors - Southern Region
@@ -228,7 +228,7 @@ $supervisors = [
         'phone' => '0772222001',
         'role' => 'supervisor',
         'region' => 'Southern',
-        'rtom' => 'Matara',
+        'rtom' => 'MT',
         'status' => 'active'
     ],
     [
@@ -239,7 +239,7 @@ $supervisors = [
         'phone' => '0772222002',
         'role' => 'supervisor',
         'region' => 'Southern',
-        'rtom' => 'Matara',
+        'rtom' => 'MT',
         'status' => 'active'
     ],
     // Colombo Supervisors - Western Region
@@ -251,7 +251,7 @@ $supervisors = [
         'phone' => '0773333001',
         'role' => 'supervisor',
         'region' => 'Western',
-        'rtom' => 'Colombo',
+        'rtom' => 'CO',
         'status' => 'active'
     ],
     [
@@ -262,7 +262,7 @@ $supervisors = [
         'phone' => '0773333002',
         'role' => 'supervisor',
         'region' => 'Western',
-        'rtom' => 'Colombo',
+        'rtom' => 'CO',
         'status' => 'active'
     ]
 ];
