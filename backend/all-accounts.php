@@ -191,6 +191,92 @@ foreach ($rtomAdmins as $adminData) {
 echo "\n";
 
 // ==========================================
+// SUPERVISORS
+// ==========================================
+echo "Creating Supervisors...\n";
+
+$supervisors = [
+    // Gampaha (GP) Supervisors - Western Region
+    [
+        'adminId' => 'SUP-GP-001',
+        'name' => 'Gampaha Supervisor 1',
+        'email' => 'sup.gampaha1@slt.lk',
+        'password' => 'Supervisor@123',
+        'phone' => '0771111001',
+        'role' => 'supervisor',
+        'region' => 'Western',
+        'rtom' => 'Gampaha',
+        'status' => 'active'
+    ],
+    [
+        'adminId' => 'SUP-GP-002',
+        'name' => 'Gampaha Supervisor 2',
+        'email' => 'sup.gampaha2@slt.lk',
+        'password' => 'Supervisor@123',
+        'phone' => '0771111002',
+        'role' => 'supervisor',
+        'region' => 'Western',
+        'rtom' => 'Gampaha',
+        'status' => 'active'
+    ],
+    // Matara (MD) Supervisors - Southern Region
+    [
+        'adminId' => 'SUP-MD-001',
+        'name' => 'Matara Supervisor 1',
+        'email' => 'sup.matara1@slt.lk',
+        'password' => 'Supervisor@123',
+        'phone' => '0772222001',
+        'role' => 'supervisor',
+        'region' => 'Southern',
+        'rtom' => 'Matara',
+        'status' => 'active'
+    ],
+    [
+        'adminId' => 'SUP-MD-002',
+        'name' => 'Matara Supervisor 2',
+        'email' => 'sup.matara2@slt.lk',
+        'password' => 'Supervisor@123',
+        'phone' => '0772222002',
+        'role' => 'supervisor',
+        'region' => 'Southern',
+        'rtom' => 'Matara',
+        'status' => 'active'
+    ],
+    // Colombo Supervisors - Western Region
+    [
+        'adminId' => 'SUP-COL-001',
+        'name' => 'Colombo Supervisor 1',
+        'email' => 'sup.colombo1@slt.lk',
+        'password' => 'Supervisor@123',
+        'phone' => '0773333001',
+        'role' => 'supervisor',
+        'region' => 'Western',
+        'rtom' => 'Colombo',
+        'status' => 'active'
+    ],
+    [
+        'adminId' => 'SUP-COL-002',
+        'name' => 'Colombo Supervisor 2',
+        'email' => 'sup.colombo2@slt.lk',
+        'password' => 'Supervisor@123',
+        'phone' => '0773333002',
+        'role' => 'supervisor',
+        'region' => 'Western',
+        'rtom' => 'Colombo',
+        'status' => 'active'
+    ]
+];
+
+foreach ($supervisors as $supervisorData) {
+    Admin::updateOrCreate(
+        ['email' => $supervisorData['email']],
+        $supervisorData
+    );
+    echo "  ✅ {$supervisorData['name']} ({$supervisorData['rtom']})\n";
+}
+echo "\n";
+
+// ==========================================
 // CALLERS
 // ==========================================
 echo "Creating Callers...\n";
@@ -286,14 +372,20 @@ echo "   caller001: john.smith@example.com (Kandy)\n";
 echo "   caller002: sarah.johnson@example.com (Kandy)\n";
 echo "   caller003: mike.williams@example.com (Kandy)\n\n";
 
+echo "👔 SUPERVISORS (Password: Supervisor@123 for all):\n";
+echo "   Gampaha: sup.gampaha1@slt.lk, sup.gampaha2@slt.lk\n";
+echo "   Matara: sup.matara1@slt.lk, sup.matara2@slt.lk\n";
+echo "   Colombo: sup.colombo1@slt.lk, sup.colombo2@slt.lk\n\n";
+
 echo str_repeat("=", 70) . "\n";
 echo "Total Accounts Created:\n";
 echo "  - 1 Superadmin\n";
 echo "  - 1 Uploader\n";
 echo "  - " . count($regionalAdmins) . " Regional Admins\n";
 echo "  - " . count($rtomAdmins) . " RTOM Admins\n";
+echo "  - " . count($supervisors) . " Supervisors\n";
 echo "  - " . count($callers) . " Callers\n";
-echo "  TOTAL: " . (1 + 1 + count($regionalAdmins) + count($rtomAdmins) + count($callers)) . " accounts\n";
+echo "  TOTAL: " . (1 + 1 + count($regionalAdmins) + count($rtomAdmins) + count($supervisors) + count($callers)) . " accounts\n";
 echo str_repeat("=", 70) . "\n\n";
 
 echo "⚠️  IMPORTANT SECURITY NOTES:\n";
