@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "./CallerTable.css";
-import API_BASE_URL from "../config/api";
 import { secureFetch } from "../utils/api";
 import EditCallerModal from "./EditCallerModal";
 import TaskHistoryModal from "./TaskHistoryModal";
@@ -27,13 +26,7 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
 
   const fetchCallers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await secureFetch(`/callers`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
-      });
+      const response = await secureFetch(`/api/callers`);
       const result = await response.json();
 
       console.log('API Response:', result);
@@ -106,7 +99,7 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
   const handleDelete = async (caller) => {
     if (window.confirm(`Are you sure you want to delete ${caller.name}?`)) {
       try {
-        const response = await secureFetch(`/callers/${caller.id}`, {
+        const response = await secureFetch(`/api/callers/${caller.id}`, {
           method: 'DELETE'
         });
 

@@ -4,7 +4,7 @@ import "./AdminDashboard.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import AdminSentRequestsModal from "../components/AdminSentRequestsModal";
 import CallerDetailsModal from "../components/CallerDetailsModal";
-import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 import { showSuccess } from "../components/Notifications";
 
 function AdminDashboard() {
@@ -47,22 +47,12 @@ function AdminDashboard() {
       }
       setError(null);
 
-      // Get logged-in admin ID and token
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      const token = localStorage.getItem('token');
-      const adminId = userData.id;
-
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      };
-
       // Fetch all data in parallel
       const [statsRes, assignedRes, weeklyRes, requestsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/admin/dashboard-stats`, { headers }),
-        fetch(`${API_BASE_URL}/admin/assigned-callers`, { headers }),
-        fetch(`${API_BASE_URL}/admin/weekly-calls`, { headers }),
-        fetch(`${API_BASE_URL}/requests`, { headers })
+        secureFetch(`/api/admin/dashboard-stats`),
+        secureFetch(`/api/admin/assigned-callers`),
+        secureFetch(`/api/admin/weekly-calls`),
+        secureFetch(`/api/requests`)
       ]);
 
       if (statsRes.ok) {
@@ -169,7 +159,7 @@ function AdminDashboard() {
       setIsCallerDetailsModalOpen(true);
 
       // Fetch detailed caller information from backend
-      const response = await fetch(`${API_BASE_URL}/admin/callers/${caller.id}/details`);
+      const response = await secureFetch(`/api/admin/callers/${caller.id}/details`);
       if (response.ok) {
         const result = await response.json();
         setCallerDetailsData(result.data);

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "./CustomerTable.css";
-import API_BASE_URL from "../config/api";
 import { secureFetch } from "../utils/api";
 import EditCustomerModal from "./EditCustomerModal";
 import { showSuccess, showError, showWarning } from "./Notifications";
@@ -24,11 +23,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await secureFetch(`/customers`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await secureFetch(`/api/customers`);
       const result = await response.json();
       if (result.success && result.data) {
         // Show all customers including COMPLETED
@@ -93,7 +88,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
       // Second click - proceed with delete
       setDeleteConfirmation(null);
       try {
-        const response = await secureFetch(`/customers/${customer._id}`, {
+        const response = await secureFetch(`/api/customers/${customer._id}`, {
           method: 'DELETE'
         });
         if (response.ok) {

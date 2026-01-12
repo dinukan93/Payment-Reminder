@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { toast } from 'react-toastify';
 import "./AdminTasks.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import API_BASE_URL from "../config/api";
 import { secureFetch } from "../utils/api";
 import { showError, showSuccess, showInfo } from "../components/Notifications";
 import AutomateConfigModal from "../components/AutomateConfigModal";
@@ -29,13 +28,7 @@ function AdminTasks() {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await secureFetch(`/customers`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
-      });
+      const response = await secureFetch(`/api/customers`);
       if (response.ok) {
         const result = await response.json();
         // Get data from the response (could be result.data or result directly)
@@ -69,13 +62,7 @@ function AdminTasks() {
 
   const loadCallers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await secureFetch(`/callers`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
-      });
+      const response = await secureFetch(`/api/callers`);
 
       if (response.ok) {
         const result = await response.json();
@@ -212,7 +199,7 @@ function AdminTasks() {
       console.log('Request payload:', requestData);
 
       // Save request to backend
-      const response = await secureFetch(`/requests`, {
+      const response = await secureFetch(`/api/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -244,10 +231,9 @@ function AdminTasks() {
     showInfo("Starting automated customer assignment...");
 
     try {
-      const response = await secureFetch(`/auto-assign`, {
+      const response = await secureFetch(`/api/auto-assign`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -307,7 +293,7 @@ function AdminTasks() {
       <div className="admin-tasks-stats">
         <div className="stat-item">
           <i className="bi bi-people-fill"></i>
-        <div>
+          <div>
             <h3>{allCustomers.length}</h3>
             <p>Total Customers</p>
           </div>
