@@ -1,6 +1,6 @@
 import React from "react";
 import Logo from "../assets/logo_11.png";
-import "./sideBar.css";
+import "./SideBar.css";
 import { BiHomeAlt2 } from "react-icons/bi";
 import { FaTasks } from "react-icons/fa";
 import { GoPeople } from "react-icons/go";
