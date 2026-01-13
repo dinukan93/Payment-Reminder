@@ -14,7 +14,8 @@ class Request extends Model
         'contacted',
         'sent_date',
         'status',
-        'customer_ids'
+        'customer_ids',
+        'sent_by'
     ];
 
     protected $casts = [

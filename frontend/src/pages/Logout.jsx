@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clearSession } from '../utils/auth';
-import API_BASE_URL from '../config/api';
+import { secureFetch } from '../utils/api';
 
 const Logout = () => {
   const navigate = useNavigate();
@@ -12,12 +12,8 @@ const Logout = () => {
         // Call backend logout endpoint if token exists
         const token = localStorage.getItem('token');
         if (token) {
-          await fetch(`${API_BASE_URL}/logout`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
+          await secureFetch(`/api/logout`, {
+            method: 'POST'
           }).catch(err => console.log('Logout API call failed:', err));
         }
       } catch (error) {
@@ -25,7 +21,7 @@ const Logout = () => {
       } finally {
         // Clear all authentication and session data using utility
         clearSession();
-        
+
         // Redirect to login
         navigate('/login', { replace: true });
       }
@@ -35,10 +31,10 @@ const Logout = () => {
   }, [navigate]);
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
       height: '100vh',
       fontSize: '1.2rem',
       flexDirection: 'column',

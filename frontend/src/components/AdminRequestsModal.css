@@ -29,6 +29,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -203,10 +204,10 @@
 .decline-all-btn,
 .accept-all-btn {
   flex: 1;
-  padding: 8px 16px;
+  padding: 10px 16px;
   border: none;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -225,20 +226,128 @@
 .decline-all-btn:hover {
   background-color: #d32f2f;
   color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(211, 47, 47, 0.2);
 }
 
 .accept-all-btn {
   background-color: #4caf50;
   color: white;
+  border: 2px solid #4caf50;
 }
 
 .accept-all-btn:hover {
   background-color: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
 }
 
 .decline-all-btn i,
 .accept-all-btn i {
   font-size: 16px;
+}
+
+/* Decline Reason Section Styling */
+.decline-reason-section {
+  width: 100%;
+  background: #fff8f8;
+  border: 2px solid #ffcdd2;
+  border-radius: 8px;
+  padding: 16px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.decline-reason-section label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #d32f2f;
+  margin-bottom: 8px;
+}
+
+.decline-reason-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.2s;
+  background: white;
+}
+
+.decline-reason-input:focus {
+  outline: none;
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+}
+
+.decline-reason-input::placeholder {
+  color: #bbb;
+}
+
+.decline-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+
+.cancel-decline-btn,
+.confirm-decline-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cancel-decline-btn {
+  background-color: #f5f5f5;
+  color: #666;
+  border: 2px solid #e0e0e0;
+}
+
+.cancel-decline-btn:hover {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.confirm-decline-btn {
+  background-color: #d32f2f;
+  color: white;
+  border: 2px solid #d32f2f;
+}
+
+.confirm-decline-btn:hover:not(:disabled) {
+  background-color: #c62828;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(211, 47, 47, 0.3);
+}
+
+.confirm-decline-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #e57373;
+  border-color: #e57373;
 }
 
 .customer-list {
@@ -357,7 +466,7 @@
   margin-top: 2px;
 }
 
-.info-item > div {
+.info-item>div {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -484,8 +593,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-state p {
@@ -542,7 +656,8 @@
 
 /* Disabled button state */
 .accept-all-btn:disabled,
-.decline-all-btn:disabled {
+.decline-all-btn:disabled,
+.confirm-decline-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -597,6 +712,15 @@
 
   .decline-all-btn,
   .accept-all-btn {
+    width: 100%;
+  }
+
+  .decline-actions {
+    flex-direction: column;
+  }
+
+  .cancel-decline-btn,
+  .confirm-decline-btn {
     width: 100%;
   }
 }

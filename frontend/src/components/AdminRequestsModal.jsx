@@ -10,6 +10,8 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [expandedRequests, setExpandedRequests] = useState({});
+  const [decliningRequestId, setDecliningRequestId] = useState(null);
+  const [declineReason, setDeclineReason] = useState('');
 
   // Fetch pending requests from MongoDB when modal opens
   useEffect(() => {
@@ -25,7 +27,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     console.log('AdminRequestsModal - Fetching requests for callerId:', callerId);
 
     try {
-      const response = await secureFetch(`/requests?callerId=${callerId}&status=PENDING`, {
+      const response = await secureFetch(`/api/requests?callerId=${callerId}&status=PENDING`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -38,18 +40,39 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
 
         console.log('AdminRequestsModal - Received requests:', data);
 
+
         if (data && data.length > 0) {
           setRequests(data.map(req => {
             const requestId = req.id || req.requestId || req._id;
-            console.log('Mapping request:', { original: req, mappedId: requestId });
+
+            // Format the date properly
+            let formattedDate = '';
+            const dateValue = req.sent_date || req.sentDate;
+            if (dateValue) {
+              const date = new Date(dateValue);
+              formattedDate = date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              });
+            }
+
+            console.log('Mapping request:', {
+              original: req,
+              mappedId: requestId,
+              sent_by: req.sent_by,
+              sent_date: dateValue,
+              formattedDate: formattedDate
+            });
+
             return {
               id: requestId,
               customers: req.customers || [],
               customerCount: (req.customers || []).length,
-              sentDate: req.sentDate,
-              callerName: req.callerName,
-              callerId: req.callerId,
-              sentBy: req.sentBy
+              sentDate: formattedDate,
+              callerName: req.caller_name || req.callerName,
+              callerId: req.caller_id || req.callerId,
+              sentBy: req.sent_by || req.sentBy || 'Admin'
             };
           }));
           // All requests collapsed by default
@@ -83,7 +106,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
 
     try {
       // Update request status in backend
-      const response = await secureFetch(`/requests/${request.id}`, {
+      const response = await secureFetch(`/api/requests/${request.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -128,6 +151,16 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     }
   };
 
+  const handleDeclineClick = (requestId) => {
+    setDecliningRequestId(requestId);
+    setDeclineReason('');
+  };
+
+  const handleCancelDecline = () => {
+    setDecliningRequestId(null);
+    setDeclineReason('');
+  };
+
   const handleDeclineRequest = async (requestId) => {
     const request = requests.find(r => r.id === requestId);
     if (!request) {
@@ -141,9 +174,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
       return;
     }
 
-    const reason = window.prompt("Please provide a reason for declining:");
-
-    if (!reason || reason.trim() === '') {
+    if (!declineReason || declineReason.trim() === '') {
       showError('Decline reason is required');
       return;
     }
@@ -151,7 +182,8 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     try {
       console.log('Declining request with ID:', request.id);
       // Update request status in backend
-      const response = await secureFetch(`/requests/${request.id}`, {
+
+      const response = await secureFetch(`/api/requests/${request.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -159,24 +191,24 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         body: JSON.stringify({
           status: 'DECLINED',
           respondedAt: new Date().toISOString(),
-          declineReason: reason.trim()
+          declineReason: declineReason.trim()
         })
       });
 
-      if (response.ok) {
-        // Decline the request
-        onDecline(request.id);
+      const result = await response.json();
 
-        // Remove this request from the list
-        setRequests(requests.filter(r => r.id !== requestId));
-
-        // Notify parent that request is processed
-        if (onRequestProcessed) onRequestProcessed();
-
-        showSuccess('Request declined successfully!');
+      if (result.success || response.ok) {
+        showSuccess('Request declined successfully');
+        // Reset declining state
+        setDecliningRequestId(null);
+        setDeclineReason('');
+        // Refresh requests
+        fetchPendingRequests();
+        if (onRequestProcessed) {
+          onRequestProcessed();
+        }
       } else {
-        const errorData = await response.json();
-        showError(errorData.message || 'Failed to decline request. Please try again.');
+        showError(result.message || 'Failed to decline request');
       }
     } catch (error) {
       console.error('Error declining request:', error);
@@ -254,36 +286,63 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
                       <div className="customer-list">
                         <h4>Customers in this request:</h4>
                         <ul>
-                          {request.customers.slice(0, 3).map((customer, idx) => (
+                          {request.customers.map((customer, idx) => (
                             <li key={idx}>
                               {customer.name} - {customer.accountNumber}
                             </li>
                           ))}
-                          {request.customers.length > 3 && (
-                            <li className="more-customers">
-                              +{request.customers.length - 3} more customers
-                            </li>
-                          )}
                         </ul>
                       </div>
 
+
                       <div className="summary-actions">
-                        <button
-                          className="decline-all-btn"
-                          onClick={() => handleDeclineRequest(request.id)}
-                          disabled={loading}
-                        >
-                          <i className="bi bi-x-circle"></i>
-                          Decline
-                        </button>
-                        <button
-                          className="accept-all-btn"
-                          onClick={() => handleAcceptRequest(request.id)}
-                          disabled={loading}
-                        >
-                          <i className="bi bi-check-circle"></i>
-                          Accept
-                        </button>
+                        {decliningRequestId === request.id ? (
+                          <div className="decline-reason-section">
+                            <label htmlFor={`decline-reason-${request.id}`}>
+                              Reason for declining:
+                            </label>
+                            <textarea
+                              id={`decline-reason-${request.id}`}
+                              value={declineReason}
+                              onChange={(e) => setDeclineReason(e.target.value)}
+                              placeholder="Please provide a reason..."
+                              rows="3"
+                              className="decline-reason-input"
+                            />
+                            <div className="decline-actions">
+                              <button
+                                className="cancel-decline-btn"
+                                onClick={handleCancelDecline}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                className="confirm-decline-btn"
+                                onClick={() => handleDeclineRequest(request.id)}
+                                disabled={loading || !declineReason.trim()}
+                              >
+                                {loading ? 'Declining...' : 'Confirm Decline'}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <button
+                              className="decline-all-btn"
+                              onClick={() => handleDeclineClick(request.id)}
+                              disabled={loading}
+                            >
+                              <i className="bi bi-x-circle"></i> Decline
+                            </button>
+                            <button
+                              className="accept-all-btn"
+                              onClick={() => handleAcceptRequest(request.id)}
+                              disabled={loading}
+                            >
+                              <i className="bi bi-check-circle"></i> Accept
+                            </button>
+                          </>
+                        )}
                       </div>
                     </>
                   )}

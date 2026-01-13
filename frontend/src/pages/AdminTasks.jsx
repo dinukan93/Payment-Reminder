@@ -170,36 +170,42 @@ function AdminTasks() {
 
   const sendRequestToCaller = async (callerName, callerId, customers) => {
     try {
-      const today = new Date();
-      const todayString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+      // Find the caller's numeric ID from the callers list
+      const caller = availableCallers.find(c => c.callerId === callerId || c.id === callerId);
 
-      // Get logged-in admin ID
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      const adminId = userData.id;
+      if (!caller) {
+        console.error('Caller not found:', callerId);
+        toast.error('Failed to find caller. Please try again.');
+        return;
+      }
+
+      // Get the numeric caller ID from the database
+      const response = await secureFetch(`/api/callers`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch caller details');
+      }
+
+      const callersData = await response.json();
+      const callersArray = Array.isArray(callersData) ? callersData : (callersData.data || []);
+      const callerFromDB = callersArray.find(c => c.callerId === callerId);
+
+      if (!callerFromDB) {
+        console.error('Caller not found in database:', callerId);
+        toast.error('Failed to find caller in database. Please try again.');
+        return;
+      }
 
       const requestData = {
-        callerName: callerName,
-        callerId: callerId,
-        customers: customers.map(customer => ({
-          customerId: customer.id,
-          accountNumber: customer.accountNumber,
-          name: customer.name,
-          contactNumber: customer.contactNumber,
-          amountOverdue: customer.amountOverdue,
-          daysOverdue: customer.daysOverdue
-        })),
-        customersSent: customers.length,
-        sentDate: todayString,
-        status: 'PENDING',
-        adminId: adminId
+        caller_id: callerFromDB.id, // Use numeric ID from database
+        customer_ids: customers.map(c => c.id) // Array of customer IDs
       };
 
       // Debug: log callerId and requestData
-      console.log('Sending request to backend with callerId:', callerId);
+      console.log('Sending request to backend with caller_id:', callerFromDB.id);
       console.log('Request payload:', requestData);
 
       // Save request to backend
-      const response = await secureFetch(`/api/requests`, {
+      const createResponse = await secureFetch(`/api/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,11 +213,12 @@ function AdminTasks() {
         body: JSON.stringify(requestData)
       });
 
-      if (response.ok) {
+      if (createResponse.ok) {
         console.log('Request sent to caller:', callerName);
       } else {
-        console.error('Failed to save request to backend');
-        toast.error('Failed to send request. Please try again.');
+        const errorData = await createResponse.json();
+        console.error('Failed to save request to backend:', errorData);
+        toast.error(errorData.message || 'Failed to send request. Please try again.');
       }
     } catch (error) {
       console.error('Error sending request to caller:', error);

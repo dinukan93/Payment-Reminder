@@ -56,7 +56,14 @@ function EditCallerModal({ show, caller, onClose, onSave }) {
 
     setLoading(true);
     try {
-      const response = await secureFetch(`/callers/${caller._id}`, {
+      // Use the numeric ID from the caller object
+      const callerId = caller.id;
+
+      if (!callerId) {
+        throw new Error('Caller ID is missing');
+      }
+
+      const response = await secureFetch(`/api/callers/${callerId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -71,7 +78,7 @@ function EditCallerModal({ show, caller, onClose, onSave }) {
       }
 
       const result = await response.json();
-      onSave(result.data);
+      onSave(result.data || result);
       onClose();
     } catch (err) {
       setError(err.message || 'Error updating Caller');

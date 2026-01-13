@@ -187,6 +187,9 @@ class AutoAssignmentController extends Controller
                 $caller = $assignment['caller'];
                 $customerIds = $assignment['customer_ids'];
 
+                // Get the authenticated admin/supervisor name
+                $sentBy = $admin->name ?? $admin->email ?? 'Admin';
+
                 try {
                     TaskRequest::create([
                         'task_id' => 'AUTO-' . time() . '-' . $callerId,
@@ -195,7 +198,8 @@ class AutoAssignmentController extends Controller
                         'customers_sent' => count($customerIds),
                         'sent_date' => now(),
                         'status' => 'PENDING',
-                        'customer_ids' => $customerIds
+                        'customer_ids' => $customerIds,
+                        'sent_by' => $sentBy
                     ]);
                 } catch (\Exception $e) {
                     Log::error('Failed to create TaskRequest: ' . $e->getMessage());

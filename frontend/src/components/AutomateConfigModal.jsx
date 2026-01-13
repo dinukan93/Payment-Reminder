@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./AutomateConfigModal.css";
-import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 import { showError } from "./Notifications";
 
 function AutomateConfigModal({ isOpen, onClose, onConfirm }) {
@@ -18,18 +18,14 @@ function AutomateConfigModal({ isOpen, onClose, onConfirm }) {
   const fetchAvailableCallers = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/callers`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await secureFetch(`/api/callers`);
 
       if (response.ok) {
         const result = await response.json();
         const callersData = result.data || result;
-        
+
         // Filter for enabled callers (not OFFLINE) with available capacity
-        const availableCallers = callersData.filter(c => 
+        const availableCallers = callersData.filter(c =>
           c.status !== 'OFFLINE' && c.currentLoad < c.maxLoad
         ).map(c => ({
           id: c._id || c.id,

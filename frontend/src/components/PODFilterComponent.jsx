@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./PODFilterComponent.css";
 import { showSuccess, showError } from "./Notifications";
-import { readExcelFile as readExcel, jsonToExcelBuffer } from '../utils/excelUtils';
+import { readExcelFile as readExcel, jsonToExcelBuffer, downloadExcelFile, createMultiSheetWorkbook } from '../utils/excelUtils';
 import JSZip from 'jszip';
 import API_BASE_URL from "../config/api";
 import { secureFetch } from "../utils/api";
@@ -638,74 +638,47 @@ function PODFilterComponent({ isOpen, onClose }) {
         const zip = new JSZip();
 
         if (results.vipData.length > 0) {
-          const vipSheet = XLSX.utils.json_to_sheet(results.vipData);
-          const vipWorkbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(vipWorkbook, vipSheet, "VIP Records");
-          const vipBuffer = XLSX.write(vipWorkbook, { bookType: 'xlsx', type: 'array' });
+          const vipBuffer = await jsonToExcelBuffer(results.vipData, "VIP Records");
           zip.file(`VIP_Records_${date}.xlsx`, vipBuffer);
         }
 
         if (results.enterpriseGovData.length > 0) {
-          const govSheet = XLSX.utils.json_to_sheet(results.enterpriseGovData);
-          const govWorkbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(govWorkbook, govSheet, "Enterprise-Gov");
-          const govBuffer = XLSX.write(govWorkbook, { bookType: 'xlsx', type: 'array' });
+          const govBuffer = await jsonToExcelBuffer(results.enterpriseGovData, "Enterprise-Gov");
           zip.file(`Enterprise_Gov_${date}.xlsx`, govBuffer);
         }
 
         if (results.enterpriseLargeData.length > 0) {
-          const largeSheet = XLSX.utils.json_to_sheet(results.enterpriseLargeData);
-          const largeWorkbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(largeWorkbook, largeSheet, "Enterprise-Large");
-          const largeBuffer = XLSX.write(largeWorkbook, { bookType: 'xlsx', type: 'array' });
+          const largeBuffer = await jsonToExcelBuffer(results.enterpriseLargeData, "Enterprise-Large");
           zip.file(`Enterprise_Large_${date}.xlsx`, largeBuffer);
         }
 
         if (results.enterpriseMediumData.length > 0) {
-          const mediumSheet = XLSX.utils.json_to_sheet(results.enterpriseMediumData);
-          const mediumWorkbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(mediumWorkbook, mediumSheet, "Enterprise-Medium");
-          const mediumBuffer = XLSX.write(mediumWorkbook, { bookType: 'xlsx', type: 'array' });
+          const mediumBuffer = await jsonToExcelBuffer(results.enterpriseMediumData, "Enterprise-Medium");
           zip.file(`Enterprise_Medium_${date}.xlsx`, mediumBuffer);
         }
 
         if (results.wholesalesData.length > 0) {
-          const wholesalesSheet = XLSX.utils.json_to_sheet(results.wholesalesData);
-          const wholesalesWorkbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wholesalesWorkbook, wholesalesSheet, "Wholesales");
-          const wholesalesBuffer = XLSX.write(wholesalesWorkbook, { bookType: 'xlsx', type: 'array' });
+          const wholesalesBuffer = await jsonToExcelBuffer(results.wholesalesData, "Wholesales");
           zip.file(`Wholesales_${date}.xlsx`, wholesalesBuffer);
         }
 
         if (results.smeData.length > 0) {
-          const smeSheet = XLSX.utils.json_to_sheet(results.smeData);
-          const smeWorkbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(smeWorkbook, smeSheet, "SME");
-          const smeBuffer = XLSX.write(smeWorkbook, { bookType: 'xlsx', type: 'array' });
+          const smeBuffer = await jsonToExcelBuffer(results.smeData, "SME");
           zip.file(`SME_${date}.xlsx`, smeBuffer);
         }
 
         if (results.retailMicroData.length > 0) {
-          const retailSheet = XLSX.utils.json_to_sheet(results.retailMicroData);
-          const retailWorkbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(retailWorkbook, retailSheet, "Retail-Micro");
-          const retailBuffer = XLSX.write(retailWorkbook, { bookType: 'xlsx', type: 'array' });
+          const retailBuffer = await jsonToExcelBuffer(results.retailMicroData, "Retail-Micro");
           zip.file(`Retail_Micro_${date}.xlsx`, retailBuffer);
         }
 
         if (results.excludedData.length > 0) {
-          const excludedSheet = XLSX.utils.json_to_sheet(results.excludedData);
-          const excludedWorkbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(excludedWorkbook, excludedSheet, "Excluded (SU)");
-          const excludedBuffer = XLSX.write(excludedWorkbook, { bookType: 'xlsx', type: 'array' });
+          const excludedBuffer = await jsonToExcelBuffer(results.excludedData, "Excluded (SU)");
           zip.file(`Excluded_SU_${date}.xlsx`, excludedBuffer);
         }
 
         if (results.allData.length > 0) {
-          const allSheet = XLSX.utils.json_to_sheet(results.allData);
-          const allWorkbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(allWorkbook, allSheet, "All Records");
-          const allBuffer = XLSX.write(allWorkbook, { bookType: 'xlsx', type: 'array' });
+          const allBuffer = await jsonToExcelBuffer(results.allData, "All Records");
           zip.file(`All_Records_${date}.xlsx`, allBuffer);
         }
 
@@ -721,36 +694,38 @@ function PODFilterComponent({ isOpen, onClose }) {
 
         showSuccess('All results downloaded as ZIP file successfully');
       } else {
-        // Download individual file type
-        const workbook = XLSX.utils.book_new();
+        // Download individual file type with multiple sheets if applicable
+        let buffer;
+        let fileName;
 
         if (type === 'vip') {
-          const vipSheet = XLSX.utils.json_to_sheet(results.vipData);
-          XLSX.utils.book_append_sheet(workbook, vipSheet, "VIP Records");
+          buffer = await jsonToExcelBuffer(results.vipData, "VIP Records");
+          fileName = `POD_Report_VIP_${date}.xlsx`;
         } else if (type === 'enterprise') {
-          const govSheet = XLSX.utils.json_to_sheet(results.enterpriseGovData);
-          XLSX.utils.book_append_sheet(workbook, govSheet, "Enterprise-Gov");
-          const largeSheet = XLSX.utils.json_to_sheet(results.enterpriseLargeData);
-          XLSX.utils.book_append_sheet(workbook, largeSheet, "Enterprise-Large");
-          const mediumSheet = XLSX.utils.json_to_sheet(results.enterpriseMediumData);
-          XLSX.utils.book_append_sheet(workbook, mediumSheet, "Enterprise-Medium");
-          const wholesalesSheet = XLSX.utils.json_to_sheet(results.wholesalesData);
-          XLSX.utils.book_append_sheet(workbook, wholesalesSheet, "Wholesales");
+          // Create workbook with multiple sheets for enterprise
+          const sheets = {
+            'Enterprise-Gov': results.enterpriseGovData,
+            'Enterprise-Large': results.enterpriseLargeData,
+            'Enterprise-Medium': results.enterpriseMediumData,
+            'Wholesales': results.wholesalesData
+          };
+          buffer = await createMultiSheetWorkbook(sheets);
+          fileName = `POD_Report_Enterprise_${date}.xlsx`;
         } else if (type === 'sme') {
-          const smeSheet = XLSX.utils.json_to_sheet(results.smeData);
-          XLSX.utils.book_append_sheet(workbook, smeSheet, "SME");
+          buffer = await jsonToExcelBuffer(results.smeData, "SME");
+          fileName = `POD_Report_SME_${date}.xlsx`;
         } else if (type === 'retail') {
-          const retailSheet = XLSX.utils.json_to_sheet(results.retailMicroData);
-          XLSX.utils.book_append_sheet(workbook, retailSheet, "Retail-Micro");
+          buffer = await jsonToExcelBuffer(results.retailMicroData, "Retail-Micro");
+          fileName = `POD_Report_Retail_${date}.xlsx`;
         } else if (type === 'excluded') {
-          const excludedSheet = XLSX.utils.json_to_sheet(results.excludedData);
-          XLSX.utils.book_append_sheet(workbook, excludedSheet, "Excluded (SU)");
+          buffer = await jsonToExcelBuffer(results.excludedData, "Excluded (SU)");
+          fileName = `POD_Report_Excluded_${date}.xlsx`;
         }
 
-        const fileName = `POD_Report_${type}_${date}.xlsx`;
-        XLSX.writeFile(workbook, fileName);
-
-        showSuccess(`${type.toUpperCase()} results downloaded successfully`);
+        if (buffer && fileName) {
+          downloadExcelFile(buffer, fileName);
+          showSuccess(`${type.toUpperCase()} results downloaded successfully`);
+        }
       }
     } catch (error) {
       console.error('Error downloading results:', error);

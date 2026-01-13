@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './TaskHistoryModal.css';
-import API_BASE_URL from '../config/api';
+import { secureFetch } from '../utils/api';
 
 function TaskHistoryModal({ show, caller, onClose }) {
   const [tasks, setTasks] = useState([]);
@@ -17,8 +17,12 @@ function TaskHistoryModal({ show, caller, onClose }) {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/requests/caller/${caller.callerId}`,
+      // Use the numeric ID from the caller object
+      const callerNumericId = caller.id || caller.callerId;
+
+      // Use the /api/requests endpoint with callerId query parameter
+      const response = await secureFetch(
+        `/api/requests?callerId=${callerNumericId}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -31,7 +35,9 @@ function TaskHistoryModal({ show, caller, onClose }) {
       }
 
       const result = await response.json();
-      setTasks(Array.isArray(result.data) ? result.data : result.data?.data || []);
+      // The result should be an array of requests or wrapped in a data property
+      const requestsData = Array.isArray(result) ? result : (result.data || []);
+      setTasks(requestsData);
     } catch (err) {
       setError(err.message || 'Error fetching task history');
       console.error('Error fetching task history:', err);
@@ -115,7 +121,7 @@ function TaskHistoryModal({ show, caller, onClose }) {
           ) : (
             <div className="tasks-list">
               {tasks.map(task => (
-                <div key={task._id} className="task-card">
+                <div key={task.id} className="task-card">
                   <div className="task-header">
                     <div className="task-info">
                       <h4>Task ID: {task.taskId}</h4>

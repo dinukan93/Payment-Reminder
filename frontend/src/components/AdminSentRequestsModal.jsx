@@ -24,10 +24,9 @@ function AdminSentRequestsModal({ isOpen, onClose, sentRequests = [], onRequestC
     setCancellingRequestId(requestId);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/requests/${requestId}/cancel`, {
+      const response = await secureFetch(`/api/requests/${requestId}/cancel`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         }
       });

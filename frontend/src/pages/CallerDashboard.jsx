@@ -39,7 +39,7 @@ function CallerDashboard() {
         console.error('No caller ID found in localStorage');
         return;
       }
-      const response = await secureFetch(`/customers?callerId=${callerId}`, {
+      const response = await secureFetch(`/api/customers?callerId=${callerId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -139,7 +139,7 @@ function CallerDashboard() {
       });
 
       // Save to backend API using the contact endpoint
-      const response = await secureFetch(`/customers/${existingCustomer._id}/contact`, {
+      const response = await secureFetch(`/api/customers/${existingCustomer._id}/contact`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

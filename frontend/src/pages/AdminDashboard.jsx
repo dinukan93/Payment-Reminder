@@ -5,7 +5,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import AdminSentRequestsModal from "../components/AdminSentRequestsModal";
 import CallerDetailsModal from "../components/CallerDetailsModal";
 import { secureFetch } from "../utils/api";
-import { showSuccess } from "../components/Notifications";
+import { showSuccess, showError } from "../components/Notifications";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -99,8 +99,9 @@ function AdminDashboard() {
           status: req.status,
           respondedDate: req.responded_date ? new Date(req.responded_date).toLocaleDateString() : null,
           reason: req.reason,
-          customers: req.customers || null,
-          customer_ids: req.customer_ids || []
+          customers: req.customers || [],
+          customer_ids: req.customer_ids || [],
+          sentBy: req.sent_by 
         }));
 
         setSentRequests(mappedRequests);
@@ -179,52 +180,42 @@ function AdminDashboard() {
 
 
 
-  // Function to send request to caller (for testing)
-  const handleSendRequestToCaller = (callerName, callerId, customers) => {
-    const newRequestId = Date.now();
-    const today = new Date();
-    const todayString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+  // Function to send request to caller
+  const handleSendRequestToCaller = async (callerName, callerId, customers) => {
+    try {
+      // Extract customer IDs from the customers array
+      const customerIds = customers.map(customer => customer.id);
 
-    const newRequest = {
-      id: newRequestId,
-      callerName: callerName,
-      callerId: callerId,
-      customersSent: customers.length,
-      sentDate: todayString,
-      status: "PENDING",
-      respondedDate: null,
-      customers: customers
-    };
+      // Send POST request to backend API
+      const response = await secureFetch('/api/requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          caller_id: callerId,
+          customer_ids: customerIds
+        })
+      });
 
-    // Add to sent requests
-    setSentRequests(prev => [...prev, newRequest]);
+      if (response.ok) {
+        const createdRequest = await response.json();
 
-    // Store in localStorage for caller to receive
-    const requestData = {
-      requestId: newRequestId,
-      callerName: callerName,
-      callerId: callerId,
-      customers: customers.map((customer, index) => ({
-        id: index + 1,
-        accountNumber: customer.accountNumber,
-        name: customer.name,
-        contactNumber: customer.contactNumber || "N/A",
-        amountOverdue: customer.amountOverdue,
-        daysOverdue: customer.daysOverdue,
-        date: todayString,
-        sentBy: "Admin",
-        sentDate: todayString
-      })),
-      sentDate: todayString
-    };
+        // Refresh dashboard data to show the new request
+        await fetchDashboardData(false);
 
-    localStorage.setItem('pendingAdminRequest', JSON.stringify(requestData));
+        showSuccess(`Request sent to ${callerName} successfully!`);
 
-    console.log('Request sent to caller:', callerName);
-    console.log('Request data stored in localStorage:', requestData);
-    console.log('Verify localStorage:', localStorage.getItem('pendingAdminRequest'));
-
-    showSuccess(`Request sent to ${callerName}! Switch to Caller Dashboard to see the request.`);
+        console.log('Request created in backend:', createdRequest);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to create request:', errorData);
+        showError(errorData.message || 'Failed to send request to caller. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending request to caller:', error);
+      showError('Failed to send request to caller. Please check your connection and try again.');
+    }
   };
 
   return (

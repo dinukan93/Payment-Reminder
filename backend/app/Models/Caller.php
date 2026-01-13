@@ -60,7 +60,7 @@ class Caller extends Authenticatable
     // Relationship: Caller has many customers
     public function customers()
     {
-        return $this->hasMany(Customer::class, 'assigned_to');
+        return $this->hasMany(FilteredCustomer::class, 'assigned_to');
     }
 
     // Relationship: Caller has many requests

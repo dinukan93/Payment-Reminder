@@ -24,7 +24,7 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
 
         if (!callerId) return;
 
-        const response = await secureFetch(`/requests?callerId=${callerId}&status=PENDING`, {
+        const response = await secureFetch(`/api/requests?callerId=${callerId}&status=PENDING`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json'
@@ -33,7 +33,9 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
 
         if (response.ok) {
           const data = await response.json();
-          const count = data.data?.length || 0;
+          // Handle both flat array and nested data.data format
+          const requestsArray = Array.isArray(data) ? data : (data.data || []);
+          const count = requestsArray.length;
           console.log('Checking pending requests from MySQL... Found:', count);
           setPendingRequestsCount(count);
         }

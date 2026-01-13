@@ -80,7 +80,24 @@ class RequestController extends Controller
             // Attach customer details to each request
             $results->transform(function ($req) {
                 if (!empty($req->customer_ids)) {
-                    $req->customers = FilteredCustomer::whereIn('id', $req->customer_ids)->get();
+                    $customers = FilteredCustomer::whereIn('id', $req->customer_ids)->get();
+
+                    // Transform customer data to match frontend expectations
+                    $req->customers = $customers->map(function ($customer) {
+                        return [
+                            'id' => $customer->id,
+                            'accountNumber' => $customer->ACCOUNT_NUM,
+                            'name' => $customer->CUSTOMER_NAME,
+                            'contactNumber' => $customer->MOBILE_CONTACT_TEL,
+                            'amountOverdue' => $customer->NEW_ARREARS,
+                            'daysOverdue' => $customer->AGE_MONTHS,
+                            'region' => $customer->REGION,
+                            'rtom' => $customer->RTOM,
+                            'productLabel' => $customer->PRODUCT_LABEL,
+                            'medium' => $customer->MEDIUM,
+                            'status' => $customer->status
+                        ];
+                    });
                 } else {
                     $req->customers = [];
                 }
@@ -110,6 +127,22 @@ class RequestController extends Controller
 
         $caller = Caller::findOrFail($validated['caller_id']);
 
+        // Get the authenticated user (admin/supervisor) who is sending the request
+        $user = $request->user();
+        Log::info('Creating request - authenticated user:', [
+            'user' => $user,
+            'user_id' => $user ? $user->id : null,
+            'user_name' => $user ? $user->name : null,
+            'user_type' => $user ? get_class($user) : null
+        ]);
+
+        $sentBy = 'Admin'; // Default fallback
+        if ($user) {
+            $sentBy = $user->name ?? $user->username ?? $user->email ?? 'Admin';
+        }
+
+        Log::info('Determined sent_by value:', ['sent_by' => $sentBy]);
+
         $taskRequest = TaskRequest::create([
             'task_id' => 'TASK-' . time() . '-' . rand(1000, 9999),
             'caller_id' => $caller->id,
@@ -117,7 +150,8 @@ class RequestController extends Controller
             'customers_sent' => count($validated['customer_ids']),
             'sent_date' => now(),
             'status' => 'PENDING',
-            'customer_ids' => $validated['customer_ids']
+            'customer_ids' => $validated['customer_ids'],
+            'sent_by' => $sentBy
         ]);
 
         // DO NOT assign customers to caller yet - wait for acceptance
