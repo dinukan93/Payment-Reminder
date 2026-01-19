@@ -1002,54 +1002,6 @@ function PODFilterComponent({ isOpen, onClose }) {
             )}
           </div>
 
-          {/* Configuration Section */}
-          <div className="upload-section">
-            <h3>3. Configure Account Distribution Limits</h3>
-            <p className="config-description">
-              Configure account distribution limits for call center assignments.
-              Retail/Micro FTTH records with NEW_ARREARS between 3,000 and 10,000 will be distributed across call centers.
-            </p>
-
-            <div className="config-section">
-              <h4>Account Distribution Limits</h4>
-              <div className="config-grid">
-                <div className="config-item">
-                  <label>Call Center Staff Limit:</label>
-                  <input
-                    type="number"
-                    value={config.callCenterStaffLimit}
-                    onChange={(e) => setConfig({ ...config, callCenterStaffLimit: parseInt(e.target.value) })}
-                    placeholder="e.g., 30000"
-                  />
-                  <span className="config-hint">Maximum accounts for Call Center Staff</span>
-                </div>
-                <div className="config-item">
-                  <label>Call Center Limit:</label>
-                  <input
-                    type="number"
-                    value={config.ccLimit}
-                    onChange={(e) => setConfig({ ...config, ccLimit: parseInt(e.target.value) })}
-                    placeholder="e.g., 5000"
-                  />
-                  <span className="config-hint">Maximum accounts for CC</span>
-                </div>
-                <div className="config-item">
-                  <label>Staff Limit:</label>
-                  <input
-                    type="number"
-                    value={config.staffLimit}
-                    onChange={(e) => setConfig({ ...config, staffLimit: parseInt(e.target.value) })}
-                    placeholder="e.g., 3000"
-                  />
-                  <span className="config-hint">Maximum accounts for Staff</span>
-                </div>
-              </div>
-              <div className="config-summary">
-                <strong>Total Capacity:</strong> {config.callCenterStaffLimit + config.ccLimit + config.staffLimit} accounts
-              </div>
-            </div>
-          </div>
-
           {/* Process Button */}
           <div className="action-section">
             <button

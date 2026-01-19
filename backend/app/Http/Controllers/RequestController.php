@@ -183,7 +183,7 @@ class RequestController extends Controller
             FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
                 ->update([
                     'assigned_to' => $taskRequest->caller_id,
-                    'status' => 'pending'
+                    'status' => 'overdue'  // Not contacted until call response is recorded
                 ]);
         }
 

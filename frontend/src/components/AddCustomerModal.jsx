@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./AddCustomerModal.css";
 import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 import { ALL_REGIONS, getRtomsForRegion } from "../config/regionConfig";
 import { showSuccess } from "./Notifications";
 
@@ -74,13 +75,11 @@ function AddCustomerModal({ isOpen, onClose, onSuccess }) {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
 
-      const response = await fetch(`${API_BASE_URL}/customers`, {
+      const response = await secureFetch('/api/customers', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
       });

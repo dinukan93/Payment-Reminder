@@ -56,9 +56,11 @@ function CallerTasks() {
   useEffect(() => {
     let filtered = allCustomers;
 
-    // Apply status filter
+    // Apply status filter (case-insensitive)
     if (statusFilter !== "ALL") {
-      filtered = filtered.filter(c => c.status === statusFilter);
+      filtered = filtered.filter(c =>
+        (c.status || "").toUpperCase() === statusFilter.toUpperCase()
+      );
     }
 
     // Apply search filter

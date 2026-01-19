@@ -301,7 +301,7 @@ class CustomerController extends Controller
             $validated = $request->validate([
                 'callOutcome' => 'required|string',
                 'customerResponse' => 'nullable|string',
-                'paymentMade' => 'boolean',
+                'paymentMade' => 'nullable|boolean',
                 'promisedDate' => 'nullable|date'
             ]);
 
@@ -317,8 +317,8 @@ class CustomerController extends Controller
 
             $contactHistory = ContactHistory::create($contactData);
 
-            // Update customer status
-            $customer->update(['status' => 'PENDING']);
+            // Update customer status to pending after contact is recorded
+            $customer->update(['status' => 'pending']);
 
             return response()->json([
                 'success' => true,

@@ -126,11 +126,18 @@ function CallerDashboard() {
     console.log('Found customer:', existingCustomer.name, 'ID:', existingCustomer.id);
 
     try {
+      // Convert date from DD/MM/YYYY to YYYY-MM-DD format for Laravel
+      let formattedDate = promisedDate;
+      if (promisedDate && promisedDate.includes('/')) {
+        const [day, month, year] = promisedDate.split('/');
+        formattedDate = `${year}-${month}-${day}`;
+      }
+
       const requestBody = {
         callOutcome,
         customerResponse,
         paymentMade,
-        promisedDate
+        promisedDate: formattedDate
       };
 
       console.log('Sending request to backend:', {

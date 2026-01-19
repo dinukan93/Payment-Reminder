@@ -76,6 +76,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/distribution/distribute', [DataDistributionController::class, 'distributeToRegionsAndRtoms']);
     Route::get('/distribution/summary', [DataDistributionController::class, 'getDistributionSummary']);
 
+    // POD Filter Configuration (read access for all authenticated users)
+    Route::get('/pod-filter-config', [PodFilterConfigController::class, 'index']);
+
     // Superadmin routes
     Route::middleware('can:superadmin')->group(function () {
         Route::get('/superadmin/admins', [AdminController::class, 'getAllAdmins']);
@@ -84,8 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/superadmin/admins/{id}', [AdminController::class, 'deleteAdmin']);
         Route::get('/superadmin/rtoms', [AdminController::class, 'getRtoms']);
 
-        // POD Filter Configuration
-        Route::get('/pod-filter-config', [PodFilterConfigController::class, 'index']);
+        // POD Filter Configuration (write access for superadmin only)
         Route::put('/pod-filter-config', [PodFilterConfigController::class, 'update']);
         Route::post('/pod-filter-config/reset', [PodFilterConfigController::class, 'reset']);
 
