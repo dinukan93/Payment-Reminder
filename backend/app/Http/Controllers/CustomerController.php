@@ -87,7 +87,7 @@ class CustomerController extends Controller
                 $history = $customer->contactHistory->map(function ($item) {
                     return [
                         'contactDate' => $item->contact_date ? $item->contact_date->format('Y-m-d') : null,
-                        'promisedDate' => $item->promised_date ? $item->promised_date->format('Y-m-d') : null,
+                        'promisedDate' => $item->promised_date ? $item->promised_date->format('d/m/Y') : null, // Changed to DD/MM/YYYY
                         'outcome' => $item->outcome,
                         'remark' => $item->remark,
                         'paymentMade' => (bool) $item->payment_made

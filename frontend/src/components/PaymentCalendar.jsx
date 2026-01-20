@@ -24,9 +24,18 @@ function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
   // Update selected date customers whenever data or selected date changes
   useEffect(() => {
     const dateString = formatDate(selectedDate);
+    console.log('📅 Calendar: Looking for payments on', dateString);
+    console.log('📅 Calendar: Total promisedPayments:', promisedPayments.length);
+    console.log('📅 Calendar: All promisedPayments:', promisedPayments);
+
     const customers = promisedPayments.filter(
-      (payment) => payment.promisedDate === dateString
+      (payment) => {
+        console.log('  Comparing:', payment.promisedDate, '===', dateString, '?', payment.promisedDate === dateString);
+        return payment.promisedDate === dateString;
+      }
     );
+
+    console.log('📅 Calendar: Found', customers.length, 'customers for', dateString);
     setSelectedDateCustomers(customers);
   }, [JSON.stringify(promisedPayments), selectedDate]);
 
@@ -150,9 +159,8 @@ function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
                   return (
                     <div
                       key={day}
-                      className={`calendar-day ${isToday(day) ? "today" : ""} ${
-                        isSelectedDate(day) ? "selected" : ""
-                      } ${paymentCount > 0 ? "has-payments" : ""}`}
+                      className={`calendar-day ${isToday(day) ? "today" : ""} ${isSelectedDate(day) ? "selected" : ""
+                        } ${paymentCount > 0 ? "has-payments" : ""}`}
                       onClick={() => handleDateClick(day)}
                     >
                       <span className="day-number">{day}</span>

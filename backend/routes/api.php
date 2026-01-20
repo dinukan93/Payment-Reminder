@@ -39,7 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Callers
     Route::get('/callers', [CallerController::class, 'index']);
     Route::post('/callers', [CallerController::class, 'store']);
-    Route::get('/callers/next-id', [CallerController::class, 'nextCallerId']);
+    Route::get('/callers/next-id', [CallerController::class, 'nextCallerId']); // Must come before {id} route
     Route::get('/callers/{id}', [CallerController::class, 'show']);
     Route::put('/callers/{id}', [CallerController::class, 'update']);
     Route::delete('/callers/{id}', [CallerController::class, 'destroy']);

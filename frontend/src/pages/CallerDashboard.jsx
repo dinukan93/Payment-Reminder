@@ -242,22 +242,31 @@ function CallerDashboard() {
   const promisedPayments = useMemo(() => {
     const paymentsWithDates = [];
 
+    console.log('🔍 DEBUG: Building promisedPayments from contactedCustomers:', contactedCustomers.length, 'customers');
+
     contactedCustomers.forEach(customer => {
+      console.log('🔍 Customer:', customer.name, 'Status:', customer.status, 'Has history:', !!customer.contactHistory);
+
       // Only include customers with PENDING status (not COMPLETED)
-      if (customer.status === "PENDING" && customer.contactHistory && customer.contactHistory.length > 0) {
+      if (customer.status.toLowerCase() === "pending" && customer.contactHistory && customer.contactHistory.length > 0) {
         const latestContact = customer.contactHistory[customer.contactHistory.length - 1];
+        console.log('  Latest contact promisedDate:', latestContact.promisedDate);
+
         if (latestContact.promisedDate) {
-          paymentsWithDates.push({
+          const payment = {
             accountNumber: customer.accountNumber,
             name: customer.name,
             contactNumber: customer.contactNumber,
             amountOverdue: customer.amountOverdue,
             promisedDate: latestContact.promisedDate,
-          });
+          };
+          console.log('  ✅ Adding to promisedPayments:', payment);
+          paymentsWithDates.push(payment);
         }
       }
     });
 
+    console.log('🎯 Final promisedPayments array:', paymentsWithDates);
     return paymentsWithDates;
   }, [contactedCustomers]);
 
