@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Admin;
 use App\Models\Caller;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -21,20 +22,38 @@ class SettingsController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        // Determine user type
+        $userType = $user instanceof Admin ? 'admin' : 'caller';
+
+        // Get or create settings
+        $setting = $user->setting;
+        if (!$setting) {
+            $setting = Setting::create([
+                'user_id' => $user->id,
+                'user_type' => $userType,
+                'avatar' => null,
+                'email_notifications' => false,
+                'payment_reminder' => false,
+                'call_notifications' => false,
+                'language' => 'English',
+                'timezone' => 'UTC',
+            ]);
+        }
+
         return response()->json([
             'id' => $user->id,
             'callerId' => $user->callerId ?? $user->adminId ?? '',
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone ?? '',
-            'avatar' => $user->avatar ?? '',
-            'role' => $user->role,
+            'avatar' => $setting->avatar ?? '',
+            'role' => $user->role ?? 'caller',
             'preferences' => [
-                'emailNotifications' => $user->email_notifications ?? false,
-                'paymentReminder' => $user->payment_reminder ?? false,
-                'callNotifications' => $user->call_notifications ?? false,
-                'language' => $user->language ?? 'English',
-                'timezone' => $user->timezone ?? 'UTC',
+                'emailNotifications' => (bool) $setting->email_notifications,
+                'paymentReminder' => (bool) $setting->payment_reminder,
+                'callNotifications' => (bool) $setting->call_notifications,
+                'language' => $setting->language ?? 'English',
+                'timezone' => $setting->timezone ?? 'UTC',
             ]
         ]);
     }
@@ -56,14 +75,28 @@ class SettingsController extends Controller
             'avatar' => 'nullable|string'
         ]);
 
-        $user->update($validated);
+        // Update user's name and phone
+        $user->update([
+            'name' => $validated['name'] ?? $user->name,
+            'phone' => $validated['phone'] ?? $user->phone,
+        ]);
+
+        // Update settings with avatar
+        if (isset($validated['avatar'])) {
+            $userType = $user instanceof Admin ? 'admin' : 'caller';
+            $setting = $user->setting ?? Setting::create([
+                'user_id' => $user->id,
+                'user_type' => $userType,
+            ]);
+            $setting->update(['avatar' => $validated['avatar']]);
+        }
 
         return response()->json([
             'msg' => 'Profile updated successfully',
             'data' => [
                 'name' => $user->name,
                 'phone' => $user->phone,
-                'avatar' => $user->avatar
+                'avatar' => $user->setting->avatar ?? null
             ]
         ]);
     }
@@ -118,25 +151,32 @@ class SettingsController extends Controller
             'timezone' => 'string|max:50',
         ]);
 
+        // Get or create settings
+        $userType = $user instanceof Admin ? 'admin' : 'caller';
+        $setting = $user->setting ?? Setting::create([
+            'user_id' => $user->id,
+            'user_type' => $userType,
+        ]);
+
         // Map camelCase to snake_case for database
         $updateData = [
-            'email_notifications' => $validated['emailNotifications'] ?? false,
-            'payment_reminder' => $validated['paymentReminder'] ?? false,
-            'call_notifications' => $validated['callNotifications'] ?? false,
-            'language' => $validated['language'] ?? 'English',
-            'timezone' => $validated['timezone'] ?? 'UTC',
+            'email_notifications' => $validated['emailNotifications'] ?? $setting->email_notifications,
+            'payment_reminder' => $validated['paymentReminder'] ?? $setting->payment_reminder,
+            'call_notifications' => $validated['callNotifications'] ?? $setting->call_notifications,
+            'language' => $validated['language'] ?? $setting->language,
+            'timezone' => $validated['timezone'] ?? $setting->timezone,
         ];
 
-        $user->update($updateData);
+        $setting->update($updateData);
 
         return response()->json([
             'msg' => 'Preferences updated successfully',
             'data' => [
-                'emailNotifications' => $user->email_notifications,
-                'paymentReminder' => $user->payment_reminder,
-                'callNotifications' => $user->call_notifications,
-                'language' => $user->language,
-                'timezone' => $user->timezone,
+                'emailNotifications' => (bool) $setting->email_notifications,
+                'paymentReminder' => (bool) $setting->payment_reminder,
+                'callNotifications' => (bool) $setting->call_notifications,
+                'language' => $setting->language,
+                'timezone' => $setting->timezone,
             ]
         ]);
     }
