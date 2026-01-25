@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import "./Settings.css";
 import { useTheme } from "../context/ThemeContext";
 import {
@@ -13,9 +12,9 @@ import {
   FaMoon,
   FaSun,
 } from "react-icons/fa";
-import API_BASE_URL from "../config/api";
 import { toast } from "react-toastify";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { secureFetch } from "../utils/api";
 
 const Settings = () => {
   const { darkMode, toggleDarkMode } = useTheme();
@@ -56,46 +55,49 @@ const Settings = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(`${API_BASE_URL}/settings`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await secureFetch("/api/settings", {
+          method: "GET",
         });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Failed to load settings");
+
+        console.log("Settings data:", data);
 
         // Set profile data
         setFormData((prev) => ({
           ...prev,
-          callerId: res.data.callerId || "",
-          name: res.data.name || "",
-          email: res.data.email || "",
-          phone: res.data.phone || "",
-          avatar: res.data.avatar || "",
+          callerId: data.callerId || "",
+          name: data.name || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          avatar: data.avatar || "",
         }));
 
         // Set avatar preview if available
-        if (res.data.avatar) {
-          setAvatarPreview(res.data.avatar);
+        if (data.avatar) {
+          setAvatarPreview(data.avatar);
         }
 
         // Set preferences
-        if (res.data.preferences) {
+        if (data.preferences) {
           setPreferences({
-            emailNotifications:
-              res.data.preferences.emailNotifications || false,
-            paymentReminder: res.data.preferences.paymentReminder || false,
-            callNotifications: res.data.preferences.callNotifications || false,
-            language: res.data.preferences.language || "English",
-            timezone: res.data.preferences.timezone || "UTC",
+            emailNotifications: data.preferences.emailNotifications || false,
+            paymentReminder: data.preferences.paymentReminder || false,
+            callNotifications: data.preferences.callNotifications || false,
+            language: data.preferences.language || "English",
+            timezone: data.preferences.timezone || "UTC",
             darkMode: darkMode, // Use context value
           });
         }
       } catch (err) {
         console.error("Failed to load settings", err);
-        toast.error("Failed to load settings");
+        toast.error(err.message || "Failed to load settings");
       }
     };
 
     fetchSettings();
-  }, [darkMode]); 
+  }, [darkMode]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -123,25 +125,26 @@ const Settings = () => {
   const saveProfileImage = async () => {
     try {
       setLoadingImage(true);
-      const token = localStorage.getItem("token");
-      const res = await axios.put(
-        `${API_BASE_URL}/settings/profile`,
-        { avatar: formData.avatar },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await secureFetch("/api/settings/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar: formData.avatar }),
+      });
+      const data = await res.json();
 
-      toast.success(res.data?.msg || "Profile image updated successfully!");
+      if (!res.ok) throw new Error(data.msg || "Failed to save profile image");
+      toast.success(data.msg || "Profile image updated successfully!");
 
       // Update localStorage
       const userData = JSON.parse(localStorage.getItem("userData") || "{}");
       localStorage.setItem(
         "userData",
-        JSON.stringify({ ...userData, avatar: formData.avatar })
+        JSON.stringify({ ...userData, avatar: formData.avatar }),
       );
       window.dispatchEvent(new Event("storage"));
     } catch (err) {
       console.error("Save profile image error:", err);
-      toast.error(err.response?.data?.msg || "Failed to save profile image");
+      toast.error(err.message || "Failed to save profile image");
     } finally {
       setLoadingImage(false);
     }
@@ -151,12 +154,15 @@ const Settings = () => {
   const removeProfileImage = async () => {
     try {
       setLoadingImage(true);
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `${API_BASE_URL}/settings/profile`,
-        { avatar: "" },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await secureFetch("/api/settings/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar: "" }),
+      });
+      const data = await res.json();
+
+      if (!res.ok)
+        throw new Error(data.msg || "Failed to remove profile image");
 
       setFormData((prev) => ({ ...prev, avatar: "" }));
       setAvatarPreview("");
@@ -164,14 +170,14 @@ const Settings = () => {
       const userData = JSON.parse(localStorage.getItem("userData") || "{}");
       localStorage.setItem(
         "userData",
-        JSON.stringify({ ...userData, avatar: "" })
+        JSON.stringify({ ...userData, avatar: "" }),
       );
       window.dispatchEvent(new Event("storage"));
 
       toast.success("Profile image removed");
     } catch (err) {
       console.error("Remove profile image error:", err);
-      toast.error(err.response?.data?.msg || "Failed to remove profile image");
+      toast.error(err.message || "Failed to remove profile image");
     } finally {
       setLoadingImage(false);
     }
@@ -195,18 +201,19 @@ const Settings = () => {
       }
 
       setLoadingProfile(true);
-      const token = localStorage.getItem("token");
-      const res = await axios.put(
-        `${API_BASE_URL}settings/profile`,
-        {
+      const res = await secureFetch("/api/settings/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           name: formData.name.trim(),
           email: formData.email.trim().toLowerCase(),
           phone: formData.phone.trim(),
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        }),
+      });
+      const data = await res.json();
 
-      toast.success(res.data.msg || "Profile updated successfully!");
+      if (!res.ok) throw new Error(data.msg || "Failed to update profile");
+      toast.success(data.msg || "Profile updated successfully!");
 
       // Update localStorage
       const userData = JSON.parse(localStorage.getItem("userData") || "{}");
@@ -217,12 +224,12 @@ const Settings = () => {
           name: formData.name.trim(),
           email: formData.email.trim().toLowerCase(),
           phone: formData.phone.trim(),
-        })
+        }),
       );
       window.dispatchEvent(new Event("storage"));
     } catch (err) {
       console.error("Update profile info error:", err);
-      toast.error(err.response?.data?.msg || "Failed to update profile");
+      toast.error(err.message || "Failed to update profile");
     } finally {
       setLoadingProfile(false);
     }
@@ -249,17 +256,19 @@ const Settings = () => {
       }
 
       setLoadingPassword(true);
-      const token = localStorage.getItem("token");
-      const res = await axios.put(
-        `${API_BASE_URL}/settings/password`,
-        {
+      const res = await secureFetch("/api/settings/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           currentPassword: formData.currentPassword,
           newPassword: formData.newPassword,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+          newPassword_confirmation: formData.confirmPassword,
+        }),
+      });
+      const data = await res.json();
 
-      toast.success(res.data.msg || "Password changed successfully!");
+      if (!res.ok) throw new Error(data.msg || "Failed to change password");
+      toast.success(data.msg || "Password changed successfully!");
       setFormData((prev) => ({
         ...prev,
         currentPassword: "",
@@ -268,7 +277,7 @@ const Settings = () => {
       }));
     } catch (err) {
       console.error("Change password error:", err);
-      toast.error(err.response?.data?.msg || "Failed to change password");
+      toast.error(err.message || "Failed to change password");
     } finally {
       setLoadingPassword(false);
     }
@@ -291,18 +300,25 @@ const Settings = () => {
       setLoadingNotifications(true);
       const { emailNotifications, paymentReminder, callNotifications } =
         preferences;
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `${API_BASE_URL}/settings/preferences?type=notification`,
-        { emailNotifications, paymentReminder, callNotifications },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Notification preferences saved successfully!");
+      const res = await secureFetch("/api/settings/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          emailNotifications,
+          paymentReminder,
+          callNotifications,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok)
+        throw new Error(
+          data.msg || "Failed to update notification preferences",
+        );
+      toast.success(data.msg || "Notification preferences saved successfully!");
     } catch (err) {
       console.error("Failed to update preferences:", err);
-      toast.error(
-        err.response?.data?.msg || "Failed to update notification preferences"
-      );
+      toast.error(err.message || "Failed to update notification preferences");
     } finally {
       setLoadingNotifications(false);
     }
@@ -312,19 +328,20 @@ const Settings = () => {
   const saveSystemPreferences = async () => {
     try {
       setLoadingSystem(true);
-      const { language, timezone, darkMode } = preferences;
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `${API_BASE_URL}/settings/preferences?type=system`,
-        { language, timezone, darkMode },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("System preferences saved successfully!");
+      const { language, timezone } = preferences;
+      const res = await secureFetch("/api/settings/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language, timezone }),
+      });
+      const data = await res.json();
+
+      if (!res.ok)
+        throw new Error(data.msg || "Failed to update system preferences");
+      toast.success(data.msg || "System preferences saved successfully!");
     } catch (err) {
       console.error("Failed to update preferences:", err);
-      toast.error(
-        err.response?.data?.msg || "Failed to update system preferences"
-      );
+      toast.error(err.message || "Failed to update system preferences");
     } finally {
       setLoadingSystem(false);
     }
@@ -535,7 +552,7 @@ const Settings = () => {
                     onChange={(e) =>
                       handlePreferenceChange(
                         "emailNotifications",
-                        e.target.checked
+                        e.target.checked,
                       )
                     }
                   />
@@ -561,7 +578,7 @@ const Settings = () => {
                     onChange={(e) =>
                       handlePreferenceChange(
                         "paymentReminder",
-                        e.target.checked
+                        e.target.checked,
                       )
                     }
                   />
@@ -587,7 +604,7 @@ const Settings = () => {
                     onChange={(e) =>
                       handlePreferenceChange(
                         "callNotifications",
-                        e.target.checked
+                        e.target.checked,
                       )
                     }
                   />
