@@ -13,10 +13,10 @@ class UploadController extends Controller
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv'
         ]);
-        
+
         $file = $request->file('file');
         $data = (new FastExcel)->import($file);
-        
+
         $parsed = $data->map(function ($row) {
             return [
                 'accountNumber' => $row['Account Number'] ?? $row['accountNumber'] ?? null,
@@ -31,7 +31,7 @@ class UploadController extends Controller
                 'daysOverdue' => $row['Days Overdue'] ?? $row['daysOverdue'] ?? 0
             ];
         })->toArray();
-        
+
         return response()->json(['data' => $parsed]);
     }
 
@@ -40,15 +40,15 @@ class UploadController extends Controller
         $request->validate([
             'customers' => 'required|array'
         ]);
-        
+
         $imported = 0;
         $errors = [];
-        
+
         foreach ($request->customers as $customerData) {
             try {
                 // Check if customer already exists
                 $existing = Customer::where('accountNumber', $customerData['accountNumber'])->first();
-                
+
                 if ($existing) {
                     // Update existing customer
                     $existing->update($customerData);
@@ -56,7 +56,7 @@ class UploadController extends Controller
                     // Create new customer
                     Customer::create(array_merge($customerData, ['status' => 'overdue']));
                 }
-                
+
                 $imported++;
             } catch (\Exception $e) {
                 $errors[] = [
@@ -65,7 +65,7 @@ class UploadController extends Controller
                 ];
             }
         }
-        
+
         return response()->json([
             'message' => "Imported {$imported} customers",
             'imported' => $imported,
@@ -78,22 +78,22 @@ class UploadController extends Controller
         $request->validate([
             'customers' => 'required|array'
         ]);
-        
+
         $updated = 0;
-        
+
         foreach ($request->customers as $customerData) {
             $customer = Customer::where('accountNumber', $customerData['accountNumber'])->first();
-            
+
             if ($customer) {
                 $customer->update([
-                    'status' => 'paid',
-                    'amountOverdue' => 0,
-                    'daysOverdue' => 0
+                    'status' => 'COMPLETED',
+                    'NEW_ARREARS' => 0,
+                    'AGE_MONTHS' => 0
                 ]);
                 $updated++;
             }
         }
-        
+
         return response()->json([
             'message' => "Marked {$updated} customers as paid",
             'updated' => $updated

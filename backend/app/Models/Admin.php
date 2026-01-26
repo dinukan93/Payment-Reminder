@@ -3,13 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
+use App\Observers\AdminObserver;
 
 class Admin extends Authenticatable
 {
     use HasApiTokens;
+
+    protected static function booted(): void
+    {
+        static::observe(AdminObserver::class);
+    }
     protected $fillable = [
         'name',
         'email',
@@ -50,6 +57,12 @@ class Admin extends Authenticatable
     public function callers()
     {
         return $this->hasMany(Caller::class, 'created_by');
+    }
+
+    // Relationship: Admin has one setting
+    public function setting(): HasOne
+    {
+        return $this->hasOne(Setting::class, 'user_id')->where('user_type', 'admin');
     }
 
     // Check if superadmin

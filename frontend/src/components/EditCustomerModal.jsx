@@ -177,7 +177,9 @@ function EditCustomerModal({ show, customer, onClose, onSave }) {
               >
                 <option value="">Select RTOM</option>
                 {availableRtoms.map(rtom => (
-                  <option key={rtom} value={rtom}>{rtom}</option>
+                  <option key={rtom.code} value={rtom.code}>
+                    {rtom.code} - {rtom.name}
+                  </option>
                 ))}
               </select>
             </div>

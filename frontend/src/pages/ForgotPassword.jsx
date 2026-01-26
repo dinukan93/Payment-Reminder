@@ -51,7 +51,7 @@ const ForgotPassword = ()=>{
       
       setMessage('OTP verified successfully');
       console.log('Reset token received:', data.resetToken);
-      // Navigate to reset password page with phone and reset token
+      
       const resetToken = data.resetToken;
       navigate(`/reset-password?phone=${encodeURIComponent(phone)}&resetToken=${encodeURIComponent(resetToken)}`);
     }catch(err){

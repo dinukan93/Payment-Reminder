@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import './Register.css';
 import logo from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,7 @@ import { FaUser, FaPhone } from 'react-icons/fa';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 
 const Register = () => {
-  const [form, setForm] = useState({ name:'', email:'', phone:'', password:'', confirmPassword:'' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
   const [otp, setOtp] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,22 +20,22 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
-  const onChange = e => setForm({...form, [e.target.name]: e.target.value });
+  const onChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const submit = async (e) =>{
+  const submit = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
-    
+
     // Validate phone number: must be 10 digits starting with 0
     const phoneRegex = /^0\d{9}$/;
     if (!phoneRegex.test(form.phone)) {
       return setError('Phone number must be 10 digits starting with 0');
     }
-    
+
     if (form.password !== form.confirmPassword) return setError('Passwords do not match');
     setLoading(true);
-    try{
+    try {
       const res = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -43,13 +43,13 @@ const Register = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Registration failed');
-      
+
       // Registration success - now show OTP input
       setMessage(data.message);
       setShowOtpInput(true);
-    }catch(err){
+    } catch (err) {
       setError(err.message);
-    }finally{setLoading(false)}
+    } finally { setLoading(false) }
   }
 
   const verifyOtp = async (e) => {
@@ -64,12 +64,12 @@ const Register = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'OTP verification failed');
-      
+
       // OTP verified - decode token and save it
       const decoded = jwtDecode(data.token);
       clearSession();
       localStorage.setItem('token', data.token);
-      
+
       // save decoded token data as baseline
       const baseUserData = {
         id: decoded.id,
@@ -78,37 +78,36 @@ const Register = () => {
         avatar: decoded.avatar,
         role: decoded.role || 'caller'
       };
-      clearSession();
       localStorage.setItem('userData', JSON.stringify(baseUserData));
-      
+
       //  try to fetch full user profile to get additional fields like callerId
       try {
         const profileRes = await fetch(`${API_BASE_URL}/users/profile`, {
-          headers: { 
+          headers: {
             'Authorization': `Bearer ${data.token}`,
             'Content-Type': 'application/json'
           }
         });
-        
+
         if (profileRes.ok) {
           const profileData = await profileRes.json();
           const user = profileData.user || profileData;
-          
+
           // Merge profile data with decoded data (profile takes priority)
           const completeUserData = {
             id: user._id || decoded.id,
             _id: user._id || decoded.id,
-            callerId: user.callerId || decoded.callerId, 
+            callerId: user.callerId || decoded.callerId,
             email: user.email || decoded.email,
             name: user.name || decoded.name,
             phone: user.phone || user.number,
             avatar: user.avatar || decoded.avatar,
             role: user.role || decoded.role || 'caller'
           };
-          
+
           clearSession();
           localStorage.setItem('userData', JSON.stringify(completeUserData));
-          
+
           console.log('Registration complete - User data saved to localStorage:', {
             callerId: completeUserData.callerId,
             name: completeUserData.name,
@@ -121,9 +120,9 @@ const Register = () => {
         console.error('Profile fetch error:', profileErr);
         console.log('Using decoded token data as fallback');
       }
-      
+
       navigate('/dashboard');
-    } catch(err) {
+    } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -146,13 +145,13 @@ const Register = () => {
                 {/* Full Name */}
                 <label>Full Name</label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <input 
-                    name="name" 
-                    value={form.name} 
-                    onChange={onChange} 
-                    placeholder="Enter User Name" 
-                    required 
-                    style={{ 
+                  <input
+                    name="name"
+                    value={form.name}
+                    onChange={onChange}
+                    placeholder="Enter User Name"
+                    required
+                    style={{
                       paddingRight: '40px',
                       width: '100%',
                       fontSize: '16px',
@@ -161,14 +160,14 @@ const Register = () => {
                       backgroundColor: 'white',
                     }}
                   />
-                  <FaUser 
-                    size={16} 
-                    color="#0066cc" 
-                    style={{ 
-                      position: 'absolute', 
+                  <FaUser
+                    size={16}
+                    color="#0066cc"
+                    style={{
+                      position: 'absolute',
                       right: '12px',
                       zIndex: 2,
-                    }} 
+                    }}
                   />
                 </div>
 
@@ -180,11 +179,11 @@ const Register = () => {
                     value={form.email}
                     onChange={onChange}
                     placeholder="user@email.com"
-        
+
                     type="email"
                     required
                     style={{
-                      paddingRight: '40px', 
+                      paddingRight: '40px',
                       width: '100%',
                       fontSize: '16px',
                       height: '44px',
@@ -294,34 +293,35 @@ const Register = () => {
                     )}
                   </button>
                 </div>
-                <button type="submit" disabled={loading} style={{marginTop: '20px'}}>{loading ? 'Creating Account...' : 'Register'}</button>
+                <button type="submit" disabled={loading} style={{ marginTop: '20px' }}>{loading ? 'Creating Account...' : 'Register'}</button>
                 {error && <div className="error-message">{error}</div>}
                 {message && <div className="success-message">{message}</div>}
                 <div className="register-footer">
-                  Already have an account? <a href="#" onClick={(e)=>{e.preventDefault(); navigate('/login')}}>Sign in</a>
+                  Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); navigate('/login') }}>Sign in</a>
                 </div>
               </form>
             ) : (
               <form onSubmit={verifyOtp}>
-                <h3 style={{marginTop: 0, marginBottom: 5, textAlign: 'center', fontSize: '18px', fontWeight: 600}}>Verify Your Phone</h3>
-                <p style={{fontSize:'13px', marginBottom:'20px', marginTop: '10px', textAlign: 'center', color: '#ddd'}}>Enter the 6-digit code sent to <strong>{form.phone}</strong></p>
+                <h3 style={{ marginTop: 0, marginBottom: 5, textAlign: 'center', fontSize: '18px', fontWeight: 600 }}>Verify Your Phone</h3>
+                <p style={{ fontSize: '13px', marginBottom: '20px', marginTop: '10px', textAlign: 'center', color: '#ddd' }}>Enter the 6-digit code sent to <strong>{form.phone}</strong></p>
                 <label>Verification Code</label>
-                <input 
-                  type="text" 
-                  value={otp} 
-                  onChange={e => setOtp(e.target.value)} 
-                  placeholder="Enter 6-digit OTP" 
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={e => setOtp(e.target.value)}
+                  placeholder="Enter 6-digit OTP"
                   maxLength="6"
-                  required 
-                  style={{marginTop: '8px'}}
+                  required
+                  style={{ marginTop: '8px' }}
                 />
-                <button type="submit" disabled={loading} style={{marginTop: '20px'}}>{loading ? 'Verifying...' : 'Verify OTP'}</button>
+                <button type="submit" disabled={loading} style={{ marginTop: '20px' }}>{loading ? 'Verifying...' : 'Verify OTP'}</button>
                 {error && <div className="error-message">{error}</div>}
                 <div className="register-footer">
-                  <a href="#" onClick={(e)=>{e.preventDefault(); setShowOtpInput(false); setOtp('');}}>Change phone number</a>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setShowOtpInput(false); setOtp(''); }}>Change phone number</a>
                 </div>
               </form>
             )}
+
           </div>
         </div>
       </div>

@@ -14,7 +14,8 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
   const [selectedCaller, setSelectedCaller] = useState(null);
 
   // Get current user role
-  const userRole = localStorage.getItem('role');
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const userRole = userData.role;
 
   useEffect(() => {
     fetchCallers();

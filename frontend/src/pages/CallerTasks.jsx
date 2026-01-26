@@ -56,9 +56,11 @@ function CallerTasks() {
   useEffect(() => {
     let filtered = allCustomers;
 
-    // Apply status filter
+    // Apply status filter (case-insensitive)
     if (statusFilter !== "ALL") {
-      filtered = filtered.filter(c => c.status === statusFilter);
+      filtered = filtered.filter(c =>
+        (c.status || "").toUpperCase() === statusFilter.toUpperCase()
+      );
     }
 
     // Apply search filter
@@ -92,7 +94,7 @@ function CallerTasks() {
       console.log('Customer ID:', customerId);
       console.log('Data:', data);
 
-      // Update customer via API
+      
       const response = await secureFetch(`/api/customers/${customerId}/contact`, {
         method: 'PUT',
         headers: {
@@ -111,9 +113,9 @@ function CallerTasks() {
 
       if (result.success) {
         console.log("Customer details saved successfully");
-        // Close modal first
+        
         handleCloseModal();
-        // Then reload customers to get updated data
+        
         await loadCustomers();
       } else {
         console.error('❌ Error saving customer details:', result.message);

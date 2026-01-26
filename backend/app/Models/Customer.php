@@ -41,7 +41,9 @@ class Customer extends Model
         'LATEST_PRODUCT_STATUS',
         'BILL_HANDLING_CODE',
         'SLT_BUSINESS_LINE_VALUE',
-        'SALES_CHANNEL'
+        'SALES_CHANNEL',
+        // System fields
+        'status'
     ];
 
     protected $casts = [

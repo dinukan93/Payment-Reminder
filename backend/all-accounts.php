@@ -1,15 +1,5 @@
 <?php
 
-/**
- * ========================================
- * ALL ACCOUNTS - Complete Database Setup
- * ========================================
- * 
- * This file creates ALL user accounts for the Payment Reminder system.
- * Run this once to set up the complete database with all users.
- * 
- * Usage: php all-accounts.php
- */
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -111,7 +101,7 @@ foreach ($regionalAdmins as $adminData) {
         ['email' => $adminData['email']],
         $adminData
     );
-    echo "  ✅ {$adminData['name']}\n";
+    echo "   {$adminData['name']}\n";
 }
 echo "\n";
 
@@ -272,7 +262,7 @@ foreach ($supervisors as $supervisorData) {
         ['email' => $supervisorData['email']],
         $supervisorData
     );
-    echo "  ✅ {$supervisorData['name']} ({$supervisorData['rtom']})\n";
+    echo "   {$supervisorData['name']} ({$supervisorData['rtom']})\n";
 }
 echo "\n";
 
@@ -292,7 +282,7 @@ $callers = [
         'currentLoad' => 0,
         'status' => 'active',
         'taskStatus' => 'available',
-        'rtom' => 'KA',  // Kandy
+        'rtom' => 'KA',  
         'region' => 'Central',
         'created_by' => 1
     ],
@@ -306,7 +296,7 @@ $callers = [
         'currentLoad' => 0,
         'status' => 'active',
         'taskStatus' => 'available',
-        'rtom' => 'KA',  // Kandy
+        'rtom' => 'KA',  
         'region' => 'Central',
         'created_by' => 1
     ],
@@ -320,7 +310,7 @@ $callers = [
         'currentLoad' => 0,
         'status' => 'active',
         'taskStatus' => 'available',
-        'rtom' => 'KA',  // Kandy
+        'rtom' => 'KA',  
         'region' => 'Central',
         'created_by' => 1
     ]

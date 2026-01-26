@@ -12,6 +12,7 @@ use App\Http\Controllers\AutoAssignmentController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\PodFilterConfigController;
 use App\Http\Controllers\ExcelUploadHistoryController;
+use App\Http\Controllers\ReportController;
 
 
 // Public routes with rate limiting to prevent brute force attacks
@@ -39,10 +40,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Callers
     Route::get('/callers', [CallerController::class, 'index']);
     Route::post('/callers', [CallerController::class, 'store']);
-    Route::get('/callers/next-id', [CallerController::class, 'nextCallerId']);
+    Route::get('/callers/next-id', [CallerController::class, 'nextCallerId']); // Must come before {id} route
     Route::get('/callers/{id}', [CallerController::class, 'show']);
     Route::put('/callers/{id}', [CallerController::class, 'update']);
     Route::delete('/callers/{id}', [CallerController::class, 'destroy']);
+    Route::post('/callers/{id}/report', [ReportController::class, 'submitReport']);
+    Route::get('/reports', [ReportController::class, 'index']);
 
     // Requests
     Route::get('/requests', [RequestController::class, 'index']);
@@ -76,6 +79,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/distribution/distribute', [DataDistributionController::class, 'distributeToRegionsAndRtoms']);
     Route::get('/distribution/summary', [DataDistributionController::class, 'getDistributionSummary']);
 
+    // POD Filter Configuration (read access for all authenticated users)
+    Route::get('/pod-filter-config', [PodFilterConfigController::class, 'index']);
+
     // Superadmin routes
     Route::middleware('can:superadmin')->group(function () {
         Route::get('/superadmin/admins', [AdminController::class, 'getAllAdmins']);
@@ -84,8 +90,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/superadmin/admins/{id}', [AdminController::class, 'deleteAdmin']);
         Route::get('/superadmin/rtoms', [AdminController::class, 'getRtoms']);
 
-        // POD Filter Configuration
-        Route::get('/pod-filter-config', [PodFilterConfigController::class, 'index']);
+        // POD Filter Configuration (write access for superadmin only)
         Route::put('/pod-filter-config', [PodFilterConfigController::class, 'update']);
         Route::post('/pod-filter-config/reset', [PodFilterConfigController::class, 'reset']);
 

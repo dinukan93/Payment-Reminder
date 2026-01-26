@@ -11,11 +11,11 @@ const DisplayDataPage = () => {
   const rowsPerPage = 20;
 
   useEffect(() => {
-    // Get data from navigation state
+    
     if (location.state?.data) {
       setData(location.state.data);
     } else {
-      // If no data, redirect back to upload page
+      
       navigate("/upload");
     }
   }, [location, navigate]);
@@ -81,7 +81,7 @@ const DisplayDataPage = () => {
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset to first page on search
+              setCurrentPage(1); 
             }}
           />
           <div className="showing-info">

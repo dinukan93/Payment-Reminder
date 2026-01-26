@@ -87,7 +87,7 @@ class CustomerController extends Controller
                 $history = $customer->contactHistory->map(function ($item) {
                     return [
                         'contactDate' => $item->contact_date ? $item->contact_date->format('Y-m-d') : null,
-                        'promisedDate' => $item->promised_date ? $item->promised_date->format('Y-m-d') : null,
+                        'promisedDate' => $item->promised_date ? $item->promised_date->format('d/m/Y') : null, // Changed to DD/MM/YYYY
                         'outcome' => $item->outcome,
                         'remark' => $item->remark,
                         'paymentMade' => (bool) $item->payment_made
@@ -301,24 +301,42 @@ class CustomerController extends Controller
             $validated = $request->validate([
                 'callOutcome' => 'required|string',
                 'customerResponse' => 'nullable|string',
-                'paymentMade' => 'boolean',
-                'promisedDate' => 'nullable|date'
+                'paymentMade' => 'nullable|boolean',
+                'promisedDate' => 'nullable|string'  // Changed from 'date' to 'string' to handle DD/MM/YYYY format
             ]);
+
+            // Convert promisedDate from DD/MM/YYYY to YYYY-MM-DD if provided
+            $promisedDateFormatted = null;
+            if (!empty($validated['promisedDate'])) {
+                // Check if it's in DD/MM/YYYY format
+                if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $validated['promisedDate'], $matches)) {
+                    $promisedDateFormatted = "{$matches[3]}-{$matches[2]}-{$matches[1]}"; // Convert to YYYY-MM-DD
+                } else {
+                    // Assume it's already in YYYY-MM-DD format
+                    $promisedDateFormatted = $validated['promisedDate'];
+                }
+            }
 
             // Create contact history entry
             $contactData = [
                 'customer_id' => $id,
-                'contact_date' => now()->format('Y-m-d'),
+                'contact_date' => now(), // Changed from now()->format('Y-m-d') to now() for full datetime
                 'outcome' => $validated['callOutcome'],
                 'remark' => $validated['customerResponse'] ?? null,
-                'promised_date' => $validated['promisedDate'] ?? null,
+                'promised_date' => $promisedDateFormatted,
                 'payment_made' => $validated['paymentMade'] ?? false
             ];
 
             $contactHistory = ContactHistory::create($contactData);
 
-            // Update customer status
-            $customer->update(['status' => 'PENDING']);
+            // Update customer status based on payment
+            if ($validated['paymentMade'] ?? false) {
+                // If payment was made, mark as completed
+                $customer->update(['status' => 'COMPLETED']);
+            } else {
+                // Otherwise, mark as pending (contacted but not paid)
+                $customer->update(['status' => 'PENDING']);
+            }
 
             return response()->json([
                 'success' => true,
@@ -327,13 +345,23 @@ class CustomerController extends Controller
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Contact update validation error', [
+                'errors' => $e->errors(),
+                'customer_id' => $id
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Validation error',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Contact update error', ['error' => $e->getMessage()]);
+            Log::error('Contact update error', [
+                'error' => $e->getMessage(),
+                'customer_id' => $id,
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to save contact record',

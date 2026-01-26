@@ -3,13 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
+use App\Observers\CallerObserver;
 
 class Caller extends Authenticatable
 {
     use HasApiTokens;
+
+    protected static function booted(): void
+    {
+        static::observe(CallerObserver::class);
+    }
     protected $fillable = [
         'name',
         'email',
@@ -55,6 +62,12 @@ class Caller extends Authenticatable
     public function creator()
     {
         return $this->belongsTo(Admin::class, 'created_by');
+    }
+
+    // Relationship: Caller has one setting
+    public function setting(): HasOne
+    {
+        return $this->hasOne(Setting::class, 'user_id')->where('user_type', 'caller');
     }
 
     // Relationship: Caller has many customers

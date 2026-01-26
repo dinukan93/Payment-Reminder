@@ -13,7 +13,7 @@ function AddCallerModal({ isOpen, onClose, onSuccess }) {
     phone: "",
     password: "",
     maxLoad: 20,
-    status: "AVAILABLE"
+    status: "ACTIVE"
   });
 
   // Fetch next available callerId when modal opens
@@ -22,7 +22,7 @@ function AddCallerModal({ isOpen, onClose, onSuccess }) {
       if (!isOpen) return;
       try {
         const token = localStorage.getItem('token');
-        const res = await secureFetch(`/callers/next-id`, {
+        const res = await secureFetch(`/api/callers/next-id`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -73,7 +73,7 @@ function AddCallerModal({ isOpen, onClose, onSuccess }) {
       setLoading(true);
       const token = localStorage.getItem('token');
 
-      const response = await secureFetch(`/callers`, {
+      const response = await secureFetch(`/api/callers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -211,9 +211,8 @@ function AddCallerModal({ isOpen, onClose, onSuccess }) {
               value={formData.status}
               onChange={handleInputChange}
             >
-              <option value="AVAILABLE">Available</option>
-              <option value="BUSY">Busy</option>
-              <option value="OFFLINE">Offline</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
             </select>
           </div>
 

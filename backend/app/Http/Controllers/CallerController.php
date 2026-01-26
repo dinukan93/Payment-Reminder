@@ -11,13 +11,21 @@ class CallerController extends Controller
     // Returns the next available callerId (e.g., caller002 if caller001 exists)
     public function nextCallerId(Request $request)
     {
-        // Get the highest numeric part of callerId (format: callerXXX)
-        $max = Caller::selectRaw("MAX(CAST(SUBSTRING(callerId, 7) AS UNSIGNED)) as max_num")
-            ->whereRaw("callerId REGEXP '^caller[0-9]+$'")
-            ->first();
-        $nextNum = ($max && $max->max_num) ? ((int) $max->max_num + 1) : 1;
-        $nextId = 'caller' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
-        return response()->json(['nextCallerId' => $nextId]);
+        try {
+            // Get the highest numeric part of callerId (format: callerXXX)
+            $max = Caller::selectRaw("MAX(CAST(SUBSTRING(callerId, 7) AS UNSIGNED)) as max_num")
+                ->whereRaw("callerId REGEXP '^caller[0-9]+$'")
+                ->first();
+
+            $nextNum = ($max && $max->max_num) ? ((int) $max->max_num + 1) : 1;
+            $nextId = 'caller' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+
+            return response()->json(['nextCallerId' => $nextId]);
+        } catch (\Exception $e) {
+            \Log::error('Error generating next caller ID: ' . $e->getMessage());
+            // Fallback: return a default ID
+            return response()->json(['nextCallerId' => 'caller001']);
+        }
     }
     public function index(Request $request)
     {
@@ -47,15 +55,14 @@ class CallerController extends Controller
 
         $callers = $query->get();
 
-        // Calculate currentLoad from active requests
+        // Calculate currentLoad from active requests (without saving to DB on every request)
         foreach ($callers as $caller) {
-            $activeRequests = TaskRequest::where('caller_id', $caller->id)
+            $actualLoad = TaskRequest::where('caller_id', $caller->id)
                 ->where('status', 'ACCEPTED')
-                ->get();
+                ->sum('customers_sent');
 
-            $actualLoad = $activeRequests->sum('customers_sent');
+            // Set currentLoad for response (not persisted to DB here)
             $caller->currentLoad = $actualLoad;
-            $caller->save();
         }
 
         return response()->json($callers);

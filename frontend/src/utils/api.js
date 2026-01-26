@@ -13,7 +13,7 @@ export const secureFetch = async (url, options = {}) => {
     // Merge headers with security headers
     const headers = {
         'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest', 
+        'X-Requested-With': 'XMLHttpRequest',
         ...(token && { Authorization: `Bearer ${token}` }),
         ...(options.headers || {}),
     };
@@ -47,6 +47,13 @@ export const secureFetch = async (url, options = {}) => {
             const errorData = await response.json().catch(() => ({ message: 'Bad Request' }));
             console.error('400 Bad Request:', errorData);
             throw new Error(errorData.message || 'Bad Request - Invalid data sent to server');
+        }
+
+        // Handle 500 Internal Server Error - log and display error
+        if (response.status === 500) {
+            const errorData = await response.json().catch(() => ({ message: 'Internal Server Error' }));
+            console.error('500 Internal Server Error:', errorData);
+            throw new Error(errorData.error || errorData.message || 'Server error occurred. Please try again.');
         }
 
         return response;
