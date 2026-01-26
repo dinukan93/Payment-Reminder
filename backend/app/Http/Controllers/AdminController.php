@@ -68,23 +68,49 @@ class AdminController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        // Initialize array for 7 days (Mon-Sun)
+        $weeklyCalls = [0, 0, 0, 0, 0, 0, 0];
+
+        // Calculate date range for last 7 days
+        $today = now()->endOfDay();
+        $sevenDaysAgo = now()->subDays(6)->startOfDay();
+
+        // Get all contact history within the last 7 days
         $query = ContactHistory::whereBetween('contact_date', [
-            now()->subWeek(),
-            now()
+            $sevenDaysAgo,
+            $today
         ]);
 
         // Apply filtering based on user role
         if ($user->isRegionAdmin() && $user->region) {
             $query->whereHas('customer', function ($q) use ($user) {
-                $q->where('region', $user->region);
+                $q->where('REGION', $user->region);
             });
         } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $user->rtom) {
             $query->whereHas('customer', function ($q) use ($user) {
-                $q->where('rtom', $user->rtom);
+                $q->where('RTOM', $user->rtom);
             });
         }
 
-        return response()->json(['count' => $query->count()]);
+        // Get all contacts and group by day of week
+        $contacts = $query->get();
+
+        foreach ($contacts as $contact) {
+            $contactDate = \Carbon\Carbon::parse($contact->contact_date);
+
+            // Only count if within our 7-day window
+            if ($contactDate >= $sevenDaysAgo && $contactDate <= $today) {
+                // Get day of week (0 = Sunday, 6 = Saturday)
+                $dayOfWeek = $contactDate->dayOfWeek;
+
+                // Convert to Monday-first index (0 = Monday, 6 = Sunday)
+                $mondayFirstIndex = $dayOfWeek === 0 ? 6 : $dayOfWeek - 1;
+
+                $weeklyCalls[$mondayFirstIndex]++;
+            }
+        }
+
+        return response()->json(['data' => $weeklyCalls]);
     }
 
     // Superadmin operations

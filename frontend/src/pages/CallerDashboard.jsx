@@ -47,7 +47,7 @@ function CallerDashboard() {
       });
       const data = await response.json();
       if (data.success && data.data) {
-        // Separate customers by status
+        
         const contacted = data.data.filter(c =>
           (c.status === 'PENDING' || c.status === 'pending') &&
           c.contactHistory &&

@@ -8,7 +8,7 @@ import { IoIosWarning } from "react-icons/io";
 import { FaUserCheck } from "react-icons/fa";
 import { MdPendingActions } from "react-icons/md";
 import CallerStatisticsTable from '../components/CallerStatisticsTable';
-import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 import { useTheme } from '../context/ThemeContext';
 import { showError } from '../components/Notifications';
 
@@ -36,7 +36,7 @@ function AdminReport() {
   // Fetch all performance reports submitted by callers
   const fetchPerformanceReports = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/reports`);
+      const response = await secureFetch(`/api/reports`);
       const result = await response.json();
       if (result.success && result.data) {
         setPerformanceReports(result.data);
@@ -49,10 +49,20 @@ function AdminReport() {
   // Fetch all callers for report list
   const fetchAllCallers = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/callers`);
+      console.log('Fetching all callers...');
+      const response = await secureFetch(`/api/callers`);
       const result = await response.json();
-      if (result.success && result.data) {
+      console.log('Callers response:', result);
+
+      // Handle both array response and {success, data} response
+      if (Array.isArray(result)) {
+        console.log('Setting callers from array:', result);
+        setAllCallers(result);
+      } else if (result.success && result.data) {
+        console.log('Setting callers from object:', result.data);
         setAllCallers(result.data);
+      } else {
+        console.error('Unexpected callers response format:', result);
       }
     } catch (error) {
       console.error('Error fetching callers:', error);
@@ -101,26 +111,27 @@ function AdminReport() {
   const fetchReportData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch all customers to calculate statistics
-      const customersResponse = await fetch(`${API_BASE_URL}/customers`);
+      const customersResponse = await secureFetch(`/api/customers`);
       const customersResult = await customersResponse.json();
-      
+
       // Fetch all callers to get active caller count
-      const callersResponse = await fetch(`${API_BASE_URL}/callers`);
+      const callersResponse = await secureFetch(`/api/callers`);
       const callersResult = await callersResponse.json();
-      
+
+
       if (customersResult.success && customersResult.data) {
         const customers = customersResult.data;
-        
+
         // Calculate total calls from all contact histories
         let totalCalls = 0;
         let successfulCalls = 0;
-        
+
         customers.forEach(customer => {
           if (customer.contactHistory && customer.contactHistory.length > 0) {
             totalCalls += customer.contactHistory.length;
-            
+
             // Count successful calls (Spoke to Customer)
             customer.contactHistory.forEach(contact => {
               if (contact.outcome === 'Spoke to Customer') {
@@ -129,26 +140,26 @@ function AdminReport() {
             });
           }
         });
-        
+
         // Count payments
         const totalPayments = customers.filter(c => c.status === 'COMPLETED').length;
         const pendingPayments = customers.filter(c => c.status === 'PENDING').length;
-        
+
         // Count active callers (those with ongoing tasks)
-        const activeCallers = callersResult.success && callersResult.data 
-          ? callersResult.data.filter(c => c.taskStatus === 'ONGOING').length 
+        const activeCallers = callersResult.success && callersResult.data
+          ? callersResult.data.filter(c => c.taskStatus === 'ONGOING').length
           : 0;
-        
+
         setStats({
           totalCalls,
           successfulCalls,
           totalPayments,
           pendingPayments,
           activeCallers,
-          completedRequests: 0 
+          completedRequests: 0
         });
       }
-      
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching report data:', error);
@@ -158,9 +169,9 @@ function AdminReport() {
 
   const fetchCompletedRequests = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/requests/completed`);
+      const response = await secureFetch(`/api/requests?status=COMPLETED`);
       const result = await response.json();
-      
+
       if (result.success && result.data) {
         setCompletedRequests(result.data);
         setStats(prev => ({
@@ -175,10 +186,13 @@ function AdminReport() {
 
   const fetchPendingRequests = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/requests?status=ACCEPTED`);
+      const response = await secureFetch(`/api/requests?status=ACCEPTED`);
       const result = await response.json();
-      
-      if (result.success && result.data) {
+
+      // Handle both array response and {success, data} response
+      if (Array.isArray(result)) {
+        setPendingRequests(result);
+      } else if (result.success && result.data) {
         setPendingRequests(result.data);
       }
     } catch (error) {
@@ -186,7 +200,7 @@ function AdminReport() {
     }
   };
 
- 
+
   // Download selected report for selected caller as CSV
   const handleDownloadExcel = () => {
     if (!performanceReports.length) {
@@ -319,7 +333,7 @@ function AdminReport() {
     <>
       <div className="title">Admin Report - System Overview</div>
       <hr />
-      
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
           <div style={{
@@ -367,7 +381,7 @@ function AdminReport() {
               <MdPendingActions className='completed-icon' />
             </div>
           </div>
-          
+
           <div className='caller-statistics'>
             <CallerStatisticsTable />
           </div>
@@ -390,16 +404,16 @@ function AdminReport() {
                   </thead>
                   <tbody>
                     {pendingRequests.map((request) => {
-                      const progress = request.customersSent > 0 
-                        ? Math.round((request.customersContacted / request.customersSent) * 100) 
+                      const progress = request.customers_sent > 0
+                        ? Math.round((request.customers_contacted / request.customers_sent) * 100)
                         : 0;
                       return (
-                        <tr key={request._id}>
-                          <td style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{request.taskId}</td>
-                          <td>{request.caller?.name || request.callerName}</td>
-                          <td>{request.sentDate}</td>
-                          <td>{request.customersSent}</td>
-                          <td>{request.customersContacted}</td>
+                        <tr key={request.id || request.task_id}>
+                          <td style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{request.task_id}</td>
+                          <td>{request.caller?.name || request.caller_name}</td>
+                          <td>{new Date(request.sent_date).toLocaleDateString()}</td>
+                          <td>{request.customers_sent}</td>
+                          <td>{request.customers_contacted}</td>
                           <td>
                             <div className="progress-bar-container">
                               <div className="progress-bar-fill" style={{ width: `${progress}%` }}></div>
@@ -441,12 +455,12 @@ function AdminReport() {
                   </thead>
                   <tbody>
                     {completedRequests.map((request) => (
-                      <tr key={request._id}>
-                        <td style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{request.taskId}</td>
-                        <td>{request.caller?.name || request.callerName}</td>
-                        <td>{request.sentDate}</td>
-                        <td>{request.customersSent}</td>
-                        <td>{request.customersContacted}</td>
+                      <tr key={request.id || request.task_id}>
+                        <td style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{request.task_id}</td>
+                        <td>{request.caller?.name || request.caller_name}</td>
+                        <td>{new Date(request.sent_date).toLocaleDateString()}</td>
+                        <td>{request.customers_sent}</td>
+                        <td>{request.customers_contacted}</td>
                         <td>
                           <span className='status-badge completed'>
                             {request.status}
@@ -470,92 +484,105 @@ function AdminReport() {
             <div style={{ maxHeight: 340, overflow: 'auto', minWidth: 0 }}>
               <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse' }}>
                 <thead>
-                <tr style={{ background: darkMode ? '#2d3748' : '#e9ecef' }}>
-                  <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Caller</th>
-                  <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Caller ID</th>
-                  <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Report ID</th>
-                  <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Sent</th>
-                  <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Download</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allCallers.length > 0 ? (
-                  allCallers.map((caller, idx) => {
-                    // Use business callerId for matching and display
-                    const callerId = caller.callerId || caller._id;
-                    const callerReports = performanceReports.filter(r => r.caller && String(r.caller.callerId || r.caller._id) === String(callerId));
-                    if (callerReports.length === 0) {
-                      return (
-                        <tr key={callerId || idx}>
-                          <td style={{ padding: '8px', border: '1px solid #ddd' }}>{caller.name}</td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd', fontFamily: 'monospace', fontSize: '0.95em' }}>{callerId}</td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd', color: '#999' }}>No report submitted</td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd', color: '#eb1717ff' }}>Unsubmitted</td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd', color: '#999' }}>Download</td>
-                        </tr>
-                      );
-                    } else if (callerReports.length === 1) {
-                      const report = callerReports[0];
-                      return (
-                        <tr key={report._id || `${callerId}-0`}>
-                          <td style={{ padding: '8px', border: '1px solid #ddd' }}>{caller.name}</td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd', fontFamily: 'monospace', fontSize: '0.95em' }}>{callerId}</td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd', fontFamily: 'monospace', fontSize: '0.95em' }}>{report.reportId || '-'}</td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd', color: '#28a745', fontWeight: 500 }}>Submitted</td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd' }}>
-                            <button onClick={() => handleDownloadSingleReport(report)} style={{ padding: '4px 14px', background: '#1488ee', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.95em' }}>Download</button>
-                          </td>
-                        </tr>
-                      );
-                    } else {
-                      // Multiple reports: show dropdown, default to most recent
-                      // Use a state map to track selected report per caller
-                      if (!reportDropdownState[callerId]) {
-                        // Default to most recent reportId
-                        const sorted = [...callerReports].sort((a, b) => new Date(b.generatedDate) - new Date(a.generatedDate));
-                        setReportDropdownState(prev => ({ ...prev, [callerId]: sorted[0].reportId }));
-                        // Render nothing on first render, will re-render with state
-                        return null;
-                      }
-                      const selectedReportId = reportDropdownState[callerId];
-                      const sortedReports = [...callerReports].sort((a, b) => new Date(b.generatedDate) - new Date(a.generatedDate));
-                      return (
-                        <tr key={callerId}>
-                          <td style={{ padding: '8px', border: '1px solid #ddd' }}>{caller.name}</td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd', fontFamily: 'monospace', fontSize: '0.95em' }}>{callerId}</td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd' }}>
-                            <select
-                              value={selectedReportId}
-                              onChange={e => setReportDropdownState(prev => ({ ...prev, [callerId]: e.target.value }))}
-                              style={{ padding: '4px 10px', fontSize: '0.95em', borderRadius: '4px', border: '1px solid #bbb' }}
-                            >
-                              {sortedReports.map(report => (
-                                <option key={report.reportId} value={report.reportId}>
-                                  {report.reportId} ({new Date(report.generatedDate).toLocaleString()})
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd', color: '#28a745', fontWeight: 500 }}>Submitted</td>
-                          <td style={{ padding: '8px', border: '1px solid #ddd' }}>
-                            <button
-                              onClick={() => {
-                                const report = callerReports.find(r => r.reportId === selectedReportId);
-                                if (report) handleDownloadSingleReport(report);
-                              }}
-                              style={{ padding: '4px 14px', background: '#1488ee', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.95em' }}
-                            >
-                              Download
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    }
-                  })
-                ) : (
-                  <tr><td colSpan={5} style={{ textAlign: 'center', color: '#999', padding: '20px' }}>No callers found</td></tr>
-                )}
-              </tbody>
+                  <tr style={{ background: darkMode ? '#2d3748' : '#e9ecef' }}>
+                    <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Caller</th>
+                    <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Caller ID</th>
+                    <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Report ID</th>
+                    <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Sent</th>
+                    <th style={{ padding: '8px', border: darkMode ? '1px solid #4a5568' : '1px solid #ddd' }}>Download</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {performanceReports.length > 0 ? (
+                    // Group reports by caller
+                    (() => {
+                      // Extract unique callers from reports
+                      const callerMap = new Map();
+                      performanceReports.forEach(report => {
+                        if (report.caller) {
+                          const callerId = report.caller.callerId || report.caller._id;
+                          if (!callerMap.has(callerId)) {
+                            callerMap.set(callerId, {
+                              name: report.caller.name,
+                              callerId: callerId,
+                              _id: report.caller._id
+                            });
+                          }
+                        }
+                      });
+
+                      const uniqueCallers = Array.from(callerMap.values());
+
+                      return uniqueCallers.map((caller, idx) => {
+                        const callerId = caller.callerId || caller._id;
+                        const callerReports = performanceReports.filter(r =>
+                          r.caller && String(r.caller.callerId || r.caller._id) === String(callerId)
+                        );
+
+                        if (callerReports.length === 1) {
+                          const report = callerReports[0];
+                          return (
+                            <tr key={report._id || `${callerId}-0`}>
+                              <td style={{ padding: '8px', border: '1px solid #ddd' }}>{caller.name}</td>
+                              <td style={{ padding: '8px', border: '1px solid #ddd', fontFamily: 'monospace', fontSize: '0.95em' }}>{callerId}</td>
+                              <td style={{ padding: '8px', border: '1px solid #ddd', fontFamily: 'monospace', fontSize: '0.95em' }}>{report.reportId || '-'}</td>
+                              <td style={{ padding: '8px', border: '1px solid #ddd', color: '#28a745', fontWeight: 500 }}>Submitted</td>
+                              <td style={{ padding: '8px', border: '1px solid #ddd' }}>
+                                <button onClick={() => handleDownloadSingleReport(report)} style={{ padding: '4px 14px', background: '#1488ee', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.95em' }}>Download</button>
+                              </td>
+                            </tr>
+                          );
+                        } else {
+                          // Multiple reports: show dropdown
+                          if (!reportDropdownState[callerId]) {
+                            const sorted = [...callerReports].sort((a, b) => new Date(b.generatedDate) - new Date(a.generatedDate));
+                            setReportDropdownState(prev => ({ ...prev, [callerId]: sorted[0].reportId }));
+                            return null;
+                          }
+                          const selectedReportId = reportDropdownState[callerId];
+                          const sortedReports = [...callerReports].sort((a, b) => new Date(b.generatedDate) - new Date(a.generatedDate));
+                          return (
+                            <tr key={callerId}>
+                              <td style={{ padding: '8px', border: '1px solid #ddd' }}>{caller.name}</td>
+                              <td style={{ padding: '8px', border: '1px solid #ddd', fontFamily: 'monospace', fontSize: '0.95em' }}>{callerId}</td>
+                              <td style={{ padding: '8px', border: '1px solid #ddd' }}>
+                                <select
+                                  value={selectedReportId}
+                                  onChange={e => setReportDropdownState(prev => ({ ...prev, [callerId]: e.target.value }))}
+                                  style={{ padding: '4px 10px', fontSize: '0.95em', borderRadius: '4px', border: '1px solid #bbb' }}
+                                >
+                                  {sortedReports.map(report => (
+                                    <option key={report.reportId} value={report.reportId}>
+                                      {report.reportId} ({new Date(report.generatedDate).toLocaleString()})
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td style={{ padding: '8px', border: '1px solid #ddd', color: '#28a745', fontWeight: 500 }}>Submitted</td>
+                              <td style={{ padding: '8px', border: '1px solid #ddd' }}>
+                                <button
+                                  onClick={() => {
+                                    const report = callerReports.find(r => r.reportId === selectedReportId);
+                                    if (report) handleDownloadSingleReport(report);
+                                  }}
+                                  style={{ padding: '4px 14px', background: '#1488ee', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.95em' }}
+                                >
+                                  Download
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        }
+                      });
+                    })()
+                  ) : (
+                    <tr>
+                      <td colSpan="5" style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+                        No performance reports submitted yet
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
               </table>
             </div>
           </div>
@@ -586,7 +613,8 @@ function AdminReport() {
             </button>
           </div>
         </>
-      )}
+      )
+      }
     </>
   );
 }

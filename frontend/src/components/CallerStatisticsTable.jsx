@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import "./CallerStatisticsTable.css";
-import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 
 function CallerStatisticsTable() {
   const [statistics, setStatistics] = useState([]);
@@ -14,14 +14,14 @@ function CallerStatisticsTable() {
     try {
       setLoading(true);
       // Fetch all callers
-      const callersResponse = await fetch(`${API_BASE_URL}/callers`);
+      const callersResponse = await secureFetch(`/api/callers`);
       const callersResult = await callersResponse.json();
-      
+
       if (callersResult.success && callersResult.data) {
         // Fetch all customers
-        const customersResponse = await fetch(`${API_BASE_URL}/customers`);
+        const customersResponse = await secureFetch(`/api/customers`);
         const customersResult = await customersResponse.json();
-        
+
         if (customersResult.success && customersResult.data) {
           // Calculate statistics for each caller
           const stats = callersResult.data.map(caller => {
@@ -29,17 +29,17 @@ function CallerStatisticsTable() {
             const assignedCustomers = customersResult.data.filter(
               c => c.assignedTo && c.assignedTo._id === caller._id
             );
-            
+
             // Count total calls from contact history
             let totalCalls = 0;
             let successful = 0;
             let pending = 0;
             let failed = 0;
-            
+
             assignedCustomers.forEach(customer => {
               if (customer.contactHistory && customer.contactHistory.length > 0) {
                 totalCalls += customer.contactHistory.length;
-                
+
                 // Count by outcome
                 customer.contactHistory.forEach(contact => {
                   if (contact.outcome === 'Spoke to Customer') {
@@ -52,10 +52,10 @@ function CallerStatisticsTable() {
                 });
               }
             });
-            
+
             // Count completed payments
             const completedCount = assignedCustomers.filter(c => c.status === 'COMPLETED').length;
-            
+
             return {
               Caller: caller.name,
               CallerId: caller.callerId,
@@ -66,7 +66,7 @@ function CallerStatisticsTable() {
               Completed: completedCount
             };
           });
-          
+
           setStatistics(stats);
         }
       }

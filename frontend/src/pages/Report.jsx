@@ -8,7 +8,7 @@ import { BsCashCoin } from "react-icons/bs";
 import { IoIosWarning } from "react-icons/io";
 import { IoSend } from "react-icons/io5";
 import CallerStatisticsTable from '../components/CallerStatisticsTable';
-import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 
 function Report() {
   const [stats, setStats] = useState({
@@ -33,26 +33,26 @@ function Report() {
   const fetchReportData = async () => {
     try {
       setLoading(true);
-      
+
       // Get logged-in caller ID
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       const callerId = userData.id;
-      
+
       // Fetch only this caller's customers
-      const response = await fetch(`${API_BASE_URL}/customers?callerId=${callerId}`);
+      const response = await secureFetch(`/api/customers?callerId=${callerId}`);
       const result = await response.json();
-      
+
       if (result.success && result.data) {
         const customers = result.data;
-        
+
         // Calculate total calls from all contact histories
         let totalCalls = 0;
         let successfulCalls = 0;
-        
+
         customers.forEach(customer => {
           if (customer.contactHistory && customer.contactHistory.length > 0) {
             totalCalls += customer.contactHistory.length;
-            
+
             // Count successful calls (Spoke to Customer)
             customer.contactHistory.forEach(contact => {
               if (contact.outcome === 'Spoke to Customer') {
@@ -61,16 +61,16 @@ function Report() {
             });
           }
         });
-        
+
         // Count payments
         const totalPayments = customers.filter(c => c.status === 'COMPLETED').length;
         const pendingPayments = customers.filter(c => c.status === 'PENDING').length;
-        
+
         // Calculate rates
         const successRate = totalCalls > 0 ? ((successfulCalls / totalCalls) * 100).toFixed(1) : 0;
         const totalCustomers = customers.length;
         const completionRate = totalCustomers > 0 ? ((totalPayments / totalCustomers) * 100).toFixed(1) : 0;
-        
+
         setStats({
           totalCalls,
           successfulCalls,
@@ -79,7 +79,7 @@ function Report() {
           successRate,
           completionRate
         });
-        
+
         // Prepare detailed customer list
         const details = customers.map(customer => {
           const latestContact = customer.contactHistory && customer.contactHistory.length > 0
@@ -112,10 +112,10 @@ function Report() {
           const statusOrder = { 'COMPLETED': 0, 'PENDING': 1, 'OVERDUE': 2 };
           return statusOrder[a.status] - statusOrder[b.status];
         });
-        
+
         setCustomerDetails(details);
       }
-      
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching report data:', error);
@@ -128,11 +128,11 @@ function Report() {
       // Get logged-in caller ID
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       const callerId = userData.id;
-      
+
       // Fetch only this caller's completed requests
-      const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=COMPLETED`);
+      const response = await secureFetch(`/api/requests?callerId=${callerId}&status=COMPLETED`);
       const result = await response.json();
-      
+
       if (result.success && result.data) {
         setCompletedRequests(result.data);
       }
@@ -214,7 +214,7 @@ function Report() {
         stats,
         customerDetails
       };
-      const response = await fetch(`${API_BASE_URL}/callers/${callerId}/report`, {
+      const response = await secureFetch(`/api/callers/${callerId}/report`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ function Report() {
     <>
       <div className="title">My Performance Report</div>
       <hr />
-      
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
           <div style={{
@@ -280,13 +280,13 @@ function Report() {
               <IoIosWarning className='pending-icon' />
             </div>
           </div>
-          
+
           {/* Send Report to Admin Section */}
           <div className='send-report-section'>
             <h3>Send Performance Report to Admin</h3>
             <div className='send-report-controls'>
-              <select 
-                value={reportType} 
+              <select
+                value={reportType}
                 onChange={(e) => setReportType(e.target.value)}
                 className='report-type'
               >
@@ -294,8 +294,8 @@ function Report() {
                 <option value="weekly">Weekly Report</option>
                 <option value="monthly">Monthly Report</option>
               </select>
-              <button 
-                className='send-report-btn' 
+              <button
+                className='send-report-btn'
                 onClick={handleSendReportToAdmin}
                 disabled={sendingReport}
               >
@@ -341,8 +341,8 @@ function Report() {
                     customerDetails.map((customer, index) => (
                       <tr key={index}>
                         <td>
-                          <span style={{ 
-                            fontSize: '0.85em', 
+                          <span style={{
+                            fontSize: '0.85em',
                             fontFamily: 'monospace',
                             color: '#666',
                             backgroundColor: '#f0f0f0',
@@ -381,7 +381,7 @@ function Report() {
               </table>
             </div>
           </div>
-          
+
           <div className='completed-requests-section'>
             <h3>Completed Requests</h3>
             {completedRequests.length > 0 ? (
@@ -423,8 +423,8 @@ function Report() {
           </div>
 
           <div className='download-section'>
-            <select 
-              value={reportType} 
+            <select
+              value={reportType}
               onChange={(e) => setReportType(e.target.value)}
               className='report-type'
             >
