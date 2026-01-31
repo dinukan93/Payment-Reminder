@@ -82,7 +82,7 @@ class SettingsController extends Controller
         ]);
 
         // Update settings with avatar
-        if (isset($validated['avatar'])) {
+        if (array_key_exists('avatar', $validated)) {
             $userType = $user instanceof Admin ? 'admin' : 'caller';
             $setting = $user->setting ?? Setting::create([
                 'user_id' => $user->id,
@@ -160,9 +160,9 @@ class SettingsController extends Controller
 
         // Map camelCase to snake_case for database
         $updateData = [
-            'email_notifications' => $validated['emailNotifications'] ?? $setting->email_notifications,
-            'payment_reminder' => $validated['paymentReminder'] ?? $setting->payment_reminder,
-            'call_notifications' => $validated['callNotifications'] ?? $setting->call_notifications,
+            'email_notifications' => isset($validated['emailNotifications']) ? $validated['emailNotifications'] : $setting->email_notifications,
+            'payment_reminder' => isset($validated['paymentReminder']) ? $validated['paymentReminder'] : $setting->payment_reminder,
+            'call_notifications' => isset($validated['callNotifications']) ? $validated['callNotifications'] : $setting->call_notifications,
             'language' => $validated['language'] ?? $setting->language,
             'timezone' => $validated['timezone'] ?? $setting->timezone,
         ];
@@ -172,11 +172,11 @@ class SettingsController extends Controller
         return response()->json([
             'msg' => 'Preferences updated successfully',
             'data' => [
-                'emailNotifications' => (bool) $setting->email_notifications,
-                'paymentReminder' => (bool) $setting->payment_reminder,
-                'callNotifications' => (bool) $setting->call_notifications,
-                'language' => $setting->language,
-                'timezone' => $setting->timezone,
+                'emailNotifications' => (bool) $updateData['email_notifications'],
+                'paymentReminder' => (bool) $updateData['payment_reminder'],
+                'callNotifications' => (bool) $updateData['call_notifications'],
+                'language' => $updateData['language'],
+                'timezone' => $updateData['timezone'],
             ]
         ]);
     }

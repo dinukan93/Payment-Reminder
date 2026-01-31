@@ -52,50 +52,50 @@ const Settings = () => {
     darkMode: false,
   });
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await secureFetch("/api/settings", {
-          method: "GET",
-        });
-        const data = await res.json();
+  const fetchSettings = async () => {
+    try {
+      const res = await secureFetch("/api/settings", {
+        method: "GET",
+      });
+      const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error || "Failed to load settings");
+      if (!res.ok) throw new Error(data.error || "Failed to load settings");
 
-        console.log("Settings data:", data);
+      console.log("Settings data:", data);
 
-        // Set profile data
-        setFormData((prev) => ({
-          ...prev,
-          callerId: data.callerId || "",
-          name: data.name || "",
-          email: data.email || "",
-          phone: data.phone || "",
-          avatar: data.avatar || "",
-        }));
+      // Set profile data
+      setFormData((prev) => ({
+        ...prev,
+        callerId: data.callerId || "",
+        name: data.name || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        avatar: data.avatar || "",
+      }));
 
-        // Set avatar preview if available
-        if (data.avatar) {
-          setAvatarPreview(data.avatar);
-        }
-
-        // Set preferences
-        if (data.preferences) {
-          setPreferences({
-            emailNotifications: data.preferences.emailNotifications || false,
-            paymentReminder: data.preferences.paymentReminder || false,
-            callNotifications: data.preferences.callNotifications || false,
-            language: data.preferences.language || "English",
-            timezone: data.preferences.timezone || "UTC",
-            darkMode: darkMode, // Use context value
-          });
-        }
-      } catch (err) {
-        console.error("Failed to load settings", err);
-        toast.error(err.message || "Failed to load settings");
+      // Set avatar preview if available
+      if (data.avatar) {
+        setAvatarPreview(data.avatar);
       }
-    };
 
+      // Set preferences
+      if (data.preferences) {
+        setPreferences({
+          emailNotifications: data.preferences.emailNotifications || false,
+          paymentReminder: data.preferences.paymentReminder || false,
+          callNotifications: data.preferences.callNotifications || false,
+          language: data.preferences.language || "English",
+          timezone: data.preferences.timezone || "UTC",
+          darkMode: darkMode, // Use context value
+        });
+      }
+    } catch (err) {
+      console.error("Failed to load settings", err);
+      toast.error(err.message || "Failed to load settings");
+    }
+  };
+
+  useEffect(() => {
     fetchSettings();
   }, [darkMode]);
 
@@ -316,6 +316,9 @@ const Settings = () => {
           data.msg || "Failed to update notification preferences",
         );
       toast.success(data.msg || "Notification preferences saved successfully!");
+
+      // Refetch settings to ensure UI reflects the latest database state
+      await fetchSettings();
     } catch (err) {
       console.error("Failed to update preferences:", err);
       toast.error(err.message || "Failed to update notification preferences");
@@ -339,6 +342,9 @@ const Settings = () => {
       if (!res.ok)
         throw new Error(data.msg || "Failed to update system preferences");
       toast.success(data.msg || "System preferences saved successfully!");
+
+      // Refetch settings to ensure UI reflects the latest database state
+      await fetchSettings();
     } catch (err) {
       console.error("Failed to update preferences:", err);
       toast.error(err.message || "Failed to update system preferences");

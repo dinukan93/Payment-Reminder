@@ -30,13 +30,7 @@ class Caller extends Authenticatable
         'region',
         'rtom',
         'assignment_type',
-        'created_by',
-        'avatar',
-        'email_notifications',
-        'payment_reminder',
-        'call_notifications',
-        'language',
-        'timezone'
+        'created_by'
     ];
 
     protected $hidden = [
