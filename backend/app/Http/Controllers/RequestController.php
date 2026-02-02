@@ -29,19 +29,15 @@ class RequestController extends Controller
 
             $query = TaskRequest::query();
 
-            // Check if user is a Caller or Admin
             if ($user instanceof Caller) {
                 Log::info('User is a Caller', ['caller_id' => $user->id]);
-                // Callers see only their own requests (ignore query parameters)
                 $query->where('caller_id', $user->id);
 
-                // Callers can filter by status
                 if ($request->has('status')) {
                     $query->where('status', $request->status);
                 }
             } elseif ($user instanceof Admin) {
                 Log::info('User is an Admin', ['admin_id' => $user->id]);
-                // Handle query parameters from frontend (for admins only)
                 if ($request->has('callerId')) {
                     $query->where('caller_id', $request->callerId);
                 }
@@ -50,9 +46,7 @@ class RequestController extends Controller
                     $query->where('status', $request->status);
                 }
 
-                // Admins see requests based on their role
                 if (!$user->isSuperAdmin()) {
-                    // Get accessible caller IDs based on admin role
                     $callerQuery = Caller::query();
 
                     if ($user->isRegionAdmin() && $user->region) {
@@ -66,23 +60,18 @@ class RequestController extends Controller
                     if (!empty($callerIds)) {
                         $query->whereIn('caller_id', $callerIds);
                     } else {
-                        // No accessible callers, return empty result
                         $query->whereRaw('1 = 0');
                     }
                 }
-                // Superadmin sees all requests (no filter)
             } else {
                 Log::warning('User is neither Caller nor Admin', ['user_class' => get_class($user)]);
             }
 
             $results = $query->orderBy('sent_date', 'desc')->get();
 
-            // Attach customer details to each request
             $results->transform(function ($req) {
                 if (!empty($req->customer_ids)) {
                     $customers = FilteredCustomer::whereIn('id', $req->customer_ids)->get();
-
-                    // Transform customer data to match frontend expectations
                     $req->customers = $customers->map(function ($customer) {
                         return [
                             'id' => $customer->id,
@@ -127,7 +116,6 @@ class RequestController extends Controller
 
         $caller = Caller::findOrFail($validated['caller_id']);
 
-        // Get the authenticated user (admin/supervisor) who is sending the request
         $user = $request->user();
         Log::info('Creating request - authenticated user:', [
             'user' => $user,
@@ -136,7 +124,7 @@ class RequestController extends Controller
             'user_type' => $user ? get_class($user) : null
         ]);
 
-        $sentBy = 'Admin'; // Default fallback
+        $sentBy = 'Admin';
         if ($user) {
             $sentBy = $user->name ?? $user->username ?? $user->email ?? 'Admin';
         }
@@ -154,10 +142,6 @@ class RequestController extends Controller
             'sent_by' => $sentBy
         ]);
 
-        // DO NOT assign customers to caller yet - wait for acceptance
-        // FilteredCustomer::whereIn('id', $validated['customer_ids'])
-        //    ->update(['assigned_to' => $caller->id]);
-
         return response()->json($taskRequest, 201);
     }
 
@@ -170,35 +154,28 @@ class RequestController extends Controller
     {
         $taskRequest = TaskRequest::findOrFail($id);
 
-        // Check if already accepted
         if ($taskRequest->status === 'ACCEPTED') {
             return response()->json($taskRequest);
         }
 
         $taskRequest->update(['status' => 'ACCEPTED']);
 
-        // Assign customers to caller in the database
-        // This is crucial now that we don't assign them during creation
         if ($taskRequest->customer_ids) {
             FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
                 ->update([
                     'assigned_to' => $taskRequest->caller_id,
-                    'status' => 'overdue'  // Not contacted until call response is recorded
+                    'status' => 'overdue'
                 ]);
         }
 
-        // Update caller's currentLoad
         $caller = $taskRequest->caller;
 
-        // Recalculate load based on assigned customers in the database
-        // This is more accurate than summing requests
         $assignedCount = FilteredCustomer::where('assigned_to', $caller->id)
             ->where('status', '!=', 'COMPLETED')
             ->count();
 
         $caller->currentLoad = $assignedCount;
 
-        // Update task status if needed
         if ($caller->currentLoad > 0) {
             $caller->taskStatus = 'busy';
         }
@@ -213,7 +190,6 @@ class RequestController extends Controller
         $taskRequest = TaskRequest::findOrFail($id);
         $taskRequest->update(['status' => 'DECLINED']);
 
-        // Unassign customers from working table
         FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
             ->update(['assigned_to' => null]);
 
@@ -224,7 +200,6 @@ class RequestController extends Controller
     {
         $user = $request->user();
 
-        // Only admins can cancel requests
         if (!($user instanceof Admin)) {
             return response()->json([
                 'success' => false,
@@ -234,7 +209,6 @@ class RequestController extends Controller
 
         $taskRequest = TaskRequest::findOrFail($id);
 
-        // Check if request is already accepted or declined
         if (in_array($taskRequest->status, ['ACCEPTED', 'DECLINED', 'CANCELLED'])) {
             return response()->json([
                 'success' => false,
@@ -242,7 +216,6 @@ class RequestController extends Controller
             ], 400);
         }
 
-        // Verify admin has permission (RTOM-based for supervisors)
         if ($user->role === 'supervisor' || $user->role === 'rtom_admin') {
             $caller = Caller::find($taskRequest->caller_id);
             if ($caller && $caller->rtom !== $user->rtom) {
@@ -261,10 +234,8 @@ class RequestController extends Controller
             }
         }
 
-        // Cancel the request
         $taskRequest->update(['status' => 'CANCELLED']);
 
-        // Unassign customers from working table if they were somehow assigned (though they shouldn't be now)
         if ($taskRequest->customer_ids) {
             FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
                 ->update(['assigned_to' => null]);

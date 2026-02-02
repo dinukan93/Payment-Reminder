@@ -20,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Override redirect for unauthenticated API requests
         $middleware->redirectGuestsTo(function ($request) {
-            // For API requests, return 401 instead of redirecting
+           
             return null;
         });
     })

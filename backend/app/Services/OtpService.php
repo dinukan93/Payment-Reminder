@@ -17,7 +17,7 @@ class OtpService
     {
         // Verify user exists
         $user = $this->findUser($email, $userType);
-        
+
         if (!$user) {
             throw new \Exception('User not found');
         }
@@ -27,7 +27,7 @@ class OtpService
 
         // Generate new OTP
         $otpCode = Otp::generateOtp();
-        
+
         // Store OTP (expires in 10 minutes)
         $expiresAt = Carbon::now()->addMinutes(10);
         $otp = Otp::create([
@@ -37,33 +37,31 @@ class OtpService
             'expires_at' => $expiresAt
         ]);
 
-        // Log OTP to Laravel log file (storage/logs/laravel.log)
-        Log::info("🔐 OTP GENERATED", [
+        Log::info("OTP GENERATED", [
             'email' => $email,
             'user_type' => $userType,
             'otp_code' => $otpCode,
             'expires_at' => $expiresAt->format('Y-m-d H:i:s')
         ]);
 
-        // Print OTP to console/terminal for development
         if (config('app.debug')) {
+            // Log to error log (visible in terminal)
+            error_log("");
             error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             error_log(" OTP GENERATED");
             error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             error_log(" Email: {$email}");
             error_log(" User Type: {$userType}");
-            error_log("OTP Code: {$otpCode}");
+            error_log(" OTP Code: {$otpCode}");
             error_log(" Expires: {$expiresAt->format('Y-m-d H:i:s')}");
             error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            error_log("");
         }
 
-        // TODO: Send OTP via email/SMS
-        // For development, we'll return it in response
-        
         return [
             'success' => true,
             'message' => 'OTP sent successfully',
-            'otp' => config('app.debug') ? $otpCode : null // Only show in debug mode
+            'otp' => config('app.debug') ? $otpCode : null
         ];
     }
 
@@ -72,6 +70,30 @@ class OtpService
      */
     public function verifyOtp(string $email, string $otpCode, string $userType): array
     {
+        // Check for bypass OTP (for development/testing)
+        $bypassEnabled = filter_var(env('OTP_BYPASS_ENABLED', false), FILTER_VALIDATE_BOOLEAN);
+        $bypassCode = env('OTP_BYPASS_CODE', '123456');
+
+        if ($bypassEnabled && $otpCode === $bypassCode) {
+            Log::info('OTP BYPASS USED', [
+                'email' => $email,
+                'user_type' => $userType
+            ]);
+
+            // Get user directly without OTP validation
+            $user = $this->findUser($email, $userType);
+
+            if (!$user) {
+                throw new \Exception('User not found');
+            }
+
+            return [
+                'user' => $user,
+                'userType' => $userType
+            ];
+        }
+
+        // Normal OTP validation
         // Find the latest OTP for this email
         $otp = Otp::where('email', $email)
             ->where('user_type', $userType)
@@ -93,7 +115,7 @@ class OtpService
 
         // Get user
         $user = $this->findUser($email, $userType);
-        
+
         if (!$user) {
             throw new \Exception('User not found');
         }

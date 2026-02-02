@@ -55,6 +55,6 @@ class CallerSeeder extends Seeder
             'created_by' => 1
         ]);
 
-        echo "✓ Created 3 callers in RTOM Kandy\n";
+        echo "Created 3 callers in RTOM Kandy\n";
     }
 }

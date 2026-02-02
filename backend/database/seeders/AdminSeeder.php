@@ -24,7 +24,7 @@ class AdminSeeder extends Seeder
             ]
         );
 
-        $this->command->info('✅ Superadmin created: superadmin@slt.lk / Super@123');
+        $this->command->info('Superadmin created: superadmin@slt.lk / Super@123');
 
         // Create Admin users for each RTOM
         $admins = [
@@ -85,7 +85,7 @@ class AdminSeeder extends Seeder
                 ['email' => $adminData['email']],
                 $adminData
             );
-            $this->command->info("✅ Admin created: {$adminData['email']} ({$adminData['rtom']})");
+            $this->command->info("Admin created: {$adminData['email']} ({$adminData['rtom']})");
         }
 
         // Create Uploader
@@ -102,8 +102,8 @@ class AdminSeeder extends Seeder
             ]
         );
 
-        $this->command->info('✅ Uploader created: uploader@slt.lk / Upload@123');
-        
-        $this->command->warn('⚠️  IMPORTANT: Change default passwords after first login!');
+        $this->command->info('Uploader created: uploader@slt.lk / Upload@123');
+
+        $this->command->warn('IMPORTANT: Change default passwords after first login!');
     }
 }

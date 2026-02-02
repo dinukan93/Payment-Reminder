@@ -15,11 +15,12 @@ use App\Http\Controllers\ExcelUploadHistoryController;
 use App\Http\Controllers\ReportController;
 
 
-// Public routes with rate limiting to prevent brute force attacks
+
 Route::middleware('throttle:5,1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    
 });
 
 // Protected routes
@@ -40,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Callers
     Route::get('/callers', [CallerController::class, 'index']);
     Route::post('/callers', [CallerController::class, 'store']);
-    Route::get('/callers/next-id', [CallerController::class, 'nextCallerId']); // Must come before {id} route
+    Route::get('/callers/next-id', [CallerController::class, 'nextCallerId']); 
     Route::get('/callers/{id}', [CallerController::class, 'show']);
     Route::put('/callers/{id}', [CallerController::class, 'update']);
     Route::delete('/callers/{id}', [CallerController::class, 'destroy']);
@@ -117,4 +118,5 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/rtom-admin/supervisors/{id}', [AdminController::class, 'updateSupervisor']);
         Route::delete('/rtom-admin/supervisors/{id}', [AdminController::class, 'deleteSupervisor']);
     });
+    
 });

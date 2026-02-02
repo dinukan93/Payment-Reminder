@@ -26,7 +26,6 @@ class AuthController extends Controller
             'userType' => 'required|in:admin,caller'
         ]);
 
-        // Check the appropriate table based on userType
         $userType = $request->userType;
 
         if ($userType === 'admin') {
@@ -35,24 +34,30 @@ class AuthController extends Controller
             $user = Caller::where('email', $request->email)->first();
         }
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            // Log failed login attempt
+        if (!$user) {
             AuditLogger::log(
                 action: 'login_failed',
-                description: "Failed login attempt for {$request->email}",
+                description: "Failed login attempt - email not found: {$request->email}",
                 request: $request
             );
-            return response()->json(['error' => 'Invalid credentials'], 401);
+            return response()->json(['error' => 'Email address not found'], 401);
+        }
+
+        if (!Hash::check($request->password, $user->password)) {
+            AuditLogger::log(
+                action: 'login_failed',
+                description: "Failed login attempt - incorrect password for {$request->email}",
+                request: $request
+            );
+            return response()->json(['error' => 'Incorrect password'], 401);
         }
 
         if ($user->status !== 'active') {
             return response()->json(['error' => 'Account is inactive'], 403);
         }
 
-        // Password verified - now send OTP to user's phone
         $otpResult = $this->otpService->generateOtp($request->email, $userType);
 
-        // Return response without OTP
         $response = [
             'message' => 'Password verified. OTP sent to your phone.',
             'requiresOtp' => true
@@ -74,6 +79,7 @@ class AuthController extends Controller
                 'role' => $user instanceof Admin ? $user->role : 'caller',
                 'region' => $user instanceof Admin ? $user->region : null,
                 'rtom' => $user->rtom
+
             ]
         ]);
     }
@@ -81,14 +87,13 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
-            // Check if user is authenticated
             if (!$request->user()) {
                 return response()->json(['message' => 'Not authenticated'], 401);
             }
 
-            // Log logout
             $user = $request->user();
             AuditLogger::log(
+
                 action: 'logout',
                 description: "User {$user->email} logged out",
                 model: get_class($user),
@@ -96,7 +101,6 @@ class AuthController extends Controller
                 request: $request
             );
 
-            // Delete the current access token
             $request->user()->currentAccessToken()->delete();
 
             return response()->json(['message' => 'Logged out successfully']);
@@ -141,10 +145,8 @@ class AuthController extends Controller
             $user = $result['user'];
             $userType = $result['userType'];
 
-            // Generate Sanctum token
             $token = $user->createToken('auth-token', [$userType])->plainTextToken;
 
-            // Log successful login
             AuditLogger::log(
                 action: 'login_success',
                 description: "User {$user->email} logged in successfully",
