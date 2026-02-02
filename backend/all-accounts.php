@@ -332,37 +332,37 @@ echo str_repeat("=", 70) . "\n";
 echo "SETUP COMPLETE - ALL ACCOUNTS CREATED\n";
 echo str_repeat("=", 70) . "\n\n";
 
-echo "📋 CREDENTIALS SUMMARY\n";
+echo "CREDENTIALS SUMMARY\n";
 echo str_repeat("-", 70) . "\n\n";
 
-echo "🔐 SUPERADMIN:\n";
+echo "SUPERADMIN:\n";
 echo "   Email: superadmin@slt.lk\n";
 echo "   Password: Super@123\n";
 echo "   Access: Full system access\n\n";
 
-echo "📤 UPLOADER:\n";
+echo "UPLOADER:\n";
 echo "   Email: uploader@slt.lk\n";
 echo "   Password: Upload@123\n";
 echo "   Access: Data upload only\n\n";
 
-echo "🌍 REGIONAL ADMINS:\n";
+echo "REGIONAL ADMINS:\n";
 echo "   Western Region: western@slt.lk / Western@123\n";
 echo "   Central Region: central@slt.lk / Central@123\n";
 echo "   Southern Region: southern@slt.lk / Southern@123\n\n";
 
-echo "🏢 RTOM ADMINS (Password: Admin@123 for all):\n";
+echo "RTOM ADMINS (Password: Admin@123 for all):\n";
 echo "   Colombo: admin.colombo@slt.lk (Western)\n";
 echo "   Negombo: admin.negombo@slt.lk (Western)\n";
 echo "   Kalutara: admin.kalutara@slt.lk (Western)\n";
 echo "   Kandy: admin.kandy@slt.lk (Central)\n";
 echo "   Matara: admin.matara@slt.lk (Southern)\n\n";
 
-echo "📞 CALLERS (Password: password123 for all):\n";
+echo "CALLERS (Password: password123 for all):\n";
 echo "   caller001: john.smith@example.com (Kandy)\n";
 echo "   caller002: sarah.johnson@example.com (Kandy)\n";
 echo "   caller003: mike.williams@example.com (Kandy)\n\n";
 
-echo "👔 SUPERVISORS (Password: Supervisor@123 for all):\n";
+echo "SUPERVISORS (Password: Supervisor@123 for all):\n";
 echo "   Gampaha: sup.gampaha1@slt.lk, sup.gampaha2@slt.lk\n";
 echo "   Matara: sup.matara1@slt.lk, sup.matara2@slt.lk\n";
 echo "   Colombo: sup.colombo1@slt.lk, sup.colombo2@slt.lk\n\n";
@@ -378,9 +378,9 @@ echo "  - " . count($callers) . " Callers\n";
 echo "  TOTAL: " . (1 + 1 + count($regionalAdmins) + count($rtomAdmins) + count($supervisors) + count($callers)) . " accounts\n";
 echo str_repeat("=", 70) . "\n\n";
 
-echo "⚠️  IMPORTANT SECURITY NOTES:\n";
+echo "IMPORTANT SECURITY NOTES:\n";
 echo "  1. Change all default passwords after first login\n";
 echo "  2. All passwords are hashed using bcrypt\n";
 echo "  3. Select correct user type (Admin/Caller) during login\n\n";
 
-echo "✅ Setup complete! You can now log in to the system.\n";
+echo "Setup complete! You can now log in to the system.\n";

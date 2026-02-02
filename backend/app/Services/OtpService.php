@@ -17,7 +17,7 @@ class OtpService
     {
         // Verify user exists
         $user = $this->findUser($email, $userType);
-        
+
         if (!$user) {
             throw new \Exception('User not found');
         }
@@ -27,7 +27,7 @@ class OtpService
 
         // Generate new OTP
         $otpCode = Otp::generateOtp();
-        
+
         // Store OTP (expires in 10 minutes)
         $expiresAt = Carbon::now()->addMinutes(10);
         $otp = Otp::create([
@@ -37,15 +37,13 @@ class OtpService
             'expires_at' => $expiresAt
         ]);
 
-        // Log OTP to Laravel log file (storage/logs/laravel.log)
-        Log::info("🔐 OTP GENERATED", [
+        Log::info("OTP GENERATED", [
             'email' => $email,
             'user_type' => $userType,
             'otp_code' => $otpCode,
             'expires_at' => $expiresAt->format('Y-m-d H:i:s')
         ]);
 
-        // Print OTP to console/terminal for development
         if (config('app.debug')) {
             error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             error_log(" OTP GENERATED");
@@ -57,13 +55,10 @@ class OtpService
             error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         }
 
-        // TODO: Send OTP via email/SMS
-        // For development, we'll return it in response
-        
         return [
             'success' => true,
             'message' => 'OTP sent successfully',
-            'otp' => config('app.debug') ? $otpCode : null // Only show in debug mode
+            'otp' => config('app.debug') ? $otpCode : null
         ];
     }
 
@@ -93,7 +88,7 @@ class OtpService
 
         // Get user
         $user = $this->findUser($email, $userType);
-        
+
         if (!$user) {
             throw new \Exception('User not found');
         }

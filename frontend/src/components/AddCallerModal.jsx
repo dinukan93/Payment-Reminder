@@ -30,7 +30,7 @@ function AddCallerModal({ isOpen, onClose, onSuccess }) {
           setFormData(prev => ({ ...prev, callerId: data.nextCallerId }));
         }
       } catch (err) {
-        // fallback: leave blank
+        
       }
     };
     fetchNextCallerId();
