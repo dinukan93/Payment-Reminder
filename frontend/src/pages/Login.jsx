@@ -9,6 +9,7 @@ import API_BASE_URL from '../config/api';
 import { secureFetch } from '../utils/api';
 import { MdOutlineMailOutline } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,8 +20,6 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isAdminLogin, setIsAdminLogin] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Clear any existing session when login page loads
@@ -30,32 +29,30 @@ const Login = () => {
 
   const handleSignIn = async (e) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
     setLoading(true);
     try {
       const endpoint = '/api/login';
       const userType = isAdminLogin ? 'admin' : 'caller';
-      console.log('Login attempt:', { email, userType }); 
+      console.log('Login attempt:', { email, userType });
       const res = await secureFetch(`${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, userType })
       });
       const data = await res.json();
-      console.log('Backend response:', data); 
+      console.log('Backend response:', data);
       if (!res.ok) throw new Error(data.error || data.message || 'Login failed');
 
       // Check if OTP is required (2FA flow)
       if (data.requiresOtp) {
-        setMessage(data.message || 'OTP sent to your phone');
+        toast.success(data.message || 'OTP sent successfully!', { autoClose: 5000 });
         setShowOtpInput(true);
       } else {
-       
+
         localStorage.setItem('token', data.token);
         localStorage.setItem('userData', JSON.stringify(data.user));
 
-      
+
         if (data.user.role === 'superadmin') {
           navigate('/superadmin');
         } else if (data.user.role === 'uploader') {
@@ -73,7 +70,7 @@ const Login = () => {
         }
       }
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message, { autoClose: 5000 });
     } finally {
       setLoading(false);
     }
@@ -81,8 +78,6 @@ const Login = () => {
 
   const requestOtp = async (e) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
     setLoading(true);
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
@@ -94,15 +89,15 @@ const Login = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message || 'Failed to send OTP');
 
-      setMessage('OTP sent to your email!');
+      toast.success('OTP sent to your email!', { autoClose: 5000 });
       setShowOtpInput(true);
 
       //show OTP if returned 
       if (data.otp) {
-
+        console.log('OTP:', data.otp);
       }
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message, { autoClose: 5000 });
     } finally {
       setLoading(false);
     }
@@ -115,22 +110,34 @@ const Login = () => {
     setLoading(true);
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
+      console.log('Verifying OTP:', { email, otp, userType });
+
       const res = await secureFetch(`/api/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp, userType })
       });
       const data = await res.json();
+      console.log('OTP Verification Response:', data);
+
       if (!res.ok) throw new Error(data.error || data.message || 'OTP verification failed');
 
       // Login success - store token and user data
+      console.log('Storing token:', data.token);
+      console.log('Storing user data:', data.user);
+
       localStorage.setItem('token', data.token);
       localStorage.setItem('userData', JSON.stringify(data.user));
 
-      setMessage('Login successful!');
+      // Verify storage
+      console.log('Token stored:', localStorage.getItem('token'));
+      console.log('UserData stored:', localStorage.getItem('userData'));
+
+      toast.success('Login successful!', { autoClose: 5000 });
 
       // Redirect based on role
       setTimeout(() => {
+        console.log('Redirecting user with role:', data.user.role);
         if (data.user.role === 'superadmin') {
           navigate('/superadmin');
         } else if (data.user.role === 'uploader') {
@@ -148,7 +155,8 @@ const Login = () => {
         }
       }, 500);
     } catch (err) {
-      setError(err.message);
+      console.error('OTP Verification Error:', err);
+      toast.error(err.message, { autoClose: 5000 });
     } finally {
       setLoading(false);
     }
@@ -240,8 +248,6 @@ const Login = () => {
                 <button className="signin-btn" type="submit" disabled={loading}>
                   {loading ? 'Signing In...' : 'Sign In'}
                 </button>
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                {message && <p style={{ color: 'green' }}>{message}</p>}
 
                 {!isAdminLogin && (
                   <p className="rg">Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); navigate('/register') }}>Register</a></p>
@@ -249,7 +255,7 @@ const Login = () => {
 
                 {isAdminLogin && (
                   <p className="rg" style={{ marginTop: 15 }}>
-                    <a href="#" onClick={(e) => { e.preventDefault(); setIsAdminLogin(false); setEmail(''); setPassword(''); setError(''); setMessage(''); }}>Back to user login</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); setIsAdminLogin(false); setEmail(''); setPassword(''); }}>Back to user login</a>
                   </p>
                 )}
               </form>
@@ -268,9 +274,8 @@ const Login = () => {
                 <button type="submit" disabled={loading} className="signin-btn">OTP
                   {loading ? 'Verifying...' : 'Verify OTP'}
                 </button>
-                {error && <p style={{ color: 'red' }}>{error}</p>}
                 <p className="rg" style={{ marginTop: 10 }}>
-                  <a href="#" onClick={(e) => { e.preventDefault(); setShowOtpInput(false); setOtp(''); setMessage(''); setError(''); }}>Back to login</a>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setShowOtpInput(false); setOtp(''); }}>Back to login</a>
                 </p>
               </form>
             )}
@@ -284,8 +289,6 @@ const Login = () => {
                 setIsAdminLogin(true);
                 setEmail('');
                 setPassword('');
-                setError('');
-                setMessage('');
               }}
             >
               <FaUserShield size={20} /> Login as Admin

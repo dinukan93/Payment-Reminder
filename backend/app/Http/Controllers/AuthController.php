@@ -34,13 +34,22 @@ class AuthController extends Controller
             $user = Caller::where('email', $request->email)->first();
         }
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             AuditLogger::log(
                 action: 'login_failed',
-                description: "Failed login attempt for {$request->email}",
+                description: "Failed login attempt - email not found: {$request->email}",
                 request: $request
             );
-            return response()->json(['error' => 'Invalid credentials'], 401);
+            return response()->json(['error' => 'Email address not found'], 401);
+        }
+
+        if (!Hash::check($request->password, $user->password)) {
+            AuditLogger::log(
+                action: 'login_failed',
+                description: "Failed login attempt - incorrect password for {$request->email}",
+                request: $request
+            );
+            return response()->json(['error' => 'Incorrect password'], 401);
         }
 
         if ($user->status !== 'active') {

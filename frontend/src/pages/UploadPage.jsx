@@ -213,10 +213,26 @@ const UploadPage = () => {
       </div>
       <hr />
 
-      {/* Paid Customers Upload Section */}
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px 0' }}>
-        <div className="upload-section">
-          <h2 style={{ fontSize: '18px', marginBottom: '20px', color: '#333' }}>Paid Customers</h2>
+      {/* Two Column Layout: Paid Customers and POD Filter */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
+        gap: '30px',
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: '20px'
+      }}>
+
+        {/* Paid Customers Upload Section */}
+        <div className="upload-section" style={{
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          padding: '30px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+        }}>
+          <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#333', fontWeight: '600' }}>Paid Customers</h2>
+          <p style={{ color: '#666', marginBottom: '20px', fontSize: '14px' }}>Upload payment records to update customer arrears</p>
+
           <div
             className={`dropzone ${paidDragActive ? "drag-active" : ""}`}
             onClick={onPaidPickClick}
@@ -346,42 +362,53 @@ const UploadPage = () => {
             </>
           )}
         </div>
-      </div>
 
-      {/* POD Filter Section */}
-      <div style={{ marginTop: '40px', padding: '30px', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', textAlign: 'center', maxWidth: '800px', margin: '40px auto 0' }}>
-        <h2 style={{ fontSize: '20px', marginBottom: '10px', color: '#333' }}>POD Lapsed Report Processing</h2>
-        <p style={{ color: '#666', marginBottom: '20px' }}>Filter and process POD lapsed customers for targeted collection efforts</p>
-        <button
-          onClick={() => setIsFilterOpen(true)}
-          style={{
-            padding: '14px 28px',
-            backgroundColor: '#667eea',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            fontSize: '16px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '10px',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#5568d3';
-            e.target.style.transform = 'translateY(-2px)';
-            e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = '#667eea';
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = 'none';
-          }}
-        >
-          <i className="bi bi-funnel-fill" style={{ fontSize: '18px' }}></i>
-          Start Filtering Process
-        </button>
+        {/* POD Filter Section */}
+        <div style={{
+          padding: '30px',
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          textAlign: 'center',
+          minHeight: '400px'
+        }}>
+          <h2 style={{ fontSize: '20px', marginBottom: '10px', color: '#333', fontWeight: '600' }}>POD Lapsed Report Processing</h2>
+          <p style={{ color: '#666', marginBottom: '30px', maxWidth: '400px' }}>Filter and process POD lapsed customers for targeted collection efforts</p>
+          <button
+            onClick={() => setIsFilterOpen(true)}
+            style={{
+              padding: '14px 28px',
+              backgroundColor: '#667eea',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '10px',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#5568d3';
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = '#667eea';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = 'none';
+            }}
+          >
+            <i className="bi bi-funnel-fill" style={{ fontSize: '18px' }}></i>
+            Start Filtering Process
+          </button>
+        </div>
       </div>
 
       <PODFilterComponent

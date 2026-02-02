@@ -45,14 +45,17 @@ class OtpService
         ]);
 
         if (config('app.debug')) {
+            // Log to error log (visible in terminal)
+            error_log("");
             error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             error_log(" OTP GENERATED");
             error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             error_log(" Email: {$email}");
             error_log(" User Type: {$userType}");
-            error_log("OTP Code: {$otpCode}");
+            error_log(" OTP Code: {$otpCode}");
             error_log(" Expires: {$expiresAt->format('Y-m-d H:i:s')}");
             error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            error_log("");
         }
 
         return [
@@ -67,6 +70,30 @@ class OtpService
      */
     public function verifyOtp(string $email, string $otpCode, string $userType): array
     {
+        // Check for bypass OTP (for development/testing)
+        $bypassEnabled = filter_var(env('OTP_BYPASS_ENABLED', false), FILTER_VALIDATE_BOOLEAN);
+        $bypassCode = env('OTP_BYPASS_CODE', '123456');
+
+        if ($bypassEnabled && $otpCode === $bypassCode) {
+            Log::info('OTP BYPASS USED', [
+                'email' => $email,
+                'user_type' => $userType
+            ]);
+
+            // Get user directly without OTP validation
+            $user = $this->findUser($email, $userType);
+
+            if (!$user) {
+                throw new \Exception('User not found');
+            }
+
+            return [
+                'user' => $user,
+                'userType' => $userType
+            ];
+        }
+
+        // Normal OTP validation
         // Find the latest OTP for this email
         $otp = Otp::where('email', $email)
             ->where('user_type', $userType)
