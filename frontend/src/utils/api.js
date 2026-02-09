@@ -7,10 +7,10 @@ import API_BASE_URL from '../config/api';
  * @returns {Promise<Response>}
  */
 export const secureFetch = async (url, options = {}) => {
-    // Get token from localStorage
+    
     const token = localStorage.getItem('token');
 
-    // Merge headers with security headers
+    
     const headers = {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
@@ -18,7 +18,7 @@ export const secureFetch = async (url, options = {}) => {
         ...(options.headers || {}),
     };
 
-    // If body is FormData, remove Content-Type to let browser set it with boundary
+    
     if (options.body instanceof FormData) {
         delete headers['Content-Type'];
     }
@@ -55,6 +55,7 @@ export const secureFetch = async (url, options = {}) => {
             console.error('500 Internal Server Error:', errorData);
             throw new Error(errorData.error || errorData.message || 'Server error occurred. Please try again.');
         }
+        
 
         return response;
     } catch (error) {
