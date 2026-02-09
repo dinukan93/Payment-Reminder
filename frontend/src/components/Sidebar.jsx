@@ -1,6 +1,6 @@
 import React from "react";
 import Logo from "../assets/logo_11.png";
-import "./SideBar.css";
+import "./Sidebar.css";
 import { BiHomeAlt2 } from "react-icons/bi";
 import { FaTasks } from "react-icons/fa";
 import { GoPeople } from "react-icons/go";
@@ -14,15 +14,15 @@ import { RiAdminLine } from "react-icons/ri";
 import { FaFilter } from "react-icons/fa";
 
 export default function Sidebar() {
-  // Get user role from localStorage
+
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const userRole = userData.role || 'caller';
 
-  // Define admin roles
+  
   const adminRoles = ['superadmin', 'region_admin', 'rtom_admin', 'supervisor', 'admin', 'uploader'];
   const isAdminRole = adminRoles.includes(userRole);
 
-  // ===================== UPLOADER =====================
+ 
   if (userRole === "uploader") {
     return (
       <div className="sidebar">
@@ -84,7 +84,7 @@ export default function Sidebar() {
     );
   }
 
-  // ===================== OTHERS =====================
+  
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
