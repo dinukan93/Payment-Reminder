@@ -43,6 +43,11 @@ export function securityHeadersPlugin() {
                 res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
                 res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
+                // Remove informational headers
+                res.removeHeader('X-Powered-By');
+                res.removeHeader('Server');
+                res.removeHeader('X-Generator');
+
                 next();
             });
         },

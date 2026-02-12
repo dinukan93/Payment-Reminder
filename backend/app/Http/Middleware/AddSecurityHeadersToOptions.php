@@ -63,11 +63,13 @@ class AddSecurityHeadersToOptions
             $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
             $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
-            // Remove X-Powered-By
-            $response->headers->remove('X-Powered-By');
-            $response->headers->set('X-Powered-By', '');
-            if (function_exists('header_remove')) {
-                @header_remove('X-Powered-By');
+            // Remove informational headers to hide server technology
+            $informationalHeaders = ['X-Powered-By', 'Server', 'X-Generator'];
+            foreach ($informationalHeaders as $header) {
+                $response->headers->remove($header);
+                if (function_exists('header_remove')) {
+                    @header_remove($header);
+                }
             }
 
             return $response;
