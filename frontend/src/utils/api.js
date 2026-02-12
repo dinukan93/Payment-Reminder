@@ -28,6 +28,26 @@ export const secureFetch = async (url, options = {}) => {
         ...(options.headers || {}),
     };
 
+    // Add X-XSRF-TOKEN header from cookie for CSRF protection
+    // Laravel encodes the token, and decodeURIComponent handles this.
+    const getXSRFToken = () => {
+        const name = "XSRF-TOKEN=";
+        const decodedCookie = decodeURIComponent(document.cookie);
+        const ca = decodedCookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i].trim();
+            if (c.indexOf(name) === 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return null;
+    };
+
+    const xsrfToken = getXSRFToken();
+    if (xsrfToken) {
+        headers['X-XSRF-TOKEN'] = xsrfToken;
+    }
+
 
     if (options.body instanceof FormData) {
         delete headers['Content-Type'];
