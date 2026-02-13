@@ -43,7 +43,7 @@ export function securityHeadersPlugin() {
                 res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
                 res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
-                // Remove informational headers
+                
                 res.removeHeader('X-Powered-By');
                 res.removeHeader('Server');
                 res.removeHeader('X-Generator');
@@ -53,17 +53,15 @@ export function securityHeadersPlugin() {
         },
 
         transform(code, id) {
-            // 1. Information Disclosure Fix: Scrub development comments from JS/TS source files
-            // 2. Private IP Disclosure Fix: Scrub RFC 1918 IPs (10.x, 172.16-31.x, 192.168.x)
-
+           
             if (id.endsWith('.js') || id.endsWith('.jsx') || id.endsWith('.ts') || id.endsWith('.tsx') || id.includes('/node_modules/')) {
-                // Keywords that scanners often flag
+                
                 const suspiciousKeywords = /\b(debug|TODO|FIXME|BUG|HACK|XXX)\b/gi;
 
-                // Regex for Private IP Disclosure (RFC 1918)
+                
                 const privateIpRegex = /\b(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3})\b/g;
 
-                // Scrub from comments in the code
+                
                 let sanitizedCode = code.replace(/(\/\*[\s\S]*?\*\/|\/\/.+)/g, (match) => {
                     return match.replace(suspiciousKeywords, 'SCRUBBED');
                 });
@@ -84,11 +82,9 @@ export function securityHeadersPlugin() {
                 ctx.req?.nonce ||
                 crypto.randomBytes(16).toString('base64');
 
-            // Cleanup map after use to prevent memory leak
+        
             if (ctx.originalUrl) {
-                // In dev, we might have multiple transforms, but usually one is enough.
-                // However, we'll keep it for a bit or just let it overwrite.
-                // nonceMap.delete(ctx.originalUrl); // Don't delete yet as it might be used by multiple hooks
+                
             }
 
             // 1. Nonce Sitter: Auto-nonces dynamic tags created at runtime.
