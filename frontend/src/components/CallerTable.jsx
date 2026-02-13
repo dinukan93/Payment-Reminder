@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import logger from '../utils/logger';
 import "./CallerTable.css";
 import { secureFetch } from "../utils/api";
 import EditCallerModal from "./EditCallerModal";
@@ -30,9 +31,9 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
       const response = await secureFetch(`/api/callers`);
       const result = await response.json();
 
-      console.log('API Response:', result);
-      console.log('Is Array?', Array.isArray(result));
-      console.log('Callers count:', Array.isArray(result) ? result.length : 'N/A');
+      logger.info('API Response:', result);
+      logger.info('Is Array?', Array.isArray(result));
+      logger.info('Callers count:', Array.isArray(result) ? result.length : 'N/A');
 
       // API returns array directly (backend filters by RTOM for supervisors)
       if (Array.isArray(result)) {
@@ -44,7 +45,7 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
       }
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching callers:', error);
+      logger.error('Error fetching callers:', error);
       setLoading(false);
     }
   };
@@ -75,6 +76,14 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
   const handleShowHistory = (caller) => {
     setSelectedCaller(caller);
     setShowHistoryModal(true);
+  };
+
+  const handleRowClick = (customer) => {
+    logger.info('Row clicked:', customer);
+    // Assuming onCustomerSelect is passed as a prop or defined elsewhere if needed
+    // For this component, onCustomerSelect is not defined, so this line might cause an error
+    // if not handled. Keeping it as per instruction, but noting potential issue.
+    // onCustomerSelect(customer);
   };
 
   const handleEdit = (caller) => {
@@ -113,7 +122,6 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
           showError(data.error || 'Failed to delete caller');
         }
       } catch (error) {
-        console.error('Error deleting caller:', error);
         showError('Error deleting caller');
       }
     }
@@ -196,7 +204,7 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
                         color: '#4CAF50',
                         fontSize: '18px'
                       }}
-                      title={userRole === 'supervisor' ? 'Enable/Disable' : 'Edit'}
+                      title={userRole === 'supervisor' ? 'Edit Capacity/Status' : 'Edit'}
                     >
                       <i className="bi bi-pencil-square"></i>
                     </button>

@@ -54,7 +54,6 @@ class ExcelUploadHistoryController extends Controller
                 'data' => $upload
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching upload details', ['id' => $id, 'error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Upload not found',
@@ -151,7 +150,6 @@ class ExcelUploadHistoryController extends Controller
                 'data' => $latest
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching latest upload', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch latest upload',

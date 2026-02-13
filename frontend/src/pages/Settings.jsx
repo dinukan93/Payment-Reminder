@@ -62,7 +62,7 @@ const Settings = () => {
 
         if (!res.ok) throw new Error(data.error || "Failed to load settings");
 
-        console.log("Settings data:", data);
+        // Data load successful
 
         // Set profile data
         setFormData((prev) => ({
@@ -91,7 +91,7 @@ const Settings = () => {
           });
         }
       } catch (err) {
-        console.error("Failed to load settings", err);
+        // Fail silenty or show notifications already handled
         toast.error(err.message || "Failed to load settings");
       }
     };
@@ -143,7 +143,6 @@ const Settings = () => {
       );
       window.dispatchEvent(new Event("storage"));
     } catch (err) {
-      console.error("Save profile image error:", err);
       toast.error(err.message || "Failed to save profile image");
     } finally {
       setLoadingImage(false);
@@ -176,7 +175,6 @@ const Settings = () => {
 
       toast.success("Profile image removed");
     } catch (err) {
-      console.error("Remove profile image error:", err);
       toast.error(err.message || "Failed to remove profile image");
     } finally {
       setLoadingImage(false);
@@ -228,7 +226,6 @@ const Settings = () => {
       );
       window.dispatchEvent(new Event("storage"));
     } catch (err) {
-      console.error("Update profile info error:", err);
       toast.error(err.message || "Failed to update profile");
     } finally {
       setLoadingProfile(false);
@@ -276,7 +273,6 @@ const Settings = () => {
         confirmPassword: "",
       }));
     } catch (err) {
-      console.error("Change password error:", err);
       toast.error(err.message || "Failed to change password");
     } finally {
       setLoadingPassword(false);
@@ -317,7 +313,6 @@ const Settings = () => {
         );
       toast.success(data.msg || "Notification preferences saved successfully!");
     } catch (err) {
-      console.error("Failed to update preferences:", err);
       toast.error(err.message || "Failed to update notification preferences");
     } finally {
       setLoadingNotifications(false);
@@ -340,7 +335,6 @@ const Settings = () => {
         throw new Error(data.msg || "Failed to update system preferences");
       toast.success(data.msg || "System preferences saved successfully!");
     } catch (err) {
-      console.error("Failed to update preferences:", err);
       toast.error(err.message || "Failed to update system preferences");
     } finally {
       setLoadingSystem(false);

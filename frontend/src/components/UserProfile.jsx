@@ -5,6 +5,7 @@ import PaymentCalendar from "./PaymentCalendar";
 import AdminRequestsModal from "./AdminRequestsModal";
 import API_BASE_URL from "../config/api";
 import { secureFetch } from "../utils/api";
+import logger from "../utils/logger";
 
 function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -19,28 +20,21 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
         const userData = JSON.parse(localStorage.getItem('userData') || '{}');
         const callerId = userData.id;
 
-        console.log('UserProfile - Logged in user data:', userData);
-        console.log('UserProfile - Fetching requests for callerId:', callerId);
 
         if (!callerId) return;
 
-        const response = await secureFetch(`/api/requests?callerId=${callerId}&status=PENDING`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await secureFetch(`/api/requests?callerId=${callerId}&status=PENDING`);
 
         if (response.ok) {
           const data = await response.json();
           // Handle both flat array and nested data.data format
           const requestsArray = Array.isArray(data) ? data : (data.data || []);
           const count = requestsArray.length;
-          console.log('Checking pending requests from MySQL... Found:', count);
+          logger.info('Checking pending requests from MySQL... Found:', count);
           setPendingRequestsCount(count);
         }
       } catch (error) {
-        console.error('Error fetching pending requests:', error);
+        logger.error('Error fetching pending requests:', error);
       }
     };
 
@@ -90,11 +84,11 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
     if (onAcceptRequest) {
       onAcceptRequest();
     }
-    console.log("Requests accepted, customers will be refetched from database");
+
   };
 
   const handleDeclineRequest = () => {
-    console.log("Request declined");
+
     // No need to refetch since nothing was added
   };
 
@@ -114,14 +108,13 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
 
         <div className="profile-card">
           <div className="profile-avatar">
-            <img
-              src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=random&color=fff&size=80`}
-              alt={user.name}
-              onError={(e) => {
-                console.log('Avatar failed to load, using fallback');
-                e.target.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.name) + "&background=2743B3&color=fff&size=80";
-              }}
-            />
+            {user.avatar ? (
+              <img src={user.avatar} alt={user.name} />
+            ) : (
+              <div className="avatar-placeholder-circle">
+                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+            )}
           </div>
           <p className="profile-greeting">Good Morning, ({user.name})</p>
 

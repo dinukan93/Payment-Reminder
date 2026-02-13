@@ -29,8 +29,22 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch user profile to get full info (PII) securely after login
+  const fetchUserProfile = async () => {
+    try {
+      const res = await secureFetch('/api/me');
+      const data = await res.json();
+      if (res.ok && data.user) {
+        localStorage.setItem('userData', JSON.stringify(data.user));
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+    }
+  };
+
   // Fetch all dashboard data on mount
   useEffect(() => {
+    fetchUserProfile();
     fetchDashboardData(true); // Initial load with loading screen
 
     // Refresh data every 30 seconds in background
@@ -101,7 +115,7 @@ function AdminDashboard() {
           reason: req.reason,
           customers: req.customers || [],
           customer_ids: req.customer_ids || [],
-          sentBy: req.sent_by 
+          sentBy: req.sent_by
         }));
 
         setSentRequests(mappedRequests);
@@ -109,7 +123,6 @@ function AdminDashboard() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
       setError('Failed to load dashboard data. Please check if the backend server is running.');
       setLoading(false);
     }
@@ -164,11 +177,9 @@ function AdminDashboard() {
       if (response.ok) {
         const result = await response.json();
         setCallerDetailsData(result.data);
-      } else {
-        console.error('Failed to fetch caller details');
       }
     } catch (error) {
-      console.error('Error fetching caller details:', error);
+      // Silence error exposure
     }
   };
 
@@ -205,15 +216,11 @@ function AdminDashboard() {
         await fetchDashboardData(false);
 
         showSuccess(`Request sent to ${callerName} successfully!`);
-
-        console.log('Request created in backend:', createdRequest);
       } else {
         const errorData = await response.json();
-        console.error('Failed to create request:', errorData);
         showError(errorData.message || 'Failed to send request to caller. Please try again.');
       }
     } catch (error) {
-      console.error('Error sending request to caller:', error);
       showError('Failed to send request to caller. Please check your connection and try again.');
     }
   };
@@ -455,13 +462,16 @@ function AdminDashboard() {
 
                 <div className="admin-profile-content">
                   <div className="admin-profile-avatar">
-                    <img
-                      src={(() => {
-                        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-                        return userData.avatar || "https://ui-avatars.com/api/?name=" + encodeURIComponent(userData.name || "Admin") + "&background=1488ee&color=fff&size=80";
-                      })()}
-                      alt="Admin"
-                    />
+                    {(() => {
+                      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                      return userData.avatar ? (
+                        <img src={userData.avatar} alt="Admin" />
+                      ) : (
+                        <div className="admin-avatar-placeholder">
+                          {(userData.name || 'Admin').charAt(0).toUpperCase()}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <h3>Good Morning, ({(() => {
                     const userData = JSON.parse(localStorage.getItem('userData') || '{}');

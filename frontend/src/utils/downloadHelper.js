@@ -126,7 +126,6 @@ export const downloadResults = async (results, type = 'all') => {
             showSuccess(`${type.toUpperCase()} results downloaded successfully`);
         }
     } catch (error) {
-        console.error('Error downloading results:', error);
         showError('Error downloading results. Please try again.');
     }
 };

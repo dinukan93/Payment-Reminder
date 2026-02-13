@@ -37,31 +37,11 @@ class OtpService
             'expires_at' => $expiresAt
         ]);
 
-        Log::info("OTP GENERATED", [
-            'email' => $email,
-            'user_type' => $userType,
-            'otp_code' => $otpCode,
-            'expires_at' => $expiresAt->format('Y-m-d H:i:s')
-        ]);
-
-        if (config('app.debug')) {
-            // Log to error log (visible in terminal)
-            error_log("");
-            error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-            error_log(" OTP GENERATED");
-            error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-            error_log(" Email: {$email}");
-            error_log(" User Type: {$userType}");
-            error_log(" OTP Code: {$otpCode}");
-            error_log(" Expires: {$expiresAt->format('Y-m-d H:i:s')}");
-            error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-            error_log("");
-        }
+        // Security: Never log OTP codes or sensitive user context in production-ready builds.
+        // Even in debug mode, we should be extremely careful.
 
         return [
-            'success' => true,
-            'message' => 'OTP sent successfully',
-            'otp' => config('app.debug') ? $otpCode : null
+            'success' => true
         ];
     }
 
@@ -75,10 +55,8 @@ class OtpService
         $bypassCode = env('OTP_BYPASS_CODE', '123456');
 
         if ($bypassEnabled && $otpCode === $bypassCode) {
-            Log::info('OTP BYPASS USED', [
-                'email' => $email,
-                'user_type' => $userType
-            ]);
+            // Log that bypass was used, but NEVER log user details or credentials
+            Log::info('OTP bypass mechanism triggered for an authentication attempt.');
 
             // Get user directly without OTP validation
             $user = $this->findUser($email, $userType);

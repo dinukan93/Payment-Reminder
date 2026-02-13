@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { toast } from 'react-toastify';
+import logger from '../utils/logger';
 import "./RtomAdminModal.css";
 import API_BASE_URL from "../config/api";
 
@@ -47,26 +49,21 @@ export default function RtomAdminModal({ isOpen, onClose, admin, onSuccess }) {
 
     const fetchAvailableRtoms = async () => {
         try {
-            const token = localStorage.getItem('token');
-            console.log('Fetching available RTOMs...');
-            const response = await fetch(`${API_BASE_URL}/region-admin/available-rtoms`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await secureFetch('/region-admin/available-rtoms');
             const data = await response.json();
-            console.log('RTOMs response:', data);
+            logger.info('RTOMs response:', data);
             if (data.success) {
                 setAvailableRtoms(data.data);
-                console.log('Available RTOMs:', data.data);
+                logger.info('Available RTOMs:', data.data);
             } else {
-                console.error('Failed to fetch RTOMs:', data.message);
+                logger.error('Failed to fetch RTOMs:', data.message);
                 setError(data.message || 'Failed to load RTOMs');
+                toast.error(data.message || 'Failed to load RTOMs');
             }
         } catch (err) {
-            console.error('Error fetching RTOMs:', err);
+            logger.error('Error fetching RTOMs:', err);
             setError('Failed to load RTOMs. Please try again.');
+            toast.error('Failed to load RTOMs. Please try again.');
         }
     };
 
@@ -84,25 +81,8 @@ export default function RtomAdminModal({ isOpen, onClose, admin, onSuccess }) {
         setError(null);
 
         try {
-            const token = localStorage.getItem('token');
-            const url = admin
-                ? `${API_BASE_URL}/region-admin/rtom-admins/${admin.id}`
-                : `${API_BASE_URL}/region-admin/rtom-admins`;
-
-            const method = admin ? 'PUT' : 'POST';
-
-            // Don't send password if editing and password is empty
-            const payload = { ...formData };
-            if (admin && !payload.password) {
-                delete payload.password;
-            }
-
-            const response = await fetch(url, {
+            const response = await secureFetch(url, {
                 method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify(payload)
             });
 
@@ -116,7 +96,6 @@ export default function RtomAdminModal({ isOpen, onClose, admin, onSuccess }) {
             }
         } catch (err) {
             setError('Network error. Please try again.');
-            console.error('Error:', err);
         } finally {
             setLoading(false);
         }

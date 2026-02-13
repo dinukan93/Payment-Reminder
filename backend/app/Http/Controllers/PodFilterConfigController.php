@@ -77,7 +77,9 @@ class PodFilterConfigController extends Controller
                 'data' => $config
             ]);
         } catch (\Exception $e) {
-            Log::error('Error updating POD filter config', ['error' => $e->getMessage()]);
+            Log::error('Error updating POD filter config', [
+                'error' => $e->getMessage()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update configuration',
@@ -106,10 +108,7 @@ class PodFilterConfigController extends Controller
                 'updated_by' => $request->user()->id
             ]);
 
-            Log::info('POD filter config reset to defaults', [
-                'admin_id' => $request->user()->id,
-                'admin_email' => $request->user()->email
-            ]);
+            Log::info('POD Filter Configuration updated');
 
             return response()->json([
                 'success' => true,

@@ -51,7 +51,6 @@ function AdminSentRequestsModal({ isOpen, onClose, sentRequests = [], onRequestC
         showError(result.message || "Failed to cancel request");
       }
     } catch (error) {
-      console.error('Error cancelling request:', error);
       showError("Error cancelling request");
     } finally {
       setCancellingRequestId(null);

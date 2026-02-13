@@ -5,6 +5,7 @@ import { readExcelFile as readExcel, jsonToExcelBuffer, downloadExcelFile, creat
 import JSZip from 'jszip';
 import API_BASE_URL from "../config/api";
 import { secureFetch } from "../utils/api";
+import logger from '../utils/logger';
 import { getRegionForRtom } from "../config/regionConfig";
 
 const steps = [
@@ -55,10 +56,10 @@ function PODFilterComponent({ isOpen, onClose }) {
             });
           }
         } else {
-          console.warn('Failed to fetch POD filter config, using defaults');
+          logger.warn('Failed to fetch POD filter config, using defaults');
         }
       } catch (error) {
-        console.error('Error fetching POD filter config:', error);
+        logger.error('Error fetching POD filter config:', error);
         showError('Failed to load filter configuration. Using default values.');
       } finally {
         setConfigLoading(false);
@@ -653,7 +654,7 @@ function PODFilterComponent({ isOpen, onClose }) {
         showSuccess(`Processing complete! ${allProcessedData.length} records processed.`);
       }
     } catch (error) {
-      console.error("Error processing Excel:", error);
+      // Error logged previously via showError message if needed
       showError("Error processing Excel file. Check console for details.");
     } finally {
       setProcessing(false);
@@ -762,24 +763,23 @@ function PODFilterComponent({ isOpen, onClose }) {
         }
       }
     } catch (error) {
-      console.error('Error downloading results:', error);
       showError('Error downloading results. Please try again.');
     }
   };
 
   // Distribute filtered data to regions and RTOMs
   const distributeToRegionsAndRtoms = async () => {
-    console.log('Distribution triggered. Results:', results);
+
 
     if (!results || !results.allData) {
       showError("No data available to distribute. Please run filtration first.");
-      console.error('No results or allData:', { results, hasAllData: results?.allData });
+      // Distribution check failed
       return;
     }
 
     if (!results.allData.length) {
       showError("No data to distribute. The filtered data is empty.");
-      console.error('Empty allData array');
+      // Distribution check failed
       return;
     }
 
@@ -800,7 +800,8 @@ function PODFilterComponent({ isOpen, onClose }) {
         .map(row => {
           // Add REGION from RTOM if not present
           const rtomCode = row['RTOM'] || null;
-          const region = rtomCode ? getRegionForRtom(rtomCode) : (row['REGION'] || null);
+          const configRegion = rtomCode ? getRegionForRtom(rtomCode) : null;
+          const region = configRegion || row['REGION'] || row['region'] || 'Unknown';
 
           // Ensure ACCOUNT_NUMBER field exists for backend
           const mappedRow = {
@@ -812,13 +813,8 @@ function PODFilterComponent({ isOpen, onClose }) {
           return mappedRow;
         });
 
-      console.log('Customers to distribute:', customersToDistribute.length);
-      console.log('Sample customer with assignedTo:', {
-        ACCOUNT_NUM: customersToDistribute[0]?.ACCOUNT_NUM,
-        assignedTo: customersToDistribute[0]?.assignedTo,
-        REGION: customersToDistribute[0]?.REGION,
-        RTOM: customersToDistribute[0]?.RTOM
-      });
+
+
 
       if (!customersToDistribute.length) {
         showError("No valid customers to distribute. All rows are missing account numbers.");
@@ -827,18 +823,8 @@ function PODFilterComponent({ isOpen, onClose }) {
       }
 
       // Send to backend API
-      const token = localStorage.getItem('token');
-      if (!token) {
-        showError("Authentication token not found. Please log in again.");
-        setDistributing(false);
-        return;
-      }
-
       const response = await secureFetch(`/api/distribution/distribute`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({
           customers: customersToDistribute
         })
@@ -848,7 +834,6 @@ function PODFilterComponent({ isOpen, onClose }) {
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
-        console.error('Non-JSON response:', text.substring(0, 500));
         showError('Server returned an error. Please check your authentication and try again.');
         setDistributing(false);
         return;
@@ -858,7 +843,6 @@ function PODFilterComponent({ isOpen, onClose }) {
 
       if (!response.ok) {
         showError(data.message || `Server error: ${response.status}`);
-        console.error('Distribution failed:', data);
         setDistributing(false);
         return;
       }
@@ -866,19 +850,15 @@ function PODFilterComponent({ isOpen, onClose }) {
       if (data.success) {
         showSuccess(`Successfully distributed ${data.summary.created + data.summary.updated} customers to regions and RTOMs`);
 
-        // Show distribution summary
-        console.log('Distribution Summary:', data.summary);
+
 
         if (data.summary.errors > 0) {
           showError(`${data.summary.errors} records failed to distribute. Check console for details.`);
-          console.error('Distribution errors:', data.errors);
         }
       } else {
         showError(data.message || 'Failed to distribute data');
-        console.error('Distribution failed:', data);
       }
     } catch (error) {
-      console.error('Distribution error:', error);
       showError('An error occurred while distributing data to regions and RTOMs');
     } finally {
       setDistributing(false);

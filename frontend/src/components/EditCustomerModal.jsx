@@ -93,8 +93,7 @@ function EditCustomerModal({ show, customer, onClose, onSave }) {
       const response = await secureFetch(`/customers/${customer._id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
       });
@@ -109,7 +108,6 @@ function EditCustomerModal({ show, customer, onClose, onSave }) {
       onClose();
     } catch (err) {
       setError(err.message || 'Error updating customer');
-      console.error('Error updating customer:', err);
     } finally {
       setLoading(false);
     }

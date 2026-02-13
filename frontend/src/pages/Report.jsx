@@ -118,7 +118,6 @@ function Report() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching report data:', error);
       setLoading(false);
     }
   };
@@ -137,7 +136,7 @@ function Report() {
         setCompletedRequests(result.data);
       }
     } catch (error) {
-      console.error('Error fetching completed requests:', error);
+      // Error handled silently
     }
   };
 
@@ -224,13 +223,11 @@ function Report() {
       const result = await response.json();
       if (result.success) {
         toast.success(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} performance report sent to admin successfully! Report ID: ${result.data.reportId}`);
-        console.log(' Report generated:', result.data);
       } else {
         toast.error('Failed to send report: ' + result.message);
       }
       setSendingReport(false);
     } catch (error) {
-      console.error('Error sending report:', error);
       toast.error('Error sending report to admin');
       setSendingReport(false);
     }

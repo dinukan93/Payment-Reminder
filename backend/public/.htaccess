@@ -1,3 +1,14 @@
+# Security Headers
+<IfModule mod_headers.c>
+    # Remove informational headers
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
+    Header unset Server
+    Header always unset Server
+    Header unset X-Generator
+    Header always unset X-Generator
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

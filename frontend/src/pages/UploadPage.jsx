@@ -19,8 +19,20 @@ const UploadPage = () => {
   const [paidFiles, setPaidFiles] = useState([]);
   const [paidDragActive, setPaidDragActive] = useState(false);
   const [paidData, setPaidData] = useState(() => {
-    const saved = localStorage.getItem('uploadedPaidData');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('uploadedPaidData');
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      // Validate structure: must have headers and rows
+      if (parsed && typeof parsed === 'object' && parsed.headers && parsed.rows) {
+        return parsed;
+      }
+      // If invalid format, clear it
+      localStorage.removeItem('uploadedPaidData');
+      return null;
+    } catch (e) {
+      return null;
+    }
   });
   const [paidUploading, setPaidUploading] = useState(false);
   const [paidImporting, setPaidImporting] = useState(false);
@@ -35,7 +47,7 @@ const UploadPage = () => {
 
   // Save paidData to localStorage whenever it changes
   React.useEffect(() => {
-    console.log('Paid Data State Changed:', paidData);
+    // State change logging removed
     if (paidData) {
       localStorage.setItem('uploadedPaidData', JSON.stringify(paidData));
     } else {
@@ -107,38 +119,25 @@ const UploadPage = () => {
       const formData = new FormData();
       formData.append('file', fileItem.file);
 
-      const token = localStorage.getItem('token');
-      console.log('Uploading paid customers file to:', `${API_BASE_URL}/upload/parse`);
-
-      const response = await secureFetch(`/upload/parse`, {
+      const response = await secureFetch(`/api/upload/parse`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: formData
       });
 
-      console.log('Paid Response status:', response.status);
       const result = await response.json();
-      console.log('Paid Response data:', result);
 
       if (response.ok && result.success) {
-        console.log('Paid data received:', result.data);
-
         setPaidFiles(prev => prev.map(f =>
           f.id === fileItem.id ? { ...f, status: 'completed', progress: 100 } : f
         ));
 
         setPaidData(result.data);
         setPaidSearchTerm("");
-
-        console.log('Paid data state updated');
       } else {
         const errorMsg = result.error || result.message || 'Upload failed';
         throw new Error(errorMsg);
       }
     } catch (error) {
-      console.error('Paid upload error:', error);
       const errorMessage = error.message.includes('zip file')
         ? 'Invalid Excel file format. Please ensure the file is a valid .xlsx or .xls file.'
         : error.message;
@@ -173,19 +172,14 @@ const UploadPage = () => {
       const formData = new FormData();
       formData.append('file', completedFile.file);
 
-      const token = localStorage.getItem('token');
-      console.log('Importing paid customers to database...');
-
-      const response = await secureFetch(`/upload/mark-paid`, {
+      console.log('Sending mark-paid request for file:', completedFile.file.name);
+      const response = await secureFetch(`/api/upload/mark-paid`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: formData
       });
 
       const result = await response.json();
-      console.log('Paid import result:', result);
+      console.log('mark-paid API response:', result);
 
       if (response.ok && result.success) {
         toast.success(`Successfully marked ${result.data.marked} customers as paid! (${result.data.skipped || 0} records skipped)`);
@@ -199,7 +193,6 @@ const UploadPage = () => {
         throw new Error(result.message || 'Import failed');
       }
     } catch (error) {
-      console.error('Paid import error:', error);
       toast.error(`Import failed: ${error.message}`);
     } finally {
       setPaidImporting(false);
@@ -513,13 +506,14 @@ const UploadPage = () => {
                   <thead>
                     <tr>
                       <th className="row-number-header">#</th>
-                      {paidData.headers.map((header, index) => (
+                      {paidData?.headers?.map?.((header, index) => (
                         <th key={index}>{header}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {(() => {
+                      if (!paidData || !paidData.headers || !paidData.rows) return null;
                       const { headers, rows } = paidData;
                       const filteredRows = rows.filter(row => {
                         if (!paidSearchTerm.trim()) return true;

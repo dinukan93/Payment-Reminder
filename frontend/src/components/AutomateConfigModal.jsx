@@ -24,20 +24,25 @@ function AutomateConfigModal({ isOpen, onClose, onConfirm }) {
         const result = await response.json();
         const callersData = result.data || result;
 
-        // Filter for enabled callers (not OFFLINE) with available capacity
+        // Show all callers that are not OFFLINE (as per user request: "show all the callers belonging to the rtom even if the max load is surpassed")
         const availableCallers = callersData.filter(c =>
-          c.status !== 'OFFLINE' && c.currentLoad < c.maxLoad
-        ).map(c => ({
-          id: c._id || c.id,
-          name: c.name,
-          callerId: c.callerId,
-          region: c.region,
-          rtom: c.rtom,
-          currentLoad: c.currentLoad || 0,
-          maxLoad: c.maxLoad || 0,
-          available: (c.maxLoad || 0) - (c.currentLoad || 0),
-          status: c.status
-        }));
+          c.status !== 'OFFLINE'
+        ).map(c => {
+          const maxLoad = c.maxLoad || 20;
+          const currentLoad = c.currentLoad || 0;
+          return {
+            id: c.id,
+            name: c.name,
+            callerId: c.callerId,
+            region: c.region,
+            rtom: c.rtom,
+            currentLoad: currentLoad,
+            maxLoad: maxLoad,
+            available: Math.max(0, maxLoad - currentLoad),
+            isFull: currentLoad >= maxLoad,
+            status: c.status
+          };
+        });
 
         setCallers(availableCallers);
         // Select all by default
@@ -47,7 +52,6 @@ function AutomateConfigModal({ isOpen, onClose, onConfirm }) {
         showError("Failed to fetch callers");
       }
     } catch (error) {
-      console.error('Error fetching callers:', error);
       showError("Error fetching available callers");
     } finally {
       setLoading(false);
@@ -126,7 +130,7 @@ function AutomateConfigModal({ isOpen, onClose, onConfirm }) {
                     onChange={handleSelectAll}
                   />
                   <span className="checkbox-text">
-                    <strong>Select All Callers</strong> ({callers.length} available)
+                    <strong>Select All Callers</strong> ({callers.filter(c => !c.isFull).length} available)
                   </span>
                 </label>
               </div>
@@ -135,8 +139,8 @@ function AutomateConfigModal({ isOpen, onClose, onConfirm }) {
                 {callers.map((caller) => (
                   <div
                     key={caller.id}
-                    className={`automate-caller-card ${selectedCallers.includes(caller.id) ? 'selected' : ''}`}
-                    onClick={() => handleCallerToggle(caller.id)}
+                    className={`automate-caller-card ${selectedCallers.includes(caller.id) ? 'selected' : ''} ${caller.isFull ? 'full' : ''}`}
+                    onClick={() => !caller.isFull && handleCallerToggle(caller.id)}
                   >
                     <div className="automate-caller-checkbox">
                       <input
@@ -144,6 +148,7 @@ function AutomateConfigModal({ isOpen, onClose, onConfirm }) {
                         checked={selectedCallers.includes(caller.id)}
                         onChange={() => handleCallerToggle(caller.id)}
                         onClick={(e) => e.stopPropagation()}
+                        disabled={caller.isFull}
                       />
                     </div>
                     <div className="automate-caller-info">
@@ -163,8 +168,16 @@ function AutomateConfigModal({ isOpen, onClose, onConfirm }) {
                           {caller.currentLoad} / {caller.maxLoad}
                         </span>
                         <span className="automate-caller-available">
-                          <i className="bi bi-check-circle"></i>
-                          {caller.available} available
+                          {caller.isFull ? (
+                            <span className="capacity-status full">
+                              <i className="bi bi-exclamation-triangle-fill"></i> Full Capacity
+                            </span>
+                          ) : (
+                            <>
+                              <i className="bi bi-check-circle"></i>
+                              {caller.available} available
+                            </>
+                          )}
                         </span>
                       </div>
                     </div>

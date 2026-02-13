@@ -35,7 +35,6 @@ function PODConfigSettings({ isOpen, onClose }) {
                 showError('Failed to load configuration');
             }
         } catch (error) {
-            console.error('Error fetching config:', error);
             showError('Error loading configuration');
         } finally {
             setLoading(false);
@@ -94,7 +93,6 @@ function PODConfigSettings({ isOpen, onClose }) {
                 showError(data.message || 'Failed to save configuration');
             }
         } catch (error) {
-            console.error('Error saving config:', error);
             showError('Error saving configuration');
         } finally {
             setSaving(false);
@@ -124,7 +122,6 @@ function PODConfigSettings({ isOpen, onClose }) {
                 showError('Failed to reset configuration');
             }
         } catch (error) {
-            console.error('Error resetting config:', error);
             showError('Error resetting configuration');
         } finally {
             setSaving(false);

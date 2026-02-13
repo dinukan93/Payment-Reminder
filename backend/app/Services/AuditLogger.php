@@ -4,62 +4,113 @@ namespace App\Services;
 
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuditLogger
 {
     /**
-     * Log an action
+     * Log an action to the audit_logs table
+     *
+     * @param string $action
+     * @param string $description
+     * @param string|null $model
+     * @param int|null $modelId
+     * @param array|null $oldValues
+     * @param array|null $newValues
+     * @param Request|null $request
      */
     public static function log(
         string $action,
-        ?string $description = null,
+        string $description,
         ?string $model = null,
         ?int $modelId = null,
         ?array $oldValues = null,
         ?array $newValues = null,
         ?Request $request = null
-    ) {
-        $user = $request ? $request->user() : null;
+    ): void {
+        // Allow disabling audit logging via .env
+        if (!config('audit.enabled', env('AUDIT_LOGGING_ENABLED', true))) {
+            return;
+        }
+
+        // Filter sensitive data from old and new values
+        $oldValues = self::filterSensitiveData($oldValues);
+        $newValues = self::filterSensitiveData($newValues);
+
+        $user = Auth::user();
 
         AuditLog::create([
-            'user_type' => $user ? ($user instanceof \App\Models\Admin ? 'admin' : 'caller') : null,
             'user_id' => $user ? $user->id : null,
-            'user_email' => $user ? $user->email : null,
+            'user_type' => $user ? (get_class($user) === 'App\Models\Admin' ? 'admin' : 'caller') : null,
             'action' => $action,
-            'model' => $model,
-            'model_id' => $modelId,
             'description' => $description,
+            'model_type' => $model,
+            'model_id' => $modelId,
             'old_values' => $oldValues,
             'new_values' => $newValues,
-            'ip_address' => $request ? $request->ip() : null,
-            'user_agent' => $request ? $request->userAgent() : null,
-            'url' => $request ? $request->fullUrl() : null,
-            'method' => $request ? $request->method() : null,
+            'ip_address' => $request ? $request->ip() : request()->ip(),
+            'user_agent' => $request ? $request->userAgent() : request()->userAgent(),
+            'url' => $request ? $request->fullUrl() : request()->fullUrl(),
+            'method' => $request ? $request->method() : request()->method(),
         ]);
     }
 
     /**
-     * Log login attempt
+     * Filter sensitive keys from an array
+     *
+     * @param array|null $data
+     * @return array|null
      */
-    public static function logLogin(Request $request, $user, bool $success)
+    private static function filterSensitiveData(?array $data): ?array
+    {
+        if (!$data) {
+            return $data;
+        }
+
+        $sensitiveKeys = [
+            'password',
+            'password_confirmation',
+            'token',
+            'access_token',
+            'refresh_token',
+            'otp',
+            'reset_token',
+            'auth_token',
+            'secret',
+            'key',
+            'api_key'
+        ];
+
+        foreach ($data as $key => $value) {
+            if (in_array(strtolower($key), $sensitiveKeys)) {
+                $data[$key] = '[REDACTED]';
+            } elseif (is_array($value)) {
+                $data[$key] = self::filterSensitiveData($value);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Helper to log login actions
+     */
+    public static function logLogin(Request $request, $user): void
     {
         self::log(
-            action: $success ? 'login_success' : 'login_failed',
-            description: $success
-            ? "User {$user->email} logged in successfully"
-            : "Failed login attempt for {$request->email}",
-            model: $success ? get_class($user) : null,
-            modelId: $success ? $user->id : null,
+            action: 'login',
+            description: "User {$user->email} logged in",
+            model: get_class($user),
+            modelId: $user->id,
             request: $request
         );
     }
 
     /**
-     * Log logout
+     * Helper to log logout actions
      */
-    public static function logLogout(Request $request)
+    public static function logLogout(Request $request, $user): void
     {
-        $user = $request->user();
         self::log(
             action: 'logout',
             description: "User {$user->email} logged out",
@@ -70,9 +121,9 @@ class AuditLogger
     }
 
     /**
-     * Log model creation
+     * Helper to log creation
      */
-    public static function logCreate(Request $request, $model, ?string $description = null)
+    public static function logCreate($model, ?Request $request = null, ?string $description = null): void
     {
         self::log(
             action: 'create',
@@ -85,9 +136,9 @@ class AuditLogger
     }
 
     /**
-     * Log model update
+     * Helper to log updates
      */
-    public static function logUpdate(Request $request, $model, array $oldValues, ?string $description = null)
+    public static function logUpdate($model, array $oldValues, ?Request $request = null, ?string $description = null): void
     {
         self::log(
             action: 'update',
@@ -101,9 +152,9 @@ class AuditLogger
     }
 
     /**
-     * Log model deletion
+     * Helper to log deletions
      */
-    public static function logDelete(Request $request, $model, ?string $description = null)
+    public static function logDelete($model, ?Request $request = null, ?string $description = null): void
     {
         self::log(
             action: 'delete',

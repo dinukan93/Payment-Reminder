@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./PaymentCalendar.css";
+import logger from '../utils/logger';
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
@@ -11,7 +12,7 @@ function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return `${day} /${month}/${year} `;
   };
 
   // Initialize calendar with today's date when it opens
@@ -21,21 +22,26 @@ function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    logger.info('PaymentCalendar - Promised payments:', promisedPayments);
+    // Find customers with promised dates matching current view
+  }, [promisedPayments]);
+
   // Update selected date customers whenever data or selected date changes
   useEffect(() => {
     const dateString = formatDate(selectedDate);
-    console.log('Calendar: Looking for payments on', dateString);
-    console.log('Calendar: Total promisedPayments:', promisedPayments.length);
-    console.log('Calendar: All promisedPayments:', promisedPayments);
+    logger.info('Calendar: Looking for payments on', dateString);
+    logger.info('Calendar: Total promisedPayments:', promisedPayments.length);
+    logger.info('Calendar: All promisedPayments:', promisedPayments);
 
     const customers = promisedPayments.filter(
       (payment) => {
-        console.log('  Comparing:', payment.promisedDate, '===', dateString, '?', payment.promisedDate === dateString);
+        logger.debug('  Comparing:', payment.promisedDate, '===', dateString, '?', payment.promisedDate === dateString);
         return payment.promisedDate === dateString;
       }
     );
 
-    console.log('📅 Calendar: Found', customers.length, 'customers for', dateString);
+    logger.info('📅 Calendar: Found', customers.length, 'customers for', dateString);
     setSelectedDateCustomers(customers);
   }, [JSON.stringify(promisedPayments), selectedDate]);
 
@@ -142,7 +148,7 @@ function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
               <div className="calendar-days">
                 {Array.from({ length: startingDayOfWeek }).map((_, index) => (
                   <div
-                    key={`empty-${index}`}
+                    key={`empty - ${index} `}
                     className="calendar-day empty"
                   ></div>
                 ))}
@@ -159,8 +165,8 @@ function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
                   return (
                     <div
                       key={day}
-                      className={`calendar-day ${isToday(day) ? "today" : ""} ${isSelectedDate(day) ? "selected" : ""
-                        } ${paymentCount > 0 ? "has-payments" : ""}`}
+                      className={`calendar - day ${isToday(day) ? "today" : ""} ${isSelectedDate(day) ? "selected" : ""
+                        } ${paymentCount > 0 ? "has-payments" : ""} `}
                       onClick={() => handleDateClick(day)}
                     >
                       <span className="day-number">{day}</span>

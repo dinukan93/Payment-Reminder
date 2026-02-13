@@ -8,6 +8,7 @@ use App\Models\Caller;
 use App\Services\OtpService;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -56,14 +57,8 @@ class AuthController extends Controller
             return response()->json(['error' => 'Account is inactive'], 403);
         }
 
-        $otpResult = $this->otpService->generateOtp($request->email, $userType);
-
-        $response = [
-            'message' => 'Password verified. OTP sent to your phone.',
-            'requiresOtp' => true
-        ];
-
-        return response()->json($response);
+        $this->otpService->generateOtp($request->email, $userType);
+        return response()->json(['success' => true]);
     }
 
     public function me(Request $request)
@@ -101,7 +96,11 @@ class AuthController extends Controller
                 request: $request
             );
 
-            $request->user()->currentAccessToken()->delete();
+            // Logout from session and invalidate
+            $userType = $user instanceof Admin ? 'admin' : 'caller';
+            Auth::guard($userType)->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
             return response()->json(['message' => 'Logged out successfully']);
         } catch (\Exception $e) {
@@ -145,7 +144,12 @@ class AuthController extends Controller
             $user = $result['user'];
             $userType = $result['userType'];
 
-            $token = $user->createToken('auth-token', [$userType])->plainTextToken;
+            // Use session-based authentication with appropriate guard
+            $guard = $userType === 'admin' ? 'admin' : 'caller';
+            Auth::guard($guard)->login($user);
+
+            // Regenerate session to prevent session fixation attacks
+            $request->session()->regenerate();
 
             AuditLogger::log(
                 action: 'login_success',
@@ -156,11 +160,8 @@ class AuthController extends Controller
             );
 
             return response()->json([
-                'token' => $token,
                 'user' => [
                     'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
                     'userType' => $userType,
                     'role' => $userType === 'admin' ? $user->role : 'caller',
                     'region' => $userType === 'admin' ? $user->region : null,

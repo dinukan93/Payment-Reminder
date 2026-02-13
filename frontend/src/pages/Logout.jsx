@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clearSession } from '../utils/auth';
 import { secureFetch } from '../utils/api';
+import logger from '../utils/logger';
 
 const Logout = () => {
   const navigate = useNavigate();
@@ -10,14 +11,11 @@ const Logout = () => {
     const performLogout = async () => {
       try {
         // Call backend logout endpoint if token exists
-        const token = localStorage.getItem('token');
-        if (token) {
-          await secureFetch(`/api/logout`, {
-            method: 'POST'
-          }).catch(err => console.log('Logout API call failed:', err));
-        }
+        await secureFetch(`/api/logout`, {
+          method: 'POST'
+        }).catch(err => logger.log('Logout API call failed:', err));
       } catch (error) {
-        console.log('Error during logout:', error);
+        logger.log('Error during logout:', error);
       } finally {
         // Clear all authentication and session data using utility
         clearSession();

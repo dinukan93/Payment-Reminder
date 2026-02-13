@@ -21,17 +21,27 @@ function SuperAdminDashboard() {
   });
   const [availableRtoms, setAvailableRtoms] = useState([]);
 
+  // Fetch user profile to get full info (PII) securely after login
+  const fetchUserProfile = async () => {
+    try {
+      const res = await secureFetch('/api/me');
+      const data = await res.json();
+      if (res.ok && data.user) {
+        localStorage.setItem('userData', JSON.stringify(data.user));
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+    }
+  };
+
   useEffect(() => {
+    fetchUserProfile();
     fetchAdmins();
   }, []);
 
   const fetchAdmins = async () => {
     try {
-      const response = await secureFetch(`/api/superadmin/admins`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await secureFetch(`/api/superadmin/admins`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch admins');
@@ -40,7 +50,6 @@ function SuperAdminDashboard() {
       const result = await response.json();
       setAdmins(result.data || []);
     } catch (error) {
-      console.error('Error fetching admins:', error);
       toast.error('Failed to load admins');
     } finally {
       setLoading(false);
@@ -88,10 +97,6 @@ function SuperAdminDashboard() {
 
       const response = await secureFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
         body: JSON.stringify(formData)
       });
 
@@ -106,7 +111,6 @@ function SuperAdminDashboard() {
       resetForm();
       fetchAdmins();
     } catch (error) {
-      console.error('Error saving admin:', error);
       toast.error(error.message || 'Failed to save admin');
     }
   };
@@ -139,10 +143,7 @@ function SuperAdminDashboard() {
 
     try {
       const response = await secureFetch(`/api/superadmin/admins/${adminId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        method: 'DELETE'
       });
 
       const result = await response.json();
@@ -154,7 +155,6 @@ function SuperAdminDashboard() {
       toast.success(result.message);
       fetchAdmins();
     } catch (error) {
-      console.error('Error deleting admin:', error);
       toast.error(error.message || 'Failed to delete admin');
     }
   };

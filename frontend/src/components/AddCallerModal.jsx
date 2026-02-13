@@ -21,16 +21,13 @@ function AddCallerModal({ isOpen, onClose, onSuccess }) {
     const fetchNextCallerId = async () => {
       if (!isOpen) return;
       try {
-        const token = localStorage.getItem('token');
-        const res = await secureFetch(`/api/callers/next-id`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await secureFetch(`/api/callers/next-id`);
         const data = await res.json();
         if (data.nextCallerId) {
           setFormData(prev => ({ ...prev, callerId: data.nextCallerId }));
         }
       } catch (err) {
-        
+
       }
     };
     fetchNextCallerId();
@@ -71,13 +68,10 @@ function AddCallerModal({ isOpen, onClose, onSuccess }) {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-
       const response = await secureFetch(`/api/callers`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
       });
@@ -102,7 +96,6 @@ function AddCallerModal({ isOpen, onClose, onSuccess }) {
       }
     } catch (err) {
       setError(err.message || 'Error adding Caller');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }

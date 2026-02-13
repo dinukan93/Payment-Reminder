@@ -11,6 +11,7 @@ import CallerStatisticsTable from '../components/CallerStatisticsTable';
 import { secureFetch } from "../utils/api";
 import { useTheme } from '../context/ThemeContext';
 import { showError } from '../components/Notifications';
+import logger from '../utils/logger';
 
 function AdminReport() {
   const { darkMode } = useTheme();
@@ -42,30 +43,28 @@ function AdminReport() {
         setPerformanceReports(result.data);
       }
     } catch (error) {
-      console.error('Error fetching performance reports:', error);
+      logger.error('Error fetching performance reports:', error);
     }
   };
 
   // Fetch all callers for report list
   const fetchAllCallers = async () => {
     try {
-      console.log('Fetching all callers...');
+      logger.info('Fetching all callers...');
       const response = await secureFetch(`/api/callers`);
       const result = await response.json();
-      console.log('Callers response:', result);
+      logger.info('Callers response summary loaded');
 
       // Handle both array response and {success, data} response
       if (Array.isArray(result)) {
-        console.log('Setting callers from array:', result);
         setAllCallers(result);
       } else if (result.success && result.data) {
-        console.log('Setting callers from object:', result.data);
         setAllCallers(result.data);
       } else {
-        console.error('Unexpected callers response format:', result);
+        logger.error('Unexpected callers response format:', result);
       }
     } catch (error) {
-      console.error('Error fetching callers:', error);
+      logger.error('Error fetching callers:', error);
     }
   };
 
@@ -162,7 +161,6 @@ function AdminReport() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching report data:', error);
       setLoading(false);
     }
   };
@@ -180,7 +178,7 @@ function AdminReport() {
         }));
       }
     } catch (error) {
-      console.error('Error fetching completed requests:', error);
+      // Error handling
     }
   };
 
@@ -196,7 +194,7 @@ function AdminReport() {
         setPendingRequests(result.data);
       }
     } catch (error) {
-      console.error('Error fetching pending requests:', error);
+      // Error handling
     }
   };
 

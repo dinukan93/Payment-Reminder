@@ -17,12 +17,6 @@ class RequestController extends Controller
         try {
             $user = $request->user();
 
-            Log::info('RequestController index called', [
-                'user' => $user ? get_class($user) : 'null',
-                'user_id' => $user ? $user->id : 'null',
-                'query_params' => $request->all()
-            ]);
-
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -30,14 +24,12 @@ class RequestController extends Controller
             $query = TaskRequest::query();
 
             if ($user instanceof Caller) {
-                Log::info('User is a Caller', ['caller_id' => $user->id]);
                 $query->where('caller_id', $user->id);
 
                 if ($request->has('status')) {
                     $query->where('status', $request->status);
                 }
             } elseif ($user instanceof Admin) {
-                Log::info('User is an Admin', ['admin_id' => $user->id]);
                 if ($request->has('callerId')) {
                     $query->where('caller_id', $request->callerId);
                 }
@@ -64,7 +56,7 @@ class RequestController extends Controller
                     }
                 }
             } else {
-                Log::warning('User is neither Caller nor Admin', ['user_class' => get_class($user)]);
+                // Not authorized logic
             }
 
             $results = $query->orderBy('sent_date', 'desc')->get();
@@ -93,13 +85,9 @@ class RequestController extends Controller
                 return $req;
             });
 
-            Log::info('Returning results', ['count' => $results->count()]);
-
             return response()->json($results);
         } catch (\Exception $e) {
-            Log::error('Request index error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
+            Log::error('Requests API Error: ' . $e->getMessage());
             return response()->json([
                 'error' => 'Failed to fetch requests',
                 'message' => $e->getMessage()
@@ -117,19 +105,11 @@ class RequestController extends Controller
         $caller = Caller::findOrFail($validated['caller_id']);
 
         $user = $request->user();
-        Log::info('Creating request - authenticated user:', [
-            'user' => $user,
-            'user_id' => $user ? $user->id : null,
-            'user_name' => $user ? $user->name : null,
-            'user_type' => $user ? get_class($user) : null
-        ]);
 
         $sentBy = 'Admin';
         if ($user) {
             $sentBy = $user->name ?? $user->username ?? $user->email ?? 'Admin';
         }
-
-        Log::info('Determined sent_by value:', ['sent_by' => $sentBy]);
 
         $taskRequest = TaskRequest::create([
             'task_id' => 'TASK-' . time() . '-' . rand(1000, 9999),
@@ -152,37 +132,43 @@ class RequestController extends Controller
 
     public function accept(Request $request, $id)
     {
-        $taskRequest = TaskRequest::findOrFail($id);
+        try {
+            $taskRequest = TaskRequest::findOrFail($id);
 
-        if ($taskRequest->status === 'ACCEPTED') {
+            if ($taskRequest->status === 'ACCEPTED') {
+                return response()->json($taskRequest);
+            }
+
+            $taskRequest->update(['status' => 'ACCEPTED']);
+
+            if ($taskRequest->customer_ids) {
+                FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
+                    ->update([
+                        'assigned_to' => $taskRequest->caller_id,
+                        'status' => 'overdue'
+                    ]);
+            }
+
+            $caller = $taskRequest->caller;
+            if ($caller) {
+                $assignedCount = FilteredCustomer::where('assigned_to', $caller->id)
+                    ->where('status', '!=', 'COMPLETED')
+                    ->count();
+
+                $caller->currentLoad = $assignedCount;
+
+                if ($caller->currentLoad > 0) {
+                    $caller->taskStatus = 'busy';
+                }
+
+                $caller->save();
+            }
+
             return response()->json($taskRequest);
+        } catch (\Exception $e) {
+            Log::error('Accept Request Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['error' => 'Failed to accept request'], 500);
         }
-
-        $taskRequest->update(['status' => 'ACCEPTED']);
-
-        if ($taskRequest->customer_ids) {
-            FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
-                ->update([
-                    'assigned_to' => $taskRequest->caller_id,
-                    'status' => 'overdue'
-                ]);
-        }
-
-        $caller = $taskRequest->caller;
-
-        $assignedCount = FilteredCustomer::where('assigned_to', $caller->id)
-            ->where('status', '!=', 'COMPLETED')
-            ->count();
-
-        $caller->currentLoad = $assignedCount;
-
-        if ($caller->currentLoad > 0) {
-            $caller->taskStatus = 'busy';
-        }
-
-        $caller->save();
-
-        return response()->json($taskRequest);
     }
 
     public function decline(Request $request, $id)
@@ -198,54 +184,59 @@ class RequestController extends Controller
 
     public function cancel(Request $request, $id)
     {
-        $user = $request->user();
+        try {
+            $user = $request->user();
 
-        if (!($user instanceof Admin)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized. Only admins can cancel requests.'
-            ], 403);
-        }
-
-        $taskRequest = TaskRequest::findOrFail($id);
-
-        if (in_array($taskRequest->status, ['ACCEPTED', 'DECLINED', 'CANCELLED'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot cancel a request that has already been ' . strtolower($taskRequest->status) . '.'
-            ], 400);
-        }
-
-        if ($user->role === 'supervisor' || $user->role === 'rtom_admin') {
-            $caller = Caller::find($taskRequest->caller_id);
-            if ($caller && $caller->rtom !== $user->rtom) {
+            if (!($user instanceof Admin)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You can only cancel requests in your RTOM.'
+                    'message' => 'Unauthorized. Only admins can cancel requests.'
                 ], 403);
             }
-        } elseif ($user->role === 'region_admin') {
-            $caller = Caller::find($taskRequest->caller_id);
-            if ($caller && $caller->region !== $user->region) {
+
+            $taskRequest = TaskRequest::findOrFail($id);
+
+            if (in_array($taskRequest->status, ['ACCEPTED', 'DECLINED', 'CANCELLED'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You can only cancel requests in your region.'
-                ], 403);
+                    'message' => 'Cannot cancel a request that has already been ' . strtolower($taskRequest->status) . '.'
+                ], 400);
             }
+
+            if ($user->role === 'supervisor' || $user->role === 'rtom_admin') {
+                $caller = Caller::find($taskRequest->caller_id);
+                if ($caller && $caller->rtom !== $user->rtom) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You can only cancel requests in your RTOM.'
+                    ], 403);
+                }
+            } elseif ($user->role === 'region_admin') {
+                $caller = Caller::find($taskRequest->caller_id);
+                if ($caller && $caller->region !== $user->region) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You can only cancel requests in your region.'
+                    ], 403);
+                }
+            }
+
+            $taskRequest->update(['status' => 'CANCELLED']);
+
+            if ($taskRequest->customer_ids) {
+                FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
+                    ->update(['assigned_to' => null]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Request cancelled successfully.',
+                'data' => $taskRequest
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Cancel Request Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['error' => 'Failed to cancel request'], 500);
         }
-
-        $taskRequest->update(['status' => 'CANCELLED']);
-
-        if ($taskRequest->customer_ids) {
-            FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
-                ->update(['assigned_to' => null]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Request cancelled successfully.',
-            'data' => $taskRequest
-        ]);
     }
 
     public function update(Request $request, $id)

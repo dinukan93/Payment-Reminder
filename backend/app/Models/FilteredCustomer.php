@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class FilteredCustomer extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
         // Essential Excel columns for caller work
         'REGION',

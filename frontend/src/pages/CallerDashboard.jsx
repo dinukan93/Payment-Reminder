@@ -36,18 +36,12 @@ function CallerDashboard() {
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       const callerId = userData.id;
       if (!callerId) {
-        console.error('No caller ID found in localStorage');
         return;
       }
-      const response = await secureFetch(`/api/customers?callerId=${callerId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await secureFetch(`/api/customers?callerId=${callerId}`);
       const data = await response.json();
       if (data.success && data.data) {
-        
+
         const contacted = data.data.filter(c =>
           (c.status === 'PENDING' || c.status === 'pending') &&
           c.contactHistory &&
@@ -70,13 +64,27 @@ function CallerDashboard() {
         updateStats(formattedContacted, formattedOverdue, completedCount);
       }
     } catch (error) {
-      console.error('Error fetching customers from backend:', error);
       toast.error('Failed to load customer data. Please check if the backend server is running.');
+    }
+  };
+
+  // Fetch user profile to get full info (PII) securely after login
+  const fetchUserProfile = async () => {
+    try {
+      const res = await secureFetch('/api/me');
+      const data = await res.json();
+      if (res.ok && data.user) {
+        localStorage.setItem('userData', JSON.stringify(data.user));
+        // Force re-render if needed or just rely on state elsewhere
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
     }
   };
 
   // Initialize by fetching from backend
   useEffect(() => {
+    fetchUserProfile();
     fetchCustomers();
   }, []);
 

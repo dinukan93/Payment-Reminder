@@ -22,7 +22,6 @@ function CallerTasks() {
       const callerId = userData.id;
 
       if (!callerId) {
-        console.error('No caller ID found in session');
         setLoading(false);
         return;
       }
@@ -36,7 +35,7 @@ function CallerTasks() {
         setFilteredCustomers(data.data);
       }
     } catch (error) {
-      console.error('Error loading customers:', error);
+      // Error handling
     } finally {
       setLoading(false);
     }
@@ -90,11 +89,7 @@ function CallerTasks() {
     try {
       const { callOutcome, customerResponse, paymentMade, promisedDate } = data;
 
-      console.log('=== SAVING CUSTOMER DETAILS ===');
-      console.log('Customer ID:', customerId);
-      console.log('Data:', data);
 
-      
       const response = await secureFetch(`/api/customers/${customerId}/contact`, {
         method: 'PUT',
         headers: {
@@ -109,20 +104,16 @@ function CallerTasks() {
       });
 
       const result = await response.json();
-      console.log('Response:', result);
 
       if (result.success) {
-        console.log("Customer details saved successfully");
-        
+
         handleCloseModal();
-        
+
         await loadCustomers();
       } else {
-        console.error('❌ Error saving customer details:', result.message);
         toast.error('Failed to save: ' + result.message);
       }
     } catch (error) {
-      console.error('❌ Error saving customer details:', error);
       toast.error('Failed to save customer details. Please try again.');
     }
   };

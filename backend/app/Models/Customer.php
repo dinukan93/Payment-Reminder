@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Customer extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
         // Excel columns - exact names
         'RUN_DATE',

@@ -48,15 +48,12 @@ class ReportController extends Controller
                 'generated_date' => now()
             ]);
 
-            // Log the report submission
+            // Log the report submission (summary only)
             Log::info('Performance Report Submitted', [
                 'report_id' => $reportId,
                 'caller_id' => $caller->callerId,
-                'caller_name' => $caller->name,
                 'report_type' => $validated['reportType'],
-                'stats' => $validated['stats'],
                 'customer_count' => count($validated['customerDetails']),
-                'submitted_at' => now()->toDateTimeString()
             ]);
 
             return response()->json([
@@ -84,9 +81,9 @@ class ReportController extends Controller
             ], 404);
 
         } catch (\Exception $e) {
-            Log::error('Error submitting report: ' . $e->getMessage(), [
+            Log::error('Error submitting report', [
                 'caller_id' => $id,
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage()
             ]);
 
             return response()->json([

@@ -1,10 +1,10 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ForgotPassword.css';
 import logo from '../assets/logo.png';
 import API_BASE_URL from '../config/api';
 
-const ForgotPassword = ()=>{
+const ForgotPassword = () => {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [message, setMessage] = useState('');
@@ -14,20 +14,20 @@ const ForgotPassword = ()=>{
   const navigate = useNavigate();
 
   // Step 1: Send OTP to phone number
-  const requestOtp = async (e)=>{
+  const requestOtp = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
     setLoading(true);
-    try{
+    try {
       const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
-        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email })
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to send OTP');
-      setMessage('OTP sent to your phone number');
+
       setShowOtpInput(true);
-    }catch(err){
+    } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -35,26 +35,30 @@ const ForgotPassword = ()=>{
   }
 
   // Step 2: Verify OTP
-  const verifyOtp = async (e)=>{
+  const verifyOtp = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
     setLoading(true);
-    try{
+    try {
       const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
-        method:'POST', 
-        headers:{'Content-Type':'application/json'}, 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, otp, isPasswordReset: true })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Invalid OTP');
-      
+
       setMessage('OTP verified successfully');
-      console.log('Reset token received:', data.resetToken);
-      
+
       const resetToken = data.resetToken;
-      navigate(`/reset-password?phone=${encodeURIComponent(phone)}&resetToken=${encodeURIComponent(resetToken)}`);
-    }catch(err){
+      navigate('/reset-password', {
+        state: {
+          phone: phone,
+          resetToken: resetToken
+        }
+      });
+    } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -75,12 +79,12 @@ const ForgotPassword = ()=>{
             {!showOtpInput ? (
               <form onSubmit={requestOtp}>
                 <label>Phone Number</label>
-                <input 
-                  value={phone} 
-                  onChange={e=>setPhone(e.target.value)} 
-                  placeholder="Enter your phone number" 
+                <input
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="Enter your phone number"
                   type="tel"
-                  required 
+                  required
                 />
                 <button type="submit" disabled={loading}>
                   {loading ? 'Sending...' : 'Send OTP'}
@@ -89,27 +93,27 @@ const ForgotPassword = ()=>{
             ) : (
               <form onSubmit={verifyOtp}>
                 <label>Verification Code</label>
-                <input 
-                  value={otp} 
-                  onChange={e=>setOtp(e.target.value)} 
-                  placeholder="Enter the 6-digit OTP" 
+                <input
+                  value={otp}
+                  onChange={e => setOtp(e.target.value)}
+                  placeholder="Enter the 6-digit OTP"
                   maxLength="6"
-                  required 
+                  required
                 />
                 <button type="submit" disabled={loading}>
                   {loading ? 'Verifying...' : 'Verify OTP'}
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowOtpInput(false)}
-                  style={{marginTop: '10px', backgroundColor: '#6c757d'}}
+                  style={{ marginTop: '10px', backgroundColor: '#6c757d' }}
                 >
                   Back
                 </button>
               </form>
             )}
-            {message && <p className="forgot-message" style={{color: '#28a745'}}>{message}</p>}
-            {error && <p className="forgot-message" style={{color: '#dc3545'}}>{error}</p>}
+            {message && <p className="forgot-message" style={{ color: '#28a745' }}>{message}</p>}
+            {error && <p className="forgot-message" style={{ color: '#dc3545' }}>{error}</p>}
           </div>
         </div>
       </div>

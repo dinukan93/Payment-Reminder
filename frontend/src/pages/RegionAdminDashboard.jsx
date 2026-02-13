@@ -20,7 +20,21 @@ function RegionAdminDashboard() {
   });
   const [availableRtoms, setAvailableRtoms] = useState([]);
 
+  // Fetch user profile to get full info (PII) securely after login
+  const fetchUserProfile = async () => {
+    try {
+      const res = await secureFetch('/api/me');
+      const data = await res.json();
+      if (res.ok && data.user) {
+        localStorage.setItem('userData', JSON.stringify(data.user));
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+    }
+  };
+
   useEffect(() => {
+    fetchUserProfile();
     // Get current user's region
     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
     if (userData.region) {
@@ -41,7 +55,6 @@ function RegionAdminDashboard() {
       const result = await response.json();
       setRtomAdmins(result.data || []);
     } catch (error) {
-      console.error('Error fetching RTOM admins:', error);
       toast.error(error.message || 'Failed to load RTOM admins');
     } finally {
       setLoading(false);
@@ -102,7 +115,6 @@ function RegionAdminDashboard() {
       resetForm();
       fetchRtomAdmins();
     } catch (error) {
-      console.error('Error saving RTOM admin:', error);
       toast.error(error.message || 'Failed to save RTOM admin');
     }
   };
@@ -139,7 +151,6 @@ function RegionAdminDashboard() {
       toast.success(result.message || 'RTOM admin deleted successfully');
       fetchRtomAdmins();
     } catch (error) {
-      console.error('Error deleting RTOM admin:', error);
       toast.error(error.message || 'Failed to delete RTOM admin');
     }
   };

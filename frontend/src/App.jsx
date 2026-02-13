@@ -9,7 +9,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import AuthSuccess from "./pages/AuthSuccess";
+
 import Logout from "./pages/Logout";
 import Settings from "./pages/Settings";
 import Report from "./pages/Report";
@@ -26,10 +26,18 @@ import RTOMAdminDashboard from "./pages/RTOMAdminDashboard";
 import PODConfigPage from "./pages/PODConfigPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { sanitizeUrl } from './utils/urlSanitizer';
+import { useEffect } from 'react';
 
 
 function App() {
   const location = useLocation();
+
+  // Security: Sanitize URL on every navigation/load
+  useEffect(() => {
+    sanitizeUrl();
+  }, [location.pathname]);
+
   const isLoginPage = location.pathname === "/login" ||
     location.pathname === "/auth-success" ||
     location.pathname === "/register" ||
@@ -48,7 +56,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/auth-success" element={<AuthSuccess />} />
+
             <Route path="/dashboard" element={<ProtectedRoute requiredRole="caller"><CallerDashboard /></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute requiredRole="caller"><CallerTasks /></ProtectedRoute>} />
             <Route path="/admin/tasks" element={<ProtectedRoute ><AdminTasks /></ProtectedRoute>} />

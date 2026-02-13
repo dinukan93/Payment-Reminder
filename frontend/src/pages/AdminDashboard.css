@@ -2,6 +2,7 @@
   max-height: 320px;
   overflow-y: auto;
 }
+
 .admin-dashboard {
   width: 100%;
   background-color: #f8f9fa;
@@ -335,6 +336,18 @@
   object-fit: cover;
 }
 
+.admin-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #1488ee;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+}
+
 .admin-profile-content h3 {
   font-size: 16px;
   color: #333;
@@ -559,7 +572,7 @@
   .admin-dashboard-layout {
     grid-template-columns: 1fr 300px;
   }
-  
+
   .admin-stats-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -573,7 +586,7 @@
   .admin-dashboard-sidebar {
     position: static;
   }
-  
+
   .admin-stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -583,7 +596,7 @@
   .admin-stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .admin-stat-card:nth-child(1),
   .admin-stat-card:nth-child(2),
   .admin-stat-card:nth-child(3),
@@ -626,6 +639,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }

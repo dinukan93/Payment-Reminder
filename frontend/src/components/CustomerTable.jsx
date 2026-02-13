@@ -31,7 +31,6 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
       }
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching customers:', error);
       setLoading(false);
     }
   };
@@ -98,7 +97,6 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
           showError('Failed to delete customer');
         }
       } catch (error) {
-        console.error('Error deleting customer:', error);
         showError('Error deleting customer');
       }
     } else {

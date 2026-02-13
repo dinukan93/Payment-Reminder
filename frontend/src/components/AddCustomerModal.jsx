@@ -115,7 +115,6 @@ function AddCustomerModal({ isOpen, onClose, onSuccess }) {
       }
     } catch (err) {
       setError(err.message || 'Error adding customer');
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }

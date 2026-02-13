@@ -18,7 +18,21 @@ function RTOMAdminDashboard() {
     password: ''
   });
 
+  // Fetch user profile to get full info (PII) securely after login
+  const fetchUserProfile = async () => {
+    try {
+      const res = await secureFetch('/api/me');
+      const data = await res.json();
+      if (res.ok && data.user) {
+        localStorage.setItem('userData', JSON.stringify(data.user));
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+    }
+  };
+
   useEffect(() => {
+    fetchUserProfile();
     // Get current user's RTOM and region
     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
     if (userData.rtom) {
@@ -41,7 +55,6 @@ function RTOMAdminDashboard() {
       const result = await response.json();
       setSupervisors(result.data || []);
     } catch (error) {
-      console.error('Error fetching supervisors:', error);
       toast.error(error.message || 'Failed to load supervisors');
     } finally {
       setLoading(false);
@@ -103,7 +116,6 @@ function RTOMAdminDashboard() {
       resetForm();
       fetchSupervisors();
     } catch (error) {
-      console.error('Error saving supervisor:', error);
       toast.error(error.message || 'Failed to save supervisor');
     }
   };
@@ -139,7 +151,6 @@ function RTOMAdminDashboard() {
       toast.success(result.message || 'Supervisor deleted successfully');
       fetchSupervisors();
     } catch (error) {
-      console.error('Error deleting supervisor:', error);
       toast.error(error.message || 'Failed to delete supervisor');
     }
   };

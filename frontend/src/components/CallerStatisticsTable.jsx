@@ -72,7 +72,6 @@ function CallerStatisticsTable() {
       }
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching statistics:', error);
       setLoading(false);
     }
   };

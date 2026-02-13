@@ -1,23 +1,17 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import './ResetPassword.css';
 import logo from '../assets/logo.png';
 import { useLocation, useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config/api';
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
-function useQuery(){
-  return new URLSearchParams(useLocation().search);
-}
+const ResetPassword = () => {
+  const location = useLocation();
+  const { phone: statePhone, resetToken: stateResetToken, email: stateEmail } = location.state || {};
 
-const ResetPassword = ()=>{
-  const query = useQuery();
-  const phoneParam = query.get('phone') ? decodeURIComponent(query.get('phone')) : '';
-  const resetTokenParam = query.get('resetToken') ? decodeURIComponent(query.get('resetToken')) : '';
-  const emailParam = query.get('email') ? decodeURIComponent(query.get('email')) : '';
-  
-  const [phone, setPhone] = useState(phoneParam);
-  const [email, setEmail] = useState(emailParam);
-  const [resetToken, setResetToken] = useState(resetTokenParam);
+  const [phone, setPhone] = useState(statePhone || '');
+  const [email, setEmail] = useState(stateEmail || '');
+  const [resetToken, setResetToken] = useState(stateResetToken || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -27,35 +21,37 @@ const ResetPassword = ()=>{
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const verifyOtp = async () => {
-    const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, otp })
-    });
-    return res.json().then(d=>({ ok: res.ok, body: d }));
-  }
 
-  const reset = async (e) =>{
+  const reset = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
     setLoading(true);
-    
-    try{
-      const { ok, body } = await verifyOtp();
-      if (!ok) throw new Error(body.message || 'Invalid OTP');
-      const resetToken = body.resetToken;
-      const res2 = await fetch(`${API_BASE_URL}/auth/reset-password`, {
-        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, resetToken, newPassword, confirmPassword })
+
+    try {
+      const payload = {
+        newPassword,
+        confirmPassword,
+        resetToken
+      };
+
+      if (phone) payload.phone = phone;
+      if (email) payload.email = email;
+
+      const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
-      
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Reset failed');
-      
+
       setMessage('Password reset successful. Redirecting to login...');
       setTimeout(() => {
         navigate('/login');
       }, 2000);
-    }catch(err){
+    } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -77,40 +73,40 @@ const ResetPassword = ()=>{
               {phone && (
                 <div>
                   <label>Phone Number</label>
-                  <input 
-                    value={phone} 
-                    onChange={e=>setPhone(e.target.value)} 
-                    placeholder="Phone number" 
+                  <input
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    placeholder="Phone number"
                     type="tel"
                     disabled
-                    style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}}
+                    style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
                   />
                 </div>
               )}
               {email && (
                 <div>
                   <label>Email</label>
-                  <input 
-                    value={email} 
-                    onChange={e=>setEmail(e.target.value)} 
-                    placeholder="Email" 
+                  <input
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="Email"
                     type="email"
                     disabled
-                    style={{backgroundColor: '#f5f5f5', cursor: 'not-allowed'}}
+                    style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
                   />
                 </div>
               )}
-              
+
               <label>New Password</label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <input 
-                  value={newPassword} 
-                  onChange={e=>setNewPassword(e.target.value)} 
-                  placeholder="New password" 
+                <input
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder="New password"
                   type={showPassword ? "text" : "password"}
-                  required 
-                  style={{ 
-                    paddingRight: '40px', 
+                  required
+                  style={{
+                    paddingRight: '40px',
                     width: '100%',
                     paddingLeft: '12px',
                     paddingTop: '12px',
@@ -142,14 +138,14 @@ const ResetPassword = ()=>{
 
               <label>Confirm Password</label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <input 
-                  value={confirmPassword} 
-                  onChange={e=>setConfirmPassword(e.target.value)} 
-                  placeholder="Confirm password" 
+                <input
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm password"
                   type={showConfirmPassword ? "text" : "password"}
-                  required 
-                  style={{ 
-                    paddingRight: '40px', 
+                  required
+                  style={{
+                    paddingRight: '40px',
                     width: '100%',
                     paddingLeft: '12px',
                     paddingTop: '12px',
@@ -183,8 +179,8 @@ const ResetPassword = ()=>{
                 {loading ? 'Resetting...' : 'Reset Password'}
               </button>
             </form>
-            {message && <p className="reset-message" style={{color: '#28a745'}}>{message}</p>}
-            {error && <p className="reset-message" style={{color: '#dc3545'}}>{error}</p>}
+            {message && <p className="reset-message" style={{ color: '#28a745' }}>{message}</p>}
+            {error && <p className="reset-message" style={{ color: '#dc3545' }}>{error}</p>}
           </div>
         </div>
       </div>

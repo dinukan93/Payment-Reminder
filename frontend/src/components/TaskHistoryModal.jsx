@@ -22,12 +22,7 @@ function TaskHistoryModal({ show, caller, onClose }) {
 
       // Use the /api/requests endpoint with callerId query parameter
       const response = await secureFetch(
-        `/api/requests?callerId=${callerNumericId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        }
+        `/api/requests?callerId=${callerNumericId}`
       );
 
       if (!response.ok) {
@@ -40,7 +35,6 @@ function TaskHistoryModal({ show, caller, onClose }) {
       setTasks(requestsData);
     } catch (err) {
       setError(err.message || 'Error fetching task history');
-      console.error('Error fetching task history:', err);
     } finally {
       setLoading(false);
     }

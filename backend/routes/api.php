@@ -16,7 +16,7 @@ use App\Http\Controllers\ReportController;
 
 
 
-Route::middleware('throttle:5,1')->group(function () {
+Route::middleware('throttle:50,1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);

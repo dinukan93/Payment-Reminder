@@ -3,6 +3,7 @@ import "./AdminRequestsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import API_BASE_URL from "../config/api";
 import { secureFetch } from "../utils/api";
+import logger from '../utils/logger';
 import { showSuccess, showError } from "./Notifications";
 
 function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestProcessed, callerId }) {
@@ -25,12 +26,11 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     setLoading(true);
     setError(null);
 
-    console.log('AdminRequestsModal - Fetching requests for callerId:', callerId);
+    logger.info('AdminRequestsModal - Fetching requests for callerId:', callerId);
 
     try {
       const response = await secureFetch(`/api/requests?callerId=${callerId}&status=PENDING`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         }
       });
@@ -39,7 +39,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         const result = await response.json();
         const data = result.data || result; // Handle both nested and flat response
 
-        console.log('AdminRequestsModal - Received requests:', data);
+        logger.info('AdminRequestsModal - Received requests:', data);
 
 
         if (data && data.length > 0) {
@@ -58,7 +58,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
               });
             }
 
-            console.log('Mapping request:', {
+            logger.debug('Mapping request:', {
               original: req,
               mappedId: requestId,
               sent_by: req.sent_by,
@@ -78,15 +78,18 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
           }));
           // All requests collapsed by default
           setExpandedRequests({});
+          logger.info(`Loaded ${data.length} pending requests`);
         } else {
           setRequests([]);
+          logger.info('No pending requests found.');
         }
       } else {
         setError('Failed to load requests. Please try again.');
         setRequests([]);
+        logger.error('Failed to load requests with status:', response.status);
       }
     } catch (err) {
-      console.error('Error loading pending requests:', err);
+      logger.error('Error loading pending requests:', err);
       setError('Failed to load requests. Please try again.');
       setRequests([]);
     } finally {
@@ -110,7 +113,10 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
 
   const handleAcceptRequest = async (requestId) => {
     const request = requests.find(r => r.id === requestId);
-    if (!request) return;
+    if (!request) {
+      logger.warn(`Attempted to accept non-existent request with ID: ${requestId}`);
+      return;
+    }
 
     try {
       // Update request status in backend using the dedicated accept endpoint
@@ -146,11 +152,13 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         if (onRequestProcessed) onRequestProcessed();
 
         showSuccess('Request accepted successfully!');
+        logger.info(`Request ${requestId} accepted successfully.`);
       } else {
         showError('Failed to accept request. Please try again.');
+        logger.error(`Failed to accept request ${requestId}. Status: ${response.status}`);
       }
     } catch (error) {
-      console.error('Error accepting request:', error);
+      logger.error('Error accepting request:', error);
       showError('Failed to accept request. Please try again.');
     }
   };
@@ -169,11 +177,12 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     const request = requests.find(r => r.id === requestId);
     if (!request) {
       showError('Request not found');
+      logger.warn(`Attempted to decline non-existent request with ID: ${requestId}`);
       return;
     }
 
     if (!request.id) {
-      console.error('Request ID is undefined:', request);
+      logger.error('Request ID is undefined:', request);
       showError('Invalid request ID. Please refresh and try again.');
       return;
     }
@@ -184,7 +193,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     }
 
     try {
-      console.log('Declining request with ID:', request.id);
+      logger.info('Declining request with ID:', request.id);
       // Update request status in backend
 
       const response = await secureFetch(`/api/requests/${request.id}/decline`, {
@@ -209,11 +218,13 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         if (onRequestProcessed) {
           onRequestProcessed();
         }
+        logger.info(`Request ${request.id} declined successfully with reason: "${declineReason.trim()}"`);
       } else {
         showError(result.message || 'Failed to decline request');
+        logger.error(`Failed to decline request ${request.id}. Status: ${response.status}, Message: ${result.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error declining request:', error);
+      logger.error('Error declining request:', error);
       showError('Failed to decline request. Please try again.');
     }
   };
