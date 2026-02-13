@@ -800,7 +800,8 @@ function PODFilterComponent({ isOpen, onClose }) {
         .map(row => {
           // Add REGION from RTOM if not present
           const rtomCode = row['RTOM'] || null;
-          const region = rtomCode ? getRegionForRtom(rtomCode) : (row['REGION'] || null);
+          const configRegion = rtomCode ? getRegionForRtom(rtomCode) : null;
+          const region = configRegion || row['REGION'] || row['region'] || 'Unknown';
 
           // Ensure ACCOUNT_NUMBER field exists for backend
           const mappedRow = {

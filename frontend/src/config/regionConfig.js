@@ -7,7 +7,8 @@ export const REGIONS_AND_RTOMS = {
     { code: 'HK', name: 'Havelock Town' },
     { code: 'KX', name: 'Kotte' },
     { code: 'WT', name: 'Wattala' },
-    { code: 'RM', name: 'Ratmalana' }
+    { code: 'RM', name: 'Ratmalana' },
+    { code: 'MD', name: 'Moratuwa/Mt. Lavinia' }
   ],
   'Region 1': [
     { code: 'AN', name: 'Anuradhapura' },
