@@ -94,6 +94,11 @@ export const secureFetch = async (url, options = {}) => {
         if (hasActiveSession) {
           throw new Error("Request unauthorized for current user");
         }
+
+        // If non-auth API fails with 401 and no active session, do not force immediate
+        // global logout here. Let the calling page decide how to handle transient/session
+        // race conditions to avoid hard redirect loops while navigating.
+        throw new Error("Unauthorized - Session may have expired");
       }
 
       logger.warn("401 Unauthorized - clearing auth and redirecting to login");

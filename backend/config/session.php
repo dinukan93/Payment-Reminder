@@ -9,7 +9,7 @@ if (is_string($sessionDomain) && in_array(strtolower(trim($sessionDomain)), ['',
 
 $sessionSecure = env('SESSION_SECURE_COOKIE');
 if (is_null($sessionSecure)) {
-    $sessionSecure = str_starts_with((string) env('APP_URL', ''), 'https://');
+    $sessionSecure = false;
 }
 
 if (is_string($sessionSecure)) {
