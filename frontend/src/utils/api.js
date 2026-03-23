@@ -64,11 +64,38 @@ export const secureFetch = async (url, options = {}) => {
 
   const fullUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
 
+  const isAuthRoute = ["/api/login", "/api/logout", "/api/me"].some((route) =>
+    fullUrl.includes(route),
+  );
+
+  const verifyActiveSession = async () => {
+    try {
+      const meUrl = `${API_BASE_URL}/api/me`;
+      const meResponse = await fetch(meUrl, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+      return meResponse.ok;
+    } catch {
+      return false;
+    }
+  };
+
   try {
     const response = await fetch(fullUrl, config);
 
     // Handle 401 Unauthorized - automatically redirect to login
     if (response.status === 401) {
+      if (!isAuthRoute) {
+        const hasActiveSession = await verifyActiveSession();
+        if (hasActiveSession) {
+          throw new Error("Request unauthorized for current user");
+        }
+      }
+
       logger.warn("401 Unauthorized - clearing auth and redirecting to login");
       localStorage.removeItem("userData");
       window.location.href = "/login";
