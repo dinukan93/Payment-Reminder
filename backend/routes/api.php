@@ -21,7 +21,7 @@ Route::middleware('throttle:50,1')->group(function () {
 });
 
 // Protected routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:caller,admin')->group(function () {
     // Auth
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
