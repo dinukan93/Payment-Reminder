@@ -96,8 +96,9 @@ jobs:
             php artisan view:clear
 
             echo "🔐 Fixing permissions"
-            chmod -R 775 storage bootstrap/cache
-            chown -R dpd:dpd storage bootstrap/cache
+            sudo chown -R dpd:dpd storage bootstrap/cache
+            sudo find storage bootstrap/cache -type d -exec chmod 775 {} \;
+            sudo find storage bootstrap/cache -type f -exec chmod 664 {} \;
 
             # -----------------------------
             # Frontend (React)
