@@ -2,6 +2,21 @@
 
 use Illuminate\Support\Str;
 
+$sessionDomain = env('SESSION_DOMAIN');
+if (is_string($sessionDomain) && in_array(strtolower(trim($sessionDomain)), ['', 'null'], true)) {
+    $sessionDomain = null;
+}
+
+$sessionSecure = env('SESSION_SECURE_COOKIE');
+if (is_null($sessionSecure)) {
+    $sessionSecure = str_starts_with((string) env('APP_URL', ''), 'https://');
+}
+
+if (is_string($sessionSecure)) {
+    $normalizedSecure = filter_var($sessionSecure, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    $sessionSecure = is_null($normalizedSecure) ? false : $normalizedSecure;
+}
+
 return [
 
     /*
@@ -157,7 +172,7 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => $sessionDomain,
 
     /*
     |--------------------------------------------------------------------------
@@ -170,7 +185,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => $sessionSecure,
 
     /*
     |--------------------------------------------------------------------------

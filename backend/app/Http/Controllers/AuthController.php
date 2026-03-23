@@ -132,9 +132,13 @@ class AuthController extends Controller
      */
     public function verifyOtp(Request $request)
     {
+        $request->merge([
+            'otp' => preg_replace('/\D/', '', (string) $request->input('otp', '')),
+        ]);
+
         $request->validate([
             'email' => 'required|email',
-            'otp' => 'required|string|size:6',
+            'otp' => 'required|digits:6',
             'userType' => 'required|in:admin,caller'
         ]);
 
@@ -151,13 +155,17 @@ class AuthController extends Controller
             // Regenerate session to prevent session fixation attacks
             $request->session()->regenerate();
 
-            AuditLogger::log(
-                action: 'login_success',
-                description: "User {$user->email} logged in successfully",
-                model: get_class($user),
-                modelId: $user->id,
-                request: $request
-            );
+            try {
+                AuditLogger::log(
+                    action: 'login_success',
+                    description: "User {$user->email} logged in successfully",
+                    model: get_class($user),
+                    modelId: $user->id,
+                    request: $request
+                );
+            } catch (\Throwable $ignored) {
+                // Do not block successful auth due to audit logging failures.
+            }
 
             return response()->json([
                 'user' => [

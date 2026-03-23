@@ -21,6 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Enable session and CSRF for API routes (required for Sanctum SPA authentication)
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
             \App\Http\Middleware\ValidateApiRequest::class,
         ]);
 

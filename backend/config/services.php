@@ -35,5 +35,10 @@ return [
         ],
     ],
 
+    'otp_bypass' => [
+        'enabled' => env('OTP_BYPASS_ENABLED', false),
+        'code' => env('OTP_BYPASS_CODE', '123456'),
+    ],
+
 ];
 
