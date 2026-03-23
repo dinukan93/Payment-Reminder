@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { toast } from 'react-toastify';
 import "./ShowCustomerDetailsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
@@ -7,6 +6,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
   const [callOutcome, setCallOutcome] = useState("Spoke to Customer");
   const [customerResponse, setCustomerResponse] = useState("");
   const [paymentMade, setPaymentMade] = useState(false);
+  const [genuineCustomerCall, setGenuineCustomerCall] = useState(true);
   const [promisedDate, setPromisedDate] = useState("");
   const [showAllResponses, setShowAllResponses] = useState(false);
 
@@ -16,6 +16,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
       setCallOutcome("Spoke to Customer");
       setCustomerResponse("");
       setPaymentMade(false);
+      setGenuineCustomerCall(true);
       setPromisedDate("");
       setShowAllResponses(false);
     }
@@ -24,14 +25,14 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
   // Convert DD/MM/YYYY to YYYY-MM-DD for date input
   const convertToInputFormat = (dateStr) => {
     if (!dateStr || dateStr.length !== 10) return "";
-    const [day, month, year] = dateStr.split('/');
+    const [day, month, year] = dateStr.split("/");
     return `${year}-${month}-${day}`;
   };
 
   // Convert YYYY-MM-DD to DD/MM/YYYY for storage
   const convertFromInputFormat = (dateStr) => {
     if (!dateStr) return "";
-    const [year, month, day] = dateStr.split('-');
+    const [year, month, day] = dateStr.split("-");
     return `${day}/${month}/${year}`;
   };
 
@@ -47,15 +48,17 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
 
   const handleSave = () => {
     // Use callOutcome as fallback if customerResponse is empty
-    const response = customerResponse && customerResponse.trim() !== ''
-      ? customerResponse
-      : callOutcome;
+    const response =
+      customerResponse && customerResponse.trim() !== ""
+        ? customerResponse
+        : callOutcome;
 
     if (onSave) {
       onSave(customer._id || customer.id, {
         callOutcome,
         customerResponse: response,
         paymentMade,
+        genuineCustomerCall,
         promisedDate: promisedDate,
       });
     }
@@ -107,15 +110,16 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                     <span className="response-label">Previous Response:</span>{" "}
                     <span className="response-text">{getLatestResponse()}</span>
                   </div>
-                  {customer.contactHistory && customer.contactHistory.length > 0 && (
-                    <button
-                      className="show-all-responses"
-                      onClick={() => setShowAllResponses(true)}
-                    >
-                      <i className="bi bi-three-dots"></i>
-                      Show all Responses ({customer.contactHistory.length})
-                    </button>
-                  )}
+                  {customer.contactHistory &&
+                    customer.contactHistory.length > 0 && (
+                      <button
+                        className="show-all-responses"
+                        onClick={() => setShowAllResponses(true)}
+                      >
+                        <i className="bi bi-three-dots"></i>
+                        Show all Responses ({customer.contactHistory.length})
+                      </button>
+                    )}
                 </>
               ) : (
                 <>
@@ -130,7 +134,8 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                       </button>
                     </div>
                     <div className="responses-list">
-                      {customer.contactHistory && customer.contactHistory.length > 0 ? (
+                      {customer.contactHistory &&
+                      customer.contactHistory.length > 0 ? (
                         customer.contactHistory.map((contact, index) => (
                           <div key={index} className="response-item">
                             <div className="response-date">
@@ -158,7 +163,9 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                           </div>
                         ))
                       ) : (
-                        <div className="no-responses">No contact history available</div>
+                        <div className="no-responses">
+                          No contact history available
+                        </div>
                       )}
                     </div>
                   </div>
@@ -228,7 +235,9 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                     </button>
                   )}
                 </div>
-                <span className="supporting-text">Optional - will default to "{callOutcome}" if empty</span>
+                <span className="supporting-text">
+                  Optional - will default to "{callOutcome}" if empty
+                </span>
               </div>
 
               <div className="form-group toggle-group">
@@ -243,12 +252,26 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                 </label>
               </div>
 
+              <div className="form-group toggle-group">
+                <label>Genuine Customer Call (real customer answered)</label>
+                <label className="toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={genuineCustomerCall}
+                    onChange={(e) => setGenuineCustomerCall(e.target.checked)}
+                  />
+                  <span className="toggle-slider"></span>
+                </label>
+              </div>
+
               <div className="form-group">
                 <label>Promised To Pay Date:</label>
                 <input
                   type="date"
                   value={convertToInputFormat(promisedDate)}
-                  onChange={(e) => setPromisedDate(convertFromInputFormat(e.target.value))}
+                  onChange={(e) =>
+                    setPromisedDate(convertFromInputFormat(e.target.value))
+                  }
                   className="form-input date-input"
                 />
                 {promisedDate && (

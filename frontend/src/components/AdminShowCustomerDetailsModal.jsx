@@ -67,11 +67,15 @@ function AdminShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
             </div>
             <div className="admin-customer-info-item">
               <label>Amount Overdue</label>
-              <span className="admin-customer-amount">{customer.amountOverdue}</span>
+              <span className="admin-customer-amount">
+                {customer.amountOverdue}
+              </span>
             </div>
             <div className="admin-customer-info-item">
               <label>Days Overdue</label>
-              <span className="admin-customer-days">{customer.daysOverdue} days</span>
+              <span className="admin-customer-days">
+                {customer.daysOverdue} days
+              </span>
             </div>
             <div className="admin-customer-info-item">
               <label>Previous Response</label>
@@ -90,18 +94,31 @@ function AdminShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                       <span className="admin-customer-history-date">
                         <i className="bi bi-calendar"></i> {contact.date}
                       </span>
-                      <span className={`admin-customer-history-outcome ${contact.paymentMade ? 'paid' : 'pending'}`}>
+                      <span
+                        className={`admin-customer-history-outcome ${contact.paymentMade ? "paid" : "pending"}`}
+                      >
                         {contact.paymentMade ? (
-                          <><i className="bi bi-check-circle-fill"></i> Payment Made</>
+                          <>
+                            <i className="bi bi-check-circle-fill"></i> Payment
+                            Made
+                          </>
                         ) : (
-                          <><i className="bi bi-clock-fill"></i> Pending</>
+                          <>
+                            <i className="bi bi-clock-fill"></i> Pending
+                          </>
                         )}
                       </span>
                     </div>
-                    <p><strong>Outcome:</strong> {contact.outcome}</p>
-                    <p><strong>Response:</strong> {contact.response}</p>
+                    <p>
+                      <strong>Outcome:</strong> {contact.outcome}
+                    </p>
+                    <p>
+                      <strong>Response:</strong> {contact.response}
+                    </p>
                     {contact.promisedDate && (
-                      <p><strong>Promised Date:</strong> {contact.promisedDate}</p>
+                      <p>
+                        <strong>Promised Date:</strong> {contact.promisedDate}
+                      </p>
                     )}
                   </div>
                 ))}
@@ -112,7 +129,7 @@ function AdminShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
           {/* Call Details Form */}
           <div className="admin-customer-form">
             <h3>Add Contact Details</h3>
-            
+
             <div className="admin-customer-form-group">
               <label htmlFor="callOutcome">
                 Call Outcome <span className="admin-customer-required">*</span>
@@ -134,7 +151,8 @@ function AdminShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
 
             <div className="admin-customer-form-group">
               <label htmlFor="customerResponse">
-                Customer Response <span className="admin-customer-required">*</span>
+                Customer Response{" "}
+                <span className="admin-customer-required">*</span>
               </label>
               <textarea
                 id="customerResponse"
