@@ -18,12 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SecurityHeadersMiddleware::class,    // Add security headers globally
         ]);
 
-        // Enable session and CSRF for API routes (required for Sanctum SPA authentication)
+        // Enable CORS and Custom validation for API routes
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
             \App\Http\Middleware\ValidateApiRequest::class,
         ]);
 
