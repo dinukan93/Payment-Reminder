@@ -6,9 +6,110 @@ use Illuminate\Http\Request;
 use App\Models\Customer;
 use App\Models\FilteredCustomer;
 use Rap2hpoutre\FastExcel\FastExcel;
+use Illuminate\Support\Facades\File;
 
 class UploadController extends Controller
 {
+    public function parseChunk(Request $request)
+    {
+        $request->validate([
+            'uploadId' => 'required|string|max:120',
+            'fileName' => 'required|string|max:255',
+            'chunkIndex' => 'required|integer|min:0',
+            'totalChunks' => 'required|integer|min:1|max:20',
+            'chunk' => 'required|file'
+        ]);
+
+        $uploadId = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $request->input('uploadId'));
+        $fileName = (string) $request->input('fileName');
+        $chunkIndex = (int) $request->input('chunkIndex');
+        $totalChunks = (int) $request->input('totalChunks');
+        $chunkFile = $request->file('chunk');
+
+        if (!$uploadId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid upload identifier.'
+            ], 422);
+        }
+
+        $chunkDir = storage_path('app/upload-chunks/' . $uploadId);
+
+        if (!File::exists($chunkDir)) {
+            File::makeDirectory($chunkDir, 0755, true);
+        }
+
+        $partPath = $chunkDir . DIRECTORY_SEPARATOR . 'part_' . $chunkIndex;
+        File::put($partPath, File::get($chunkFile->getRealPath()));
+
+        if ($chunkIndex < $totalChunks - 1) {
+            return response()->json([
+                'success' => true,
+                'complete' => false,
+                'uploadedChunks' => $chunkIndex + 1,
+                'totalChunks' => $totalChunks
+            ]);
+        }
+
+        for ($i = 0; $i < $totalChunks; $i++) {
+            if (!File::exists($chunkDir . DIRECTORY_SEPARATOR . 'part_' . $i)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Upload is incomplete. Missing one or more file parts.'
+                ], 422);
+            }
+        }
+
+        $safeFileName = preg_replace('/[^A-Za-z0-9._-]/', '_', $fileName);
+        $assembledFilePath = $chunkDir . DIRECTORY_SEPARATOR . 'assembled_' . $safeFileName;
+
+        try {
+            $output = fopen($assembledFilePath, 'wb');
+            if ($output === false) {
+                throw new \RuntimeException('Unable to create temporary file for processing.');
+            }
+
+            for ($i = 0; $i < $totalChunks; $i++) {
+                $partFile = $chunkDir . DIRECTORY_SEPARATOR . 'part_' . $i;
+                $input = fopen($partFile, 'rb');
+
+                if ($input === false) {
+                    throw new \RuntimeException('Unable to read uploaded chunk part.');
+                }
+
+                stream_copy_to_stream($input, $output);
+                fclose($input);
+            }
+
+            fclose($output);
+
+            $data = (new FastExcel)->import($assembledFilePath);
+
+            if ($data->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The uploaded file is empty.'
+                ], 422);
+            }
+
+            $firstRow = $data->first();
+            $headers = array_keys($firstRow);
+
+            return response()->json([
+                'success' => true,
+                'complete' => true,
+                'data' => [
+                    'headers' => $headers,
+                    'rows' => $data->toArray(),
+                    'totalRows' => count($data),
+                    'fileName' => $fileName
+                ]
+            ]);
+        } finally {
+            $this->cleanupChunkDirectory($chunkDir);
+        }
+    }
+
     public function parse(Request $request)
     {
         $request->validate([
@@ -287,6 +388,13 @@ class UploadController extends Controller
                 'message' => 'Failed to process paid customers file',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    private function cleanupChunkDirectory(string $chunkDir): void
+    {
+        if (File::exists($chunkDir)) {
+            File::deleteDirectory($chunkDir);
         }
     }
 }

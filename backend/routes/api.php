@@ -72,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/settings/preferences', [SettingsController::class, 'updatePreferences']);
 
     // Upload
+    Route::post('/upload/parse-chunk', [UploadController::class, 'parseChunk']);
     Route::post('/upload/parse', [UploadController::class, 'parse']);
     Route::post('/upload/import', [UploadController::class, 'import']);
     Route::post('/upload/mark-paid', [UploadController::class, 'markPaid']);
