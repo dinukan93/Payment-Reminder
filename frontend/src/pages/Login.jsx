@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import "./Login.css";
 import logo from "../assets/logo.png";
 import { FaUserShield } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { clearSession } from "../utils/auth";
+import { useNavigate, useLocation } from "react-router-dom";
+import { clearSession, getCurrentUser } from "../utils/auth";
 import API_BASE_URL from "../config/api";
 import { secureFetch, api } from "../utils/api";
 import { MdOutlineMailOutline } from "react-icons/md";
@@ -26,20 +26,20 @@ const Login = () => {
   const redirectByUser = (user) => {
     if (!user) return;
 
-    if (user.role === 'superadmin') {
-      navigate('/superadmin', { replace: true });
-    } else if (user.role === 'uploader') {
-      navigate('/upload', { replace: true });
-    } else if (user.role === 'region_admin') {
-      navigate('/region-admin-dashboard', { replace: true });
-    } else if (user.role === 'rtom_admin') {
-      navigate('/rtom-admin-dashboard', { replace: true });
-    } else if (user.role === 'supervisor' || user.role === 'admin') {
-      navigate('/admin', { replace: true });
-    } else if (user.userType === 'caller' || user.role === 'caller') {
-      navigate('/dashboard', { replace: true });
+    if (user.role === "superadmin") {
+      navigate("/superadmin", { replace: true });
+    } else if (user.role === "uploader") {
+      navigate("/upload", { replace: true });
+    } else if (user.role === "region_admin") {
+      navigate("/region-admin-dashboard", { replace: true });
+    } else if (user.role === "rtom_admin") {
+      navigate("/rtom-admin-dashboard", { replace: true });
+    } else if (user.role === "supervisor" || user.role === "admin") {
+      navigate("/admin", { replace: true });
+    } else if (user.userType === "caller" || user.role === "caller") {
+      navigate("/dashboard", { replace: true });
     } else {
-      navigate('/login', { replace: true });
+      navigate("/login", { replace: true });
     }
   };
 
