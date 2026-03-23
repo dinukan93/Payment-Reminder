@@ -73,7 +73,6 @@ class AuditLogger
             'token',
             'access_token',
             'refresh_token',
-            'otp',
             'reset_token',
             'auth_token',
             'secret',

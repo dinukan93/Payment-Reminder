@@ -34,8 +34,6 @@ return Application::configure(basePath: dirname(__DIR__))
         // These routes are called before the user has a session/CSRF token
         $middleware->validateCsrfTokens(except: [
             'api/login',
-            'api/send-otp',
-            'api/verify-otp',
             'sanctum/csrf-cookie',
         ]);
 

@@ -18,8 +18,6 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [showOtpInput, setShowOtpInput] = useState(false);
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -64,101 +62,28 @@ const Login = () => {
       if (!res.ok)
         throw new Error(data.error || data.message || "Login failed");
 
-      // Check if login requires OTP (if user not returned, it's the first step)
-      if (data.success && !data.user) {
-        toast.success("Check your email for OTP", { autoClose: 5000 });
-        setShowOtpInput(true);
-      } else if (data.user) {
-        // Direct login without OTP (session already created by backend)
-        localStorage.setItem("userData", JSON.stringify(data.user));
-
-        if (data.user.role === "superadmin") {
-          navigate("/superadmin");
-        } else if (data.user.role === "uploader") {
-          navigate("/upload");
-        } else if (data.user.role === "region_admin") {
-          navigate("/region-admin-dashboard");
-        } else if (data.user.role === "rtom_admin") {
-          navigate("/rtom-admin-dashboard");
-        } else if (
-          data.user.role === "supervisor" ||
-          data.user.role === "admin"
-        ) {
-          navigate("/admin");
-        } else if (data.user.userType === "caller") {
-          navigate("/dashboard");
-        } else {
-          navigate("/admin");
-        }
-      }
-    } catch (err) {
-      toast.error(err.message, { autoClose: 5000 });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const requestOtp = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const userType = isAdminLogin ? "admin" : "caller";
-      const res = await api.post(`/api/send-otp`, { email, userType });
-      const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.error || data.message || "Failed to send OTP");
-
-      toast.success("OTP sent to your email!", { autoClose: 5000 });
-      setShowOtpInput(true);
-    } catch (err) {
-      toast.error(err.message, { autoClose: 5000 });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyOtp = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const userType = isAdminLogin ? "admin" : "caller";
-
-      const res = await api.post(`/api/verify-otp`, { email, otp, userType });
-      const data = await res.json();
-
-      if (!res.ok)
-        throw new Error(
-          data.error || data.message || "OTP verification failed",
-        );
-
-      // Login success - session created by backend via cookies
+      // Direct login - user data returned
       localStorage.setItem("userData", JSON.stringify(data.user));
 
-      toast.success("Login successful!", { autoClose: 5000 });
-
-      // Redirect based on role
-      setTimeout(() => {
-        if (data.user.role === "superadmin") {
-          navigate("/superadmin");
-        } else if (data.user.role === "uploader") {
-          navigate("/upload");
-        } else if (data.user.role === "region_admin") {
-          navigate("/region-admin-dashboard");
-        } else if (data.user.role === "rtom_admin") {
-          navigate("/rtom-admin-dashboard");
-        } else if (
-          data.user.role === "supervisor" ||
-          data.user.role === "admin"
-        ) {
-          navigate("/admin");
-        } else if (data.user.userType === "caller") {
-          navigate("/dashboard");
-        } else {
-          navigate("/admin");
-        }
-      }, 500);
+      if (data.user.role === "superadmin") {
+        navigate("/superadmin");
+      } else if (data.user.role === "uploader") {
+        navigate("/upload");
+      } else if (data.user.role === "region_admin") {
+        navigate("/region-admin-dashboard");
+      } else if (data.user.role === "rtom_admin") {
+        navigate("/rtom-admin-dashboard");
+      } else if (
+        data.user.role === "supervisor" ||
+        data.user.role === "admin"
+      ) {
+        navigate("/admin");
+      } else if (data.user.userType === "caller") {
+        navigate("/dashboard");
+      } else {
+        navigate("/admin");
+      }
     } catch (err) {
-      logger.error("OTP Verification Error:", err);
       toast.error(err.message, { autoClose: 5000 });
     } finally {
       setLoading(false);
@@ -183,8 +108,7 @@ const Login = () => {
           <div className="login-card">
             <h2>{isAdminLogin ? "Admin Login" : "Login"}</h2>
 
-            {!showOtpInput ? (
-              <form onSubmit={handleSignIn}>
+            <form onSubmit={handleSignIn}>
                 <label>Email</label>
                 <div
                   style={{
@@ -311,42 +235,10 @@ const Login = () => {
                   </p>
                 )}
               </form>
-            ) : (
-              <form onSubmit={verifyOtp}>
-                <h3>Verify Your Identity</h3>
-                <p style={{ fontSize: "14px", marginBottom: "20px" }}>
-                  Enter the 6-digit code sent to your phone
-                </p>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="Enter 6-digit OTP"
-                  maxLength="6"
-                  required
-                />
-                <button type="submit" disabled={loading} className="signin-btn">
-                  OTP
-                  {loading ? "Verifying..." : "Verify OTP"}
-                </button>
-                <p className="rg" style={{ marginTop: 10 }}>
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setShowOtpInput(false);
-                      setOtp("");
-                    }}
-                  >
-                    Back to login
-                  </a>
-                </p>
-              </form>
-            )}
           </div>
 
           {/* ADMIN BUTTON BELOW LOGIN CARD */}
-          {!isAdminLogin && !showOtpInput && (
+          {!isAdminLogin && (
             <button
               className="admin-btn"
               onClick={() => {

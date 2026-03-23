@@ -5,19 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Admin;
 use App\Models\Caller;
-use App\Services\OtpService;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    protected $otpService;
-
-    public function __construct(OtpService $otpService)
-    {
-        $this->otpService = $otpService;
-    }
 
     public function login(Request $request)
     {
@@ -57,8 +50,32 @@ class AuthController extends Controller
             return response()->json(['error' => 'Account is inactive'], 403);
         }
 
-        $this->otpService->generateOtp($request->email, $userType);
-        return response()->json(['success' => true]);
+        // Use session-based authentication with appropriate guard
+        $guard = $userType === 'admin' ? 'admin' : 'caller';
+        Auth::guard($guard)->login($user);
+
+        // Regenerate session to prevent session fixation attacks
+        $request->session()->regenerate();
+
+        AuditLogger::log(
+            action: 'login_success',
+            description: "User {$user->email} logged in successfully",
+            model: get_class($user),
+            modelId: $user->id,
+            request: $request
+        );
+
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'userType' => $userType,
+                'role' => $userType === 'admin' ? $user->role : 'caller',
+                'region' => $userType === 'admin' ? $user->region : null,
+                'rtom' => $user->rtom
+            ]
+        ]);
     }
 
     public function me(Request $request)
@@ -108,6 +125,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Logout successful'], 200);
         }
     }
+<<<<<<< Updated upstream
 
     /**
      * Send OTP to user's email
@@ -180,4 +198,6 @@ class AuthController extends Controller
             return response()->json(['error' => $e->getMessage()], 401);
         }
     }
+=======
+>>>>>>> Stashed changes
 }
