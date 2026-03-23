@@ -28,10 +28,26 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { sanitizeUrl } from './utils/urlSanitizer';
 import { useEffect } from 'react';
+import { getCurrentUser } from './utils/auth';
 
 
 function App() {
   const location = useLocation();
+
+  const getDefaultRoute = () => {
+    const user = getCurrentUser();
+
+    if (!user) return '/login';
+
+    if (user.role === 'superadmin') return '/superadmin';
+    if (user.role === 'uploader') return '/upload';
+    if (user.role === 'region_admin') return '/region-admin-dashboard';
+    if (user.role === 'rtom_admin') return '/rtom-admin-dashboard';
+    if (user.role === 'supervisor' || user.role === 'admin') return '/admin';
+    if (user.userType === 'caller' || user.role === 'caller') return '/dashboard';
+
+    return '/login';
+  };
 
   // Security: Sanitize URL on every navigation/load
   useEffect(() => {
@@ -51,7 +67,7 @@ function App() {
         {!isLoginPage && <Sidebar />}
         <div className={`main-content ${isLoginPage ? 'full-width' : ''}`}>
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -59,13 +75,13 @@ function App() {
 
             <Route path="/dashboard" element={<ProtectedRoute requiredRole="caller"><CallerDashboard /></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute requiredRole="caller"><CallerTasks /></ProtectedRoute>} />
-            <Route path="/admin/tasks" element={<ProtectedRoute ><AdminTasks /></ProtectedRoute>} />
+            <Route path="/admin/tasks" element={<ProtectedRoute requiredRole="admin"><AdminTasks /></ProtectedRoute>} />
             <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><AdminReport /></ProtectedRoute>} />
 
             <Route path="/superadmin" element={<ProtectedRoute requiredRole="superadmin"><SuperAdminDashboard /></ProtectedRoute>} />
             <Route path="/region-admin-dashboard" element={<ProtectedRoute requiredRole="region_admin"><RegionAdminDashboard /></ProtectedRoute>} />
             <Route path="/rtom-admin-dashboard" element={<ProtectedRoute requiredRole="rtom_admin"><RTOMAdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute requiredRole="supervisor"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/customers" element={<ProtectedRoute><CustomerManagement /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute requiredRole="admin"><CallerManagement /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Report /></ProtectedRoute>} />

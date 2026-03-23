@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./customerManagement.css";
+import "./CustomerManagement.css";
 import CustomerTable from "../components/CustomerTable";
 import "../components/CustomerTable.css";
 import SearchBar from "../components/SearchBar";

@@ -13,6 +13,7 @@ import logger from "../utils/logger";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,10 +23,35 @@ const Login = () => {
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Clear any existing session when login page loads
+  const redirectByUser = (user) => {
+    if (!user) return;
+
+    if (user.role === 'superadmin') {
+      navigate('/superadmin', { replace: true });
+    } else if (user.role === 'uploader') {
+      navigate('/upload', { replace: true });
+    } else if (user.role === 'region_admin') {
+      navigate('/region-admin-dashboard', { replace: true });
+    } else if (user.role === 'rtom_admin') {
+      navigate('/rtom-admin-dashboard', { replace: true });
+    } else if (user.role === 'supervisor' || user.role === 'admin') {
+      navigate('/admin', { replace: true });
+    } else if (user.userType === 'caller' || user.role === 'caller') {
+      navigate('/dashboard', { replace: true });
+    } else {
+      navigate('/login', { replace: true });
+    }
+  };
+
+  // If already logged in, don't keep the user on /login
   useEffect(() => {
-    clearSession();
-  }, []);
+    const existingUser = getCurrentUser();
+    if (existingUser) {
+      redirectByUser(existingUser);
+    }
+    // only re-run when route changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const handleSignIn = async (e) => {
     e.preventDefault();

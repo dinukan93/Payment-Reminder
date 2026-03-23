@@ -72,7 +72,7 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
-            'avatar' => 'nullable|string'
+            'avatar' => 'nullable|string|max:10000000'  // Allow up to 10MB base64 string
         ]);
 
         // Update user's name and phone
@@ -84,19 +84,27 @@ class SettingsController extends Controller
         // Update settings with avatar
         if (isset($validated['avatar'])) {
             $userType = $user instanceof Admin ? 'admin' : 'caller';
-            $setting = $user->setting ?? Setting::create([
-                'user_id' => $user->id,
-                'user_type' => $userType,
-            ]);
-            $setting->update(['avatar' => $validated['avatar']]);
+            
+            if ($user->setting) {
+                $user->setting->update(['avatar' => $validated['avatar']]);
+            } else {
+                Setting::create([
+                    'user_id' => $user->id,
+                    'user_type' => $userType,
+                    'avatar' => $validated['avatar'],
+                ]);
+            }
         }
+
+        // Refresh the setting relationship to get updated data
+        $user = $user->fresh();
 
         return response()->json([
             'msg' => 'Profile updated successfully',
             'data' => [
                 'name' => $user->name,
                 'phone' => $user->phone,
-                'avatar' => $user->setting->avatar ?? null
+                'avatar' => $user->setting?->avatar ?? null
             ]
         ]);
     }
