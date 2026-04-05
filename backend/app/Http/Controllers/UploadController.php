@@ -12,6 +12,7 @@ class UploadController extends Controller
 {
     public function parseChunk(Request $request)
     {
+        set_time_limit(0); // Remove execution time limit for large uploads
         $request->validate([
             'uploadId' => 'required|string|max:120',
             'fileName' => 'required|string|max:255',
@@ -112,6 +113,7 @@ class UploadController extends Controller
 
     public function parse(Request $request)
     {
+        set_time_limit(0); // Remove execution time limit for large files
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv'
         ]);
@@ -143,6 +145,7 @@ class UploadController extends Controller
 
     public function import(Request $request)
     {
+        set_time_limit(0); // Remove execution time limit for importing large files
         $request->validate([
             'customers' => 'required|array'
         ]);
@@ -182,6 +185,7 @@ class UploadController extends Controller
 
     public function markPaid(Request $request)
     {
+        set_time_limit(0); // Remove execution time limit for marking large files
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv'
         ]);
