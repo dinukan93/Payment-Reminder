@@ -200,6 +200,16 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
           </div>
 
           <div className="modal-right">
+            <div className="call-button-section">
+              <a 
+                href={`tel:${customer.contactNumber}`} 
+                className="call-button-large"
+                title="Call customer"
+              >
+                <i className="bi bi-telephone-fill"></i>
+                <span>Call Customer</span>
+              </a>
+            </div>
             <div className="form-section">
               <div className="form-group">
                 <label>Call Outcome</label>

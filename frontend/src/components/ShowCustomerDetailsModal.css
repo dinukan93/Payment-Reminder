@@ -104,6 +104,8 @@
 .contact-card {
   background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
   color: white;
+  overflow: visible;
+  clip-path: none;
 }
 
 .amount-card {
@@ -128,6 +130,80 @@
 .card-value {
   font-size: 16px;
   font-weight: 700;
+}
+
+.call-button-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 25px;
+}
+
+.call-button-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.call-button-large:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.call-button-large:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.3);
+}
+
+.call-button-large i {
+  font-size: 18px;
+}
+
+.card-value-with-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.call-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.call-button:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+  border-color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.call-button:active {
+  transform: scale(0.95);
 }
 
 .customer-name-section {
